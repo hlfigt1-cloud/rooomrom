@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0">
+<title>دردشة عربية | Arab Chat</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;900&display=swap');
+    * {
+        font-family: 'Cairo', sans-serif;
+        -webkit-tap-highlight-color: transparent;
+    }
+    body {
+        overscroll-behavior: none;
+        touch-action: pan-y;
+    }
+    .marquee {
+        white-space: nowrap;
+        overflow: hidden;
+    }
+    .marquee-content {
+        display: inline-block;
+        padding-left: 100%;
+        animation: marquee 20s linear infinite;
+    }
+    @keyframes marquee {
+        0% { transform: translate3d(-100%, 0, 0); }
+        100% { transform: translate3d(0, 0, 0); }
+    }
+    .scroll-smooth {
+        scroll-behavior: smooth;
+    }
+    .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    .hide-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    .message-appear {
+        animation: slideIn 0.2s ease-out;
+    }
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    .ripple {
+        position: relative;
+        overflow: hidden;
+    }
+    .ripple:after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.5);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+    }
+    .ripple:active:after {
+        width: 300px;
+        height: 300px;
+    }
+    .pinned-msg {
+        border-right: 4px solid #eab308;
+    }
+    .safe-area-bottom {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+    :root {
+        --room-grad: linear-gradient(135deg, #9333ea 0%, #ec4899 100%);
+    }
+</style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white h-screen overflow-hidden">
+<!-- Login Modal -->
+<div id="loginModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl shadow-2xl w-full max-w-md border border-purple-500/30 overflow-hidden">
+        <div class="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-center">
+            <h2 class="text-3xl font-black mb-2">أهلاً بك في الدردشة</h2>
+            <p class="text-purple-100 text-lg">اختر طريقة الدخول</p>
+        </div>
+        <div class="p-6 space-y-4">
+            <button onclick="loginAsGuest()" class="ripple w-full bg-slate-700 hover:bg-slate-600 text-white text-xl font-bold py-5 rounded-2xl transition-all shadow-lg active:scale-95">
+                دخول كزائر 👤
+            </button>
+            <button onclick="showMemberLogin()" class="ripple w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white text-xl font-bold py-5 rounded-2xl transition-all shadow-lg active:scale-95">
+                دخول كعضو ✨
+            </button>
+            <button onclick="showOwnerLogin()" class="ripple w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white text-xl font-bold py-5 rounded-2xl transition-all shadow-lg active:scale-95">
+                دخول كمالك 👑
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Member Login Modal -->
+<div id="memberModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl shadow-2xl w-full max-w-md border border-blue-500/30">
+        <div class="bg-gradient-to-r from-blue-600 to-cyan-600 p-6 text-center rounded-t-3xl">
+            <h2 class="text-3xl font-black">تسجيل عضو</h2>
+        </div>
+        <div class="p-6 space-y-4">
+            <input id="memberName" type="text" placeholder="اسم المستخدم" class="w-full bg-slate-700 text-white text-xl px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-blue-500 outline-none" maxlength="20">
+            <input id="memberPass" type="password" placeholder="كلمة المرور" class="w-full bg-slate-700 text-white text-xl px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-blue-500 outline-none">
+            <div class="flex gap-3">
+                <button onclick="loginMember()" class="ripple flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">دخول</button>
+                <button onclick="closeMemberModal()" class="ripple flex-1 bg-slate-700 hover:bg-slate-600 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">إلغاء</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Owner Login Modal -->
+<div id="ownerModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl shadow-2xl w-full max-w-md border border-amber-500/30">
+        <div class="bg-gradient-to-r from-amber-600 to-orange-600 p-6 text-center rounded-t-3xl">
+            <h2 class="text-3xl font-black">دخول المالك</h2>
+        </div>
+        <div class="p-6 space-y-4">
+            <input id="ownerName" type="text" placeholder="اسم المالك" class="w-full bg-slate-700 text-white text-xl px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-amber-500 outline-none">
+            <input id="ownerPass" type="password" placeholder="كلمة المرور" class="w-full bg-slate-700 text-white text-xl px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-amber-500 outline-none">
+            <div class="flex gap-3">
+                <button onclick="loginOwner()" class="ripple flex-1 bg-amber-600 hover:bg-amber-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">دخول</button>
+                <button onclick="closeOwnerModal()" class="ripple flex-1 bg-slate-700 hover:bg-slate-600 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">إلغاء</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Admin Panel -->
+<div id="adminPanel" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl shadow-2xl w-full max-w-3xl border border-purple-500/30 my-4">
+        <div class="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-center rounded-t-3xl">
+            <h2 class="text-3xl font-black">لوحة التحكم 👑</h2>
+        </div>
+        <div class="p-6 space-y-6 max-h-[70vh] overflow-y-auto hide-scrollbar">
+            <!-- Add Country Section -->
+            <div class="bg-slate-800/50 rounded-2xl p-5 border border-purple-500/20">
+                <h3 class="text-xl font-bold mb-4 text-purple-300">إضافة دولة وغرف</h3>
+                <input id="newCountryInput" type="text" placeholder="اسم الدولة الجديدة" class="w-full bg-slate-700 text-white text-xl px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-purple-500 outline-none mb-3">
+                <input id="newRoomInput" type="text" placeholder="اسماء الغرف - افصل بفاصلة (مثال: عام, شباب, بنات)" class="w-full bg-slate-700 text-white text-lg px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-purple-500 outline-none mb-3">
+                <input id="expiryDateInput" type="date" class="w-full bg-slate-700 text-white text-lg px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-purple-500 outline-none mb-3">
+                <button onclick="addCountryWithRooms()" class="ripple w-full bg-green-600 hover:bg-green-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">إضافة دولة ➕</button>
+            </div>
+
+            <!-- Global Announcement -->
+            <div class="bg-slate-800/50 rounded-2xl p-5 border border-yellow-500/20">
+                <h3 class="text-xl font-bold mb-4 text-yellow-300">إعلان عام لجميع الغرف 📢</h3>
+                <input id="announcementInput" type="text" placeholder="اكتب الإعلان هنا..." class="w-full bg-slate-700 text-white text-lg px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-yellow-500 outline-none mb-3" maxlength="300">
+                <button onclick="sendGlobalAnnouncement()" class="ripple w-full bg-yellow-600 hover:bg-yellow-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">إرسال الإعلان</button>
+            </div>
+
+            <!-- Room Moderator Assignment -->
+            <div id="roomModSection" class="bg-slate-800/50 rounded-2xl p-5 border border-cyan-500/20">
+                <h3 class="text-xl font-bold mb-4 text-cyan-300">تعيين مشرف للغرفة 🛡️</h3>
+                <select id="modCountrySelect" class="w-full bg-slate-700 text-white text-lg px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-cyan-500 outline-none mb-3">
+                    <option value="">اختر الدولة</option>
+                </select>
+                <select id="modRoomSelect" class="w-full bg-slate-700 text-white text-lg px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-cyan-500 outline-none mb-3">
+                    <option value="">اختر الغرفة</option>
+                </select>
+                <input id="modUsernameInput" type="text" placeholder="اسم المستخدم" class="w-full bg-slate-700 text-white text-lg px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-cyan-500 outline-none mb-3">
+                <div class="flex gap-3">
+                    <button onclick="assignRoomModerator()" class="ripple flex-1 bg-cyan-600 hover:bg-cyan-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">تعيين مشرف</button>
+                    <button onclick="removeRoomModerator()" class="ripple flex-1 bg-red-600 hover:bg-red-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">إلغاء إشراف</button>
+                </div>
+            </div>
+
+            <!-- Manage Countries Section -->
+            <div class="bg-slate-800/50 rounded-2xl p-5 border border-purple-500/20">
+                <h3 class="text-xl font-bold mb-4 text-purple-300">إدارة الدول الحالية</h3>
+                <div id="adminCountriesList" class="space-y-3"></div>
+            </div>
+
+            <!-- Manage Members Section -->
+            <div class="bg-slate-800/50 rounded-2xl p-5 border border-cyan-500/20">
+                <h3 class="text-xl font-bold mb-4 text-cyan-300">إدارة الأعضاء</h3>
+                <div id="adminMembersList" class="space-y-3"></div>
+            </div>
+
+            <button onclick="closeAdminPanel()" class="ripple w-full bg-slate-700 hover:bg-slate-600 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">إغلاق</button>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Room Modal -->
+<div id="editRoomModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl shadow-2xl w-full max-w-md border border-purple-500/30">
+        <div class="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-center rounded-t-3xl">
+            <h2 class="text-2xl font-black">إعدادات الغرفة</h2>
+            <p class="text-sm text-purple-100 mt-1" id="editRoomTitle"></p>
+        </div>
+        <div class="p-6 space-y-4">
+            <input id="editRoomWelcome" type="text" placeholder="رسالة ترحيب الغرفة" class="w-full bg-slate-700 text-white text-lg px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-purple-500 outline-none" maxlength="200">
+            <div>
+                <label class="block text-sm text-purple-300 mb-2">لون ثيم الغرفة</label>
+                <div class="grid grid-cols-5 gap-2">
+                    <button onclick="selectRoomColor('#9333ea,#ec4899')" class="h-14 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 active:scale-95"></button>
+                    <button onclick="selectRoomColor('#2563eb,#06b6d4')" class="h-14 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500 active:scale-95"></button>
+                    <button onclick="selectRoomColor('#16a34a,#22c55e')" class="h-14 rounded-xl bg-gradient-to-br from-green-600 to-green-400 active:scale-95"></button>
+                    <button onclick="selectRoomColor('#dc2626,#f97316')" class="h-14 rounded-xl bg-gradient-to-br from-red-600 to-orange-500 active:scale-95"></button>
+                    <button onclick="selectRoomColor('#d97706,#eab308')" class="h-14 rounded-xl bg-gradient-to-br from-amber-600 to-yellow-500 active:scale-95"></button>
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="saveRoomSettings()" class="ripple flex-1 bg-purple-600 hover:bg-purple-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">حفظ</button>
+                <button onclick="closeEditRoomModal()" class="ripple flex-1 bg-slate-700 hover:bg-slate-600 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">إلغاء</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Country Modal -->
+<div id="editCountryModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl shadow-2xl w-full max-w-md border border-blue-500/30">
+        <div class="bg-gradient-to-r from-blue-600 to-cyan-600 p-6 text-center rounded-t-3xl">
+            <h2 class="text-2xl font-black">تعديل الدولة</h2>
+        </div>
+        <div class="p-6 space-y-4">
+            <input id="editCountryName" type="text" class="w-full bg-slate-700 text-white text-xl px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-blue-500 outline-none">
+            <div class="flex gap-3">
+                <button onclick="saveCountryEdit()" class="ripple flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">حفظ</button>
+                <button onclick="closeEditCountryModal()" class="ripple flex-1 bg-slate-700 hover:bg-slate-600 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">إلغاء</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mute User Modal -->
+<div id="muteModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl shadow-2xl w-full max-w-md border border-red-500/30">
+        <div class="bg-gradient-to-r from-red-600 to-orange-600 p-6 text-center rounded-t-3xl">
+            <h2 class="text-2xl font-black">كتم المستخدم 🔇</h2>
+            <p class="text-sm text-red-100 mt-2" id="muteUserName"></p>
+        </div>
+        <div class="p-6 space-y-4">
+            <input id="muteDuration" type="number" placeholder="المدة بالدقائق" min="1" max="10080" class="w-full bg-slate-700 text-white text-xl px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-red-500 outline-none">
+            <div class="flex gap-3">
+                <button onclick="confirmMute()" class="ripple flex-1 bg-red-600 hover:bg-red-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">كتم</button>
+                <button onclick="closeMuteModal()" class="ripple flex-1 bg-slate-700 hover:bg-slate-600 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">إلغاء</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main App -->
+<div id="app" class="hidden h-screen flex flex-col">
+    <!-- Header with Marquee -->
+    <header class="bg-gradient-to-r from-purple-900 via-pink-900 to-purple-900 shadow-xl">
+        <div class="marquee bg-black/30 py-2">
+            <div class="marquee-content text-yellow-300 text-lg font-bold" id="globalMarquee">
+                🌟 مرحباً بكم في شات الدول العربية 🌟 دردشة ممتعة للجميع 🌟 احترم الآخرين 🌟 
+            </div>
+        </div>
+        <div class="flex items-center justify-between px-4 py-3">
+            <button onclick="toggleSidebar()" class="ripple bg-white/10 hover:bg-white/20 p-3 rounded-2xl active:scale-95">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+            <div class="text-center flex-1">
+                <h1 class="text-xl font-black">
+                    <span id="breadcrumb">الدول</span>
+                </h1>
+                <div class="flex items-center justify-center gap-3 text-sm">
+                    <p class="text-purple-200" id="onlineCount">متصل: 0</p>
+                    <span class="text-purple-400">•</span>
+                    <p class="text-purple-200" id="msgCount">الرسائل: 0</p>
+                </div>
+                <p class="text-xs text-yellow-300 hidden" id="expiryInfo"></p>
+            </div>
+            <button onclick="showUserMenu()" class="ripple bg-white/10 hover:bg-white/20 p-3 rounded-2xl active:scale-95">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center text-xl font-bold" id="userAvatar">👤</div>
+            </button>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <!-- Sidebar - Countries List -->
+        <aside id="sidebar" class="w-full md:w-80 bg-slate-900/95 backdrop-blur-lg border-l border-purple-500/30 fixed md:relative inset-0 z-40 transform translate-x-full md:translate-x-0 transition-transform duration-300 flex flex-col">
+            <div class="p-4 bg-gradient-to-r from-purple-900/50 to-pink-900/50 border-b border-purple-500/30 flex items-center justify-between">
+                <h2 class="text-2xl font-black" id="sidebarTitle">الدول المتاحة</h2>
+                <button onclick="toggleSidebar()" class="md:hidden ripple bg-white/10 p-2 rounded-xl active:scale-95">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="sidebarWrapper" class="flex-1 overflow-y-auto hide-scrollbar p-3 space-y-2">
+                <button id="backToCountries" onclick="backToCountries()" class="hidden ripple w-full bg-slate-800 hover:bg-slate-700 text-white text-lg font-bold py-4 rounded-2xl mb-3 active:scale-95">
+                    ← رجوع للدول
+                </button>
+                <div id="countriesList" class="space-y-2"></div>
+                <div id="roomsList" class="hidden space-y-2"></div>
+                <button id="adminBtn" onclick="openAdminPanel()" class="hidden ripple w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white text-xl font-bold py-5 rounded-2xl mt-4 active:scale-95">
+                    لوحة التحكم 👑
+                </button>
+            </div>
+            <div class="p-4 bg-black/30 border-t border-purple-500/30">
+                <div class="text-center">
+                    <p class="text-lg font-bold" id="currentUserName">زائر</p>
+                    <p class="text-sm text-purple-300" id="currentUserRole">غير مسجل</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Chat Area -->
+        <main class="flex-1 flex flex-col bg-gradient-to-br from-slate-900/50 to-purple-900/30">
+            <div id="welcomeScreen" class="flex-1 flex items-center justify-center p-8 text-center">
+                <div>
+                    <div class="text-8xl mb-6">💬</div>
+                    <h2 class="text-4xl font-black mb-4 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">اختر دولة للبدء</h2>
+                    <p class="text-xl text-purple-200">اضغط على أيقونة القائمة لاختيار الدولة ثم الغرفة</p>
+                </div>
+            </div>
+            
+            <div id="chatScreen" class="hidden flex-1 flex flex-col">
+                <!-- Room Header Info -->
+                <div id="roomHeaderBar" class="bg-gradient-to-r sticky top-0 z-10" style="background:var(--room-grad)">
+                    <div id="roomWelcome" class="px-4 py-3 text-center text-white text-lg font-bold hidden"></div>
+                    <div id="roomModsList" class="bg-black/20 px-4 py-2 text-center text-sm hidden">
+                        <span class="text-yellow-300">المشرفون: </span>
+                        <span id="roomModsText" class="text-white"></span>
+                    </div>
+                </div>
+                
+                <div id="pinnedMessageContainer" class="hidden bg-yellow-600/20 border-b-2 border-yellow-500 px-4 py-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2 flex-1">
+                            <span class="text-yellow-400 text-2xl">📌</span>
+                            <div class="flex-1">
+                                <p class="text-sm text-yellow-300 font-bold">رسالة مثبتة</p>
+                                <p class="text-white text-lg" id="pinnedMessageText"></p>
+                            </div>
+                        </div>
+                        <button onclick="unpinMessage()" class="bg-red-600/50 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm active:scale-95 hidden" id="unpinBtn">إلغاء</button>
+                    </div>
+                </div>
+                <div id="messagesContainer" class="flex-1 overflow-y-auto hide-scrollbar p-4 space-y-3 scroll-smooth"></div>
+                
+                <!-- Input Area -->
+                <div class="bg-slate-900/90 backdrop-blur-lg border-t-2 border-purple-500/30 p-3 safe-area-bottom">
+                    <div class="flex gap-2">
+                        <input 
+                            id="messageInput" 
+                            type="text" 
+                            placeholder="اكتب رسالتك هنا..."
+                            class="flex-1 bg-slate-800 text-white text-xl px-6 py-5 rounded-2xl border-2 border-slate-700 focus:border-purple-500 outline-none"
+                            maxlength="500"
+                            onkeypress="if(event.key==='Enter') sendMessage()"
+                        >
+                        <button onclick="sendMessage()" class="ripple bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-5 rounded-2xl font-bold text-xl active:scale-95 shadow-lg">
+                            إرسال
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+    import { getDatabase, ref, push, onValue, set, remove, off, onDisconnect, serverTimestamp, update, get } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
+
+    const firebaseConfig = {
+        databaseURL: "https://hashed-cht-default-rtdb.firebaseio.com/"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // Royal names with icons
+    const royalIcons = ['🌸', '❤️', '☕', '💀', '😊'];
+    const royalUsers = {
+        'أميرة': '🌸',
+        'ملكة': '👑',
+        'سلطان': '👑',
+        'أمير': '👑',
+        'شيخة': '🌸'
+    };
+
+    // Protected names and roles
+    const PROTECTED_OWNERS = ['الدعم الفني', 'Admin', 'Owner'];
+    const PROTECTED_SUPER = ['Royal Master'];
+    const RESERVED_ROLE_NAMES = ['المالك', 'سوبر أدمن', 'مشرف', 'ادمن', 'moderator', 'admin', 'owner'];
+
+    // Global state
+    let currentUser = null;
+    let currentCountry = null;
+    let currentRoom = null;
+    let messagesRef = null;
+    let onlineRef = null;
+    let countriesRef = null;
+    let editingCountry = null;
+    let muteTargetUser = null;
+    let userMuteStatus = null;
+    let selectedRoomColor = '#9333ea,#ec4899';
+    let currentRoomMods = [];
+    let msgCountRef = null;
+
+    // Initialize
+    window.onload = () => {
+        countriesRef = ref(db, 'countries');
+        loadCountries();
+        loadGlobalAnnouncement();
+        checkBannedStatus();
+    };
+
+    // Login Functions
+    window.loginAsGuest = () => {
+        const guestNum = Math.floor(Math.random() * 9000) + 1000;
+        currentUser = {
+            name: `زائر${guestNum}`,
+            role: 'guest',
+            icon: '👤'
+        };
+        startApp();
+    };
+
+    window.showMemberLogin = () => {
+        document.getElementById('memberModal').classList.remove('hidden');
+        document.getElementById('memberModal').classList.add('flex');
+    };
+
+    window.closeMemberModal = () => {
+        document.getElementById('memberModal').classList.add('hidden');
+        document.getElementById('memberModal').classList.remove('flex');
+    };
+
+    window.loginMember = async () => {
+        const name = document.getElementById('memberName').value.trim();
+        const pass = document.getElementById('memberPass').value;
+        
+        if (name.length < 3) {
+            alert('الاسم يجب أن يكون 3 أحرف على الأقل');
+            return;
+        }
+        if (pass.length < 4) {
+            alert('كلمة المرور يجب أن تكون 4 أحرف على الأقل');
+            return;
+        }
+
+        // Check protected names
+        if (PROTECTED_OWNERS.includes(name) || PROTECTED_SUPER.includes(name) || RESERVED_ROLE_NAMES.some(r => name.includes(r))) {
+            alert('هذا الاسم محمي ولا يمكن استخدامه');
+            return;
+        }
+
+        // Check if user exists and get role
+        const memberSnap = await get(ref(db, `members/${name}`));
+        let userRole = 'member';
+        let userIcon = royalUsers[name] || royalIcons[Math.floor(Math.random() * royalIcons.length)];
+        let userTag = '';
+
+        if (memberSnap.exists()) {
+            const data = memberSnap.val();
+            if (data.password && data.password !== pass) {
+                alert('كلمة المرور غير صحيحة');
+                return;
+            }
+            userRole = data.role || 'member';
+            if (data.icon) userIcon = data.icon;
+            if (userRole === 'banned') {
+                alert('تم حظر حسابك من الدردشة');
+                return;
+            }
+        }
+
+        currentUser = {
+            name: name,
+            role: userRole,
+            icon: userIcon,
+            tag: userTag
+        };
+        
+        const memberData = {
+            name: name,
+            password: pass,
+            role: userRole,
+            icon: userIcon,
+            lastLogin: serverTimestamp()
+        };
+        
+        await update(ref(db, `members/${name}`), memberData);
+        
+        closeMemberModal();
+        startApp();
+    };
+
+    window.showOwnerLogin = () => {
+        document.getElementById('ownerModal').classList.remove('hidden');
+        document.getElementById('ownerModal').classList.add('flex');
+    };
+
+    window.closeOwnerModal = () => {
+        document.getElementById('ownerModal').classList.add('hidden');
+        document.getElementById('ownerModal').classList.remove('flex');
+    };
+
+    window.loginOwner = () => {
+        const name = document.getElementById('ownerName').value.trim();
+        const pass = document.getElementById('ownerPass').value;
+        
+        if (name === 'الدعم الفني' && pass === '19952005') {
+            currentUser = {
+                name: name,
+                role: 'owner',
+                icon: '👑',
+                tag: '[المالك 👑]'
+            };
+            closeOwnerModal();
+            startApp();
+        } else if (name === 'Royal Master' && pass === 'super2024') {
+            currentUser = {
+                name: name,
+                role: 'superadmin',
+                icon: '💎',
+                tag: '[سوبر أدمن 💎]'
+            };
+            closeOwnerModal();
+            startApp();
+        } else {
+            alert('بيانات الدخول غير صحيحة');
+        }
+    };
+
+    function startApp() {
+        checkBannedStatus().then(isBanned => {
+            if (isBanned) {
+                alert('تم حظرك من التطبيق');
+                location.reload();
+                return;
+            }
+            
+            document.getElementById('loginModal').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+            
+            updateUserInfo();
+            loadUserMuteStatus();
+            
+            if (hasGlobalModAccess()) {
+                document.getElementById('adminBtn').classList.remove('hidden');
+            }
+            
+            if (canUnpin()) {
+                document.getElementById('unpinBtn').classList.remove('hidden');
+            }
+        });
+    }
+
+    async function checkBannedStatus() {
+        if (!currentUser) return false;
+        const snap = await get(ref(db, `banned/${currentUser.name.replace(/[.#$[\]]/g, '_')}`));
+        return snap.exists();
+    }
+
+    async function loadUserMuteStatus() {
+        if (!currentUser) return;
+        const snap = await get(ref(db, `muted/${currentUser.name.replace(/[.#$[\]]/g, '_')}`));
+        if (snap.exists()) {
+            const data = snap.val();
+            // Check if mute is room-specific
+            if (currentCountry && currentRoom) {
+                if (data.room && (data.room.country !== currentCountry || data.room.room !== currentRoom)) {
+                    userMuteStatus = null;
+                    return;
+                }
+            }
+            if (data.until && data.until > Date.now()) {
+                userMuteStatus = data;
+            } else {
+                await remove(ref(db, `muted/${currentUser.name.replace(/[.#$[\]]/g, '_')}`));
+                userMuteStatus = null;
+            }
+        }
+    }
+
+    function updateUserInfo() {
+        const displayName = currentUser.tag ? `${currentUser.name} ${currentUser.tag}` : currentUser.name;
+        document.getElementById('currentUserName').textContent = displayName;
+        document.getElementById('userAvatar').textContent = currentUser.icon;
+        
+        const roleText = {
+            'guest': 'زائر',
+            'member': 'عضو ✨',
+            'owner': 'مالك 👑',
+            'superadmin': 'سوبر أدمن 💎'
+        };
+        document.getElementById('currentUserRole').textContent = roleText[currentUser.role] || 'مستخدم';
+    }
+
+    function hasAdminAccess() {
+        return currentUser && (currentUser.role === 'owner' || currentUser.role === 'superadmin');
+    }
+
+    function hasGlobalModAccess() {
+        return currentUser && (currentUser.role === 'owner' || currentUser.role === 'superadmin');
+    }
+
+    async function isRoomModerator(country, room, username) {
+        const snap = await get(ref(db, `countries/${country}/rooms/${room}/moderators/${username.replace(/[.#$[\]]/g, '_')}`));
+        return snap.exists();
+    }
+
+    async function hasRoomModAccess(country, room, username) {
+        if (hasGlobalModAccess()) return true;
+        if (!username) return false;
+        return await isRoomModerator(country, room, username);
+    }
+
+    function canUnpin() {
+        return hasGlobalModAccess() || (currentUser && currentRoomMods.includes(currentUser.name));
+    }
+
+    // Countries Management
+    function loadCountries() {
+        onValue(countriesRef, (snapshot) => {
+            const countries = snapshot.val() || {};
+            const list = document.getElementById('countriesList');
+            list.innerHTML = '';
+            
+            if (Object.keys(countries).length === 0) {
+                list.innerHTML = '<p class="text-center text-purple-300 py-8">لا توجد دول حالياً</p>';
+                return;
+            }
+            
+            Object.entries(countries).forEach(([country, data]) => {
+                const btn = document.createElement('button');
+                btn.className = 'ripple w-full bg-gradient-to-r from-slate-800 to-slate-700 hover:from-purple-800 hover:to-pink-800 text-white text-xl font-bold py-5 rounded-2xl transition-all shadow-lg active:scale-95 flex items-center justify-between px-6';
+                btn.innerHTML = `
+                    <span>${country}</span>
+                    <span class="text-2xl">${data.rooms ? Object.keys(data.rooms).length : 0} غرفة</span>
+                `;
+                btn.onclick = () => selectCountry(country);
+                list.appendChild(btn);
+            });
+
+            updateAdminCountriesList(countries);
+            populateModSelectors(countries);
+        });
+    }
+
+    function populateModSelectors(countries) {
+        const countrySelect = document.getElementById('modCountrySelect');
+        if (!countrySelect) return;
+        
+        countrySelect.innerHTML = '<option value="">اختر الدولة</option>';
+        Object.keys(countries).forEach(country => {
+            const option = document.createElement('option');
+            option.value = country;
+            option.textContent = country;
+            countrySelect.appendChild(option);
+        });
+
+        countrySelect.onchange = () => {
+            const selectedCountry = countrySelect.value;
+            const roomSelect = document.getElementById('modRoomSelect');
+            roomSelect.innerHTML = '<option value="">اختر الغرفة</option>';
+            
+            if (selectedCountry && countries[selectedCountry]?.rooms) {
+                Object.keys(countries[selectedCountry].rooms).forEach(room => {
+                    const option = document.createElement('option');
+                    option.value = room;
+                    option.textContent = room;
+                    roomSelect.appendChild(option);
+                });
+            }
+        };
+    }
+
+    function loadGlobalAnnouncement() {
+        onValue(ref(db, 'announcement'), (snapshot) => {
+            const text = snapshot.val();
+            if (text) {
+                document.getElementById('globalMarquee').textContent = `📢 ${text} 📢`;
+            }
+        });
+    }
+
+    function updateAdminCountriesList(countries) {
+        const list = document.getElementById('adminCountriesList');
+        if (!list) return;
+        
+        list.innerHTML = '';
+        Object.entries(countries).forEach(([country, data]) => {
+            const div = document.createElement('div');
+            div.className = 'bg-slate-700/50 rounded-xl p-4';
+            div.innerHTML = `
+                <div class="flex items-center justify-between gap-2 mb-3">
+                    <div class="flex-1">
+                        <p class="font-bold text-lg">${country}</p>
+                        <p class="text-sm text-purple-300">${data.rooms ? Object.keys(data.rooms).length : 0} غرفة</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="showEditCountry('${country}')" class="bg-blue-600 hover:bg-blue-700 px-4 py-3 rounded-xl font-bold active:scale-95">✏️</button>
+                        <button onclick="deleteCountry('${country}')" class="bg-red-600 hover:bg-red-700 px-4 py-3 rounded-xl font-bold active:scale-95">🗑️</button>
+                    </div>
+                </div>
+            `;
+            if (data.rooms && hasGlobalModAccess()) {
+                const roomsDiv = document.createElement('div');
+                roomsDiv.className = 'space-y-2 mt-2';
+                Object.keys(data.rooms).forEach(room => {
+                    const roomBtn = document.createElement('button');
+                    roomBtn.className = 'w-full bg-slate-600 hover:bg-slate-500 px-4 py-3 rounded-lg text-sm font-bold active:scale-95 text-right flex items-center justify-between';
+                    roomBtn.innerHTML = `<span>${room}</span><span>⚙️</span>`;
+                    roomBtn.onclick = () => showEditRoomModal(country, room);
+                    roomsDiv.appendChild(roomBtn);
+                });
+                div.appendChild(roomsDiv);
+            }
+            list.appendChild(div);
+        });
+    }
+
+    function loadAdminMembersList() {
+        onValue(ref(db, 'members'), (snapshot) => {
+            const members = snapshot.val() || {};
+            const list = document.getElementById('adminMembersList');
+            if (!list) return;
+            
+            list.innerHTML = '';
+            
+            if (Object.keys(members).length === 0) {
+                list.innerHTML = '<p class="text-center text-purple-300 py-4">لا يوجد أعضاء</p>';
+                return;
+            }
+            
+            Object.entries(members).forEach(([name, data]) => {
+                const role = data.role || 'member';
+                if (role === 'banned' || role === 'owner' || role === 'superadmin') return;
+                
+                const div = document.createElement('div');
+                div.className = 'bg-slate-700/50 rounded-xl p-4';
+                
+                div.innerHTML = `
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex-1">
+                            <p class="font-bold text-lg">${data.icon || '👤'} ${name}</p>
+                            <p class="text-sm text-cyan-300">عضو</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        ${hasGlobalModAccess() ? `
+                            <button onclick="showMuteModal('${name}')" class="bg-yellow-600 hover:bg-yellow-700 px-3 py-2 rounded-lg text-sm font-bold active:scale-95">كتم</button>
+                            <button onclick="banUser('${name}')" class="bg-red-600 hover:bg-red-700 px-3 py-2 rounded-lg text-sm font-bold active:scale-95">حظر</button>
+                        ` : ''}
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        });
+    }
+
+    window.selectCountry = (country) => {
+        currentCountry = country;
+        currentRoom = null;
+        
+        document.getElementById('sidebarTitle').textContent = country;
+        document.getElementById('breadcrumb').textContent = country;
+        document.getElementById('backToCountries').classList.remove('hidden');
+        document.getElementById('countriesList').classList.add('hidden');
+        document.getElementById('roomsList').classList.remove('hidden');
+        
+        loadRooms(country);
+        showExpiryForAdmin(country);
+    };
+
+    function showExpiryForAdmin(country) {
+        if (!hasGlobalModAccess()) {
+            document.getElementById('expiryInfo').classList.add('hidden');
+            return;
+        }
+        
+        onValue(ref(db, `countries/${country}`), (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.expiry) {
+                const expiryDate = new Date(data.expiry);
+                document.getElementById('expiryInfo').textContent = `انتهاء الصلاحية: ${expiryDate.toLocaleDateString('ar-SA')}`;
+                document.getElementById('expiryInfo').classList.remove('hidden');
+            } else {
+                document.getElementById('expiryInfo').classList.add('hidden');
+            }
+        }, { onlyOnce: true });
+    }
+
+    function loadRooms(country) {
+        onValue(ref(db, `countries/${country}/rooms`), (snapshot) => {
+            const rooms = snapshot.val() || {};
+            const list = document.getElementById('roomsList');
+            list.innerHTML = '';
+            
+            if (Object.keys(rooms).length === 0) {
+                list.innerHTML = '<p class="text-center text-purple-300 py-8">لا توجد غرف في هذه الدولة</p>';
+                return;
+            }
+            
+            Object.keys(rooms).forEach(room => {
+                const btn = document.createElement('button');
+                btn.className = 'ripple w-full bg-gradient-to-r from-slate-800 to-slate-700 hover:from-cyan-800 hover:to-blue-800 text-white text-xl font-bold py-5 rounded-2xl transition-all shadow-lg active:scale-95 flex items-center justify-between px-6';
+                btn.innerHTML = `
+                    <span>${room}</span>
+                    <span class="text-2xl">💬</span>
+                `;
+                btn.onclick = () => selectRoom(country, room);
+                list.appendChild(btn);
+            });
+        });
+    }
+
+    window.backToCountries = () => {
+        currentCountry = null;
+        currentRoom = null;
+        currentRoomMods = [];
+        document.getElementById('sidebarTitle').textContent = 'الدول المتاحة';
+        document.getElementById('breadcrumb').textContent = 'الدول';
+        document.getElementById('backToCountries').classList.add('hidden');
+        document.getElementById('countriesList').classList.remove('hidden');
+        document.getElementById('roomsList').classList.add('hidden');
+        document.getElementById('expiryInfo').classList.add('hidden');
+        document.getElementById('welcomeScreen').classList.remove('hidden');
+        document.getElementById('chatScreen').classList.add('hidden');
+        document.getElementById('msgCount').textContent = 'الرسائل: 0';
+        
+        if (messagesRef) off(messagesRef);
+        if (onlineRef) {
+            remove(onlineRef);
+            off(onlineRef);
+        }
+        if (msgCountRef) off(msgCountRef);
+    };
+
+    window.selectRoom = (country, room) => {
+        if (currentRoom === room && currentCountry === country) {
+            toggleSidebar();
+            return;
+        }
+        
+        if (messagesRef) off(messagesRef);
+        if (onlineRef) {
+            remove(onlineRef);
+            off(onlineRef);
+        }
+        if (msgCountRef) off(msgCountRef);
+        
+        currentCountry = country;
+        currentRoom = room;
+        document.getElementById('breadcrumb').textContent = `${country} > ${room}`;
+        document.getElementById('welcomeScreen').classList.add('hidden');
+        document.getElementById('chatScreen').classList.remove('hidden');
+        
+        joinRoom(country, room);
+        toggleSidebar();
+    };
+
+    function joinRoom(country, room) {
+        const messagesContainer = document.getElementById('messagesContainer');
+        messagesContainer.innerHTML = '';
+        
+        loadRoomSettings(country, room);
+        loadPinnedMessage(country, room);
+        loadRoomModerators(country, room);
+        
+        messagesRef = ref(db, `chats/${country}/${room}/messages`);
+        onValue(messagesRef, (snapshot) => {
+            const messages = snapshot.val();
+            messagesContainer.innerHTML = '';
+            
+            if (messages) {
+                const count = Object.keys(messages).length;
+                document.getElementById('msgCount').textContent = `الرسائل: ${count}`;
+                Object.entries(messages).forEach(([key, msg]) => {
+                    addMessageToScreen(msg, key);
+                });
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            } else {
+                document.getElementById('msgCount').textContent = 'الرسائل: 0';
+            }
+        });
+        
+        const userPath = currentUser.name.replace(/[.#$[\]]/g, '_');
+        onlineRef = ref(db, `chats/${country}/${room}/online/${userPath}`);
+        set(onlineRef, {
+            name: currentUser.name,
+            icon: currentUser.icon,
+            tag: currentUser.tag || '',
+            role: currentUser.role,
+            timestamp: serverTimestamp()
+        });
+        onDisconnect(onlineRef).remove();
+        
+        onValue(ref(db, `chats/${country}/${room}/online`), (snapshot) => {
+            const online = snapshot.val() || {};
+            document.getElementById('onlineCount').textContent = `متصل: ${Object.keys(online).length}`;
+        });
+    }
+
+    function loadRoomSettings(country, room) {
+        onValue(ref(db, `countries/${country}/rooms/${room}`), (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                if (data.welcome) {
+                    document.getElementById('roomWelcome').textContent = data.welcome;
+                    document.getElementById('roomWelcome').classList.remove('hidden');
+                } else {
+                    document.getElementById('roomWelcome').classList.add('hidden');
+                }
+                if (data.theme) {
+                    const colors = data.theme.split(',');
+                    document.documentElement.style.setProperty('--room-grad', `linear-gradient(135deg, ${colors[0]} 0%, ${colors[1]} 100%)`);
+                } else {
+                    document.documentElement.style.setProperty('--room-grad', 'linear-gradient(135deg, #9333ea 0%, #ec4899 100%)');
+                }
+            }
+        });
+    }
+
+    function loadRoomModerators(country, room) {
+        onValue(ref(db, `countries/${country}/rooms/${room}/moderators`), async (snapshot) => {
+            const mods = snapshot.val() || {};
+            currentRoomMods = Object.keys(mods);
+            
+            if (currentRoomMods.length > 0) {
+                const modsNames = await Promise.all(currentRoomMods.map(async (modKey) => {
+                    const modSnap = await get(ref(db, `members/${modKey}`));
+                    return modSnap.exists() ? modSnap.val().name : modKey;
+                }));
+                document.getElementById('roomModsText').textContent = modsNames.join('، ');
+                document.getElementById('roomModsList').classList.remove('hidden');
+            } else {
+                document.getElementById('roomModsList').classList.add('hidden');
+            }
+            
+            if (canUnpin()) {
+                document.getElementById('unpinBtn').classList.remove('hidden');
+            } else {
+                document.getElementById('unpinBtn').classList.add('hidden');
+            }
+        });
+    }
+
+    function loadPinnedMessage(country, room) {
+        onValue(ref(db, `chats/${country}/${room}/pinned`), (snapshot) => {
+            const pinned = snapshot.val();
+            const container = document.getElementById('pinnedMessageContainer');
+            if (pinned && pinned.text) {
+                document.getElementById('pinnedMessageText').textContent = `${pinned.user}: ${pinned.text}`;
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+        });
+    }
+
+    window.unpinMessage = async () => {
+        if (!currentCountry || !currentRoom || !canUnpin()) return;
+        await remove(ref(db, `chats/${currentCountry}/${currentRoom}/pinned`));
+    };
+
+    function addMessageToScreen(msg, msgKey) {
+        const container = document.getElementById('messagesContainer');
+        const isOwn = msg.user === currentUser.name;
+        
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message-appear flex ${isOwn ? 'justify-start' : 'justify-end'}`;
+        msgDiv.id = `msg-${msgKey}`;
+        
+        const time = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }) : '';
+        const userIcon = royalUsers[msg.user] || msg.icon || '👤';
+        const userTag = msg.tag || '';
+        const isAnnouncement = msg.isAnnouncement;
+        
+        let modButtons = '';
+        (async () => {
+            if ((hasGlobalModAccess() || await hasRoomModAccess(currentCountry, currentRoom, currentUser.name)) && msg.user !== currentUser.name && !isAnnouncement) {
+                modButtons = `
+                    <div class="flex gap-2 mt-2">
+                        <button onclick="pinMessage('${msgKey}', '${escapeHtml(msg.text)}', '${msg.user}')" class="bg-yellow-600 hover:bg-yellow-700 px-3 py-1 rounded-lg text-xs font-bold active:scale-95">📌 تثبيت</button>
+                        <button onclick="showMuteModal('${msg.user}')" class="bg-orange-600 hover:bg-orange-700 px-3 py-1 rounded-lg text-xs font-bold active:scale-95">🔇 كتم</button>
+                        <button onclick="kickUser('${msg.user}')" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded-lg text-xs font-bold active:scale-95">👢 طرد</button>
+                    </div>
+                `;
+                const btnDiv = msgDiv.querySelector('.mod-buttons-placeholder');
+                if (btnDiv) btnDiv.innerHTML = modButtons;
+            }
+        })();
+        
+        const msgClass = isAnnouncement ? 'bg-gradient-to-r from-yellow-600 to-amber-600 pinned-msg' : (isOwn ? 'bg-gradient-to-r from-purple-600 to-pink-600' : 'bg-slate-700');
+        
+        msgDiv.innerHTML = `
+            <div class="max-w-[80%] ${msgClass} rounded-3xl px-5 py-3 shadow-lg">
+                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                    <span class="text-xl">${userIcon}</span>
+                    <span class="font-bold text-lg ${isAnnouncement ? 'text-yellow-100' : (isOwn ? 'text-yellow-200' : 'text-purple-300')}">${msg.user} ${userTag}</span>
+                    <span class="text-xs text-white/50 mr-auto">${time}</span>
+                </div>
+                <p class="text-white text-lg break-words">${escapeHtml(msg.text)}</p>
+                <div class="mod-buttons-placeholder"></div>
+            </div>
+        `;
+        container.appendChild(msgDiv);
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    window.pinMessage = async (msgKey, text, user) => {
+        if (!currentCountry || !currentRoom || !(hasGlobalModAccess() || await hasRoomModAccess(currentCountry, currentRoom, currentUser.name))) return;
+        await set(ref(db, `chats/${currentCountry}/${currentRoom}/pinned`), {
+            text: text,
+            user: user,
+            timestamp: Date.now(),
+            pinnedBy: currentUser.name
+        });
+    };
+
+    window.sendMessage = async () => {
+        const input = document.getElementById('messageInput');
+        const text = input.value.trim();
+        
+        if (!text || !currentCountry || !currentRoom) return;
+        
+        // Check mute status
+        await loadUserMuteStatus();
+        if (userMuteStatus && userMuteStatus.until > Date.now()) {
+            const remaining = Math.ceil((userMuteStatus.until - Date.now()) / 60000);
+            alert(`أنت مكتوم لمدة ${remaining} دقيقة`);
+            return;
+        }
+        
+        push(ref(db, `chats/${currentCountry}/${currentRoom}/messages`), {
+            user: currentUser.name,
+            icon: currentUser.icon,
+            tag: currentUser.tag || '',
+            text: text,
+            timestamp: Date.now()
+        });
+        
+        input.value = '';
+    };
+
+    window.sendGlobalAnnouncement = async () => {
+        if (!hasGlobalModAccess()) {
+            alert('ليس لديك صلاحية');
+            return;
+        }
+        
+        const input = document.getElementById('announcementInput');
+        const text = input.value.trim();
+        
+        if (!text) return;
+        
+        await set(ref(db, 'announcement'), text);
+        
+        // Send to all countries and rooms
+        const countriesSnap = await get(ref(db, 'countries'));
+        if (countriesSnap.exists()) {
+            const countries = countriesSnap.val();
+            for (const [country, countryData] of Object.entries(countries)) {
+                if (countryData.rooms) {
+                    for (const room of Object.keys(countryData.rooms)) {
+                        await push(ref(db, `chats/${country}/${room}/messages`), {
+                            user: 'الإعلان العام',
+                            icon: '📢',
+                            tag: '[إعلان]',
+                            text: text,
+                            timestamp: Date.now(),
+                            isAnnouncement: true
+                        });
+                    }
+                }
+            }
+        }
+        
+        input.value = '';
+        alert('تم إرسال الإعلان بنجاح ✅');
+    };
+
+    // Moderation Functions
+    window.showMuteModal = (userName) => {
+        muteTargetUser = userName;
+        document.getElementById('muteUserName').textContent = userName;
+        document.getElementById('muteModal').classList.remove('hidden');
+        document.getElementById('muteModal').classList.add('flex');
+    };
+
+    window.closeMuteModal = () => {
+        document.getElementById('muteModal').classList.add('hidden');
+        document.getElementById('muteModal').classList.remove('flex');
+        muteTargetUser = null;
+    };
+
+    window.confirmMute = async () => {
+        if (!muteTargetUser || !(hasGlobalModAccess() || await hasRoomModAccess(currentCountry, currentRoom, currentUser.name))) return;
+        
+        const duration = parseInt(document.getElementById('muteDuration').value);
+        if (!duration || duration < 1) {
+            alert('المدة غير صحيحة');
+            return;
+        }
+        
+        const until = Date.now() + (duration * 60000);
+        const muteData = {
+            until: until,
+            mutedBy: currentUser.name,
+            timestamp: Date.now(),
+            room: { country: currentCountry, room: currentRoom }
+        };
+        
+        await set(ref(db, `muted/${muteTargetUser.replace(/[.#$[\]]/g, '_')}`), muteData);
+        
+        alert(`تم كتم ${muteTargetUser} لمدة ${duration} دقيقة في الغرفة`);
+        closeMuteModal();
+    };
+
+    window.kickUser = async (userName) => {
+        if (!(hasGlobalModAccess() || await hasRoomModAccess(currentCountry, currentRoom, currentUser.name)) || !currentCountry || !currentRoom) return;
+        if (!confirm(`هل تريد طرد ${userName} من الغرفة؟`)) return;
+        
+        await remove(ref(db, `chats/${currentCountry}/${currentRoom}/online/${userName.replace(/[.#$[\]]/g, '_')}`));
+        alert(`تم طرد ${userName} من الغرفة`);
+    };
+
+    window.banUser = async (userName) => {
+        if (!hasGlobalModAccess()) {
+            alert('ليس لديك صلاحية الحظر التام');
+            return;
+        }
+        if (!confirm(`هل تريد حظر ${userName} من التطبيق نهائياً؟`)) return;
+        
+        // Add to banned list
+        await set(ref(db, `banned/${userName.replace(/[.#$[\]]/g, '_')}`), {
+            bannedBy: currentUser.name,
+            timestamp: Date.now()
+        });
+        
+        // Update member role
+        await update(ref(db, `members/${userName}`), { role: 'banned' });
+        
+        // Remove from all online lists
+        const countriesSnap = await get(ref(db, 'countries'));
+        if (countriesSnap.exists()) {
+            const countries = countriesSnap.val();
+            for (const [country, countryData] of Object.entries(countries)) {
+                if (countryData.rooms) {
+                    for (const room of Object.keys(countryData.rooms)) {
+                        await remove(ref(db, `chats/${country}/${room}/online/${userName.replace(/[.#$[\]]/g, '_')}`));
+                    }
+                }
+            }
+        }
+        
+        alert(`تم حظر ${userName} بنجاح`);
+    };
+
+    window.assignRoomModerator = async () => {
+        if (!hasGlobalModAccess()) {
+            alert('ليس لديك صلاحية');
+            return;
+        }
+        
+        const country = document.getElementById('modCountrySelect').value;
+        const room = document.getElementById('modRoomSelect').value;
+        const username = document.getElementById('modUsernameInput').value.trim();
+        
+        if (!country || !room || !username) {
+            alert('الرجاء ملء جميع الحقول');
+            return;
+        }
+        
+        const memberSnap = await get(ref(db, `members/${username}`));
+        if (!memberSnap.exists()) {
+            alert('المستخدم غير موجود');
+            return;
+        }
+        
+        await set(ref(db, `countries/${country}/rooms/${room}/moderators/${username.replace(/[.#$[\]]/g, '_')}`), {
+            name: username,
+            assignedBy: currentUser.name,
+            assignedAt: Date.now()
+        });
+        
+        document.getElementById('modUsernameInput').value = '';
+        alert(`تم تعيين ${username} مشرفاً على غرفة ${room} في ${country}`);
+    };
+
+    window.removeRoomModerator = async () => {
+        if (!hasGlobalModAccess()) {
+            alert('ليس لديك صلاحية');
+            return;
+        }
+        
+        const country = document.getElementById('modCountrySelect').value;
+        const room = document.getElementById('modRoomSelect').value;
+        const username = document.getElementById('modUsernameInput').value.trim();
+        
+        if (!country || !room || !username) {
+            alert('الرجاء ملء جميع الحقول');
+            return;
+        }
+        
+        await remove(ref(db, `countries/${country}/rooms/${room}/moderators/${username.replace(/[.#$[\]]/g, '_')}`));
+        
+        document.getElementById('modUsernameInput').value = '';
+        alert(`تم إلغاء إشراف ${username} من غرفة ${room}`);
+    };
+
+    // Room Settings Functions
+    let editRoomCountry = null;
+    let editRoomName = null;
+
+    window.showEditRoomModal = (country, room) => {
+        editRoomCountry = country;
+        editRoomName = room;
+        document.getElementById('editRoomTitle').textContent = `${country} > ${room}`;
+        
+        get(ref(db, `countries/${country}/rooms/${room}`)).then(snap => {
+            const data = snap.val() || {};
+            document.getElementById('editRoomWelcome').value = data.welcome || '';
+            if (data.theme) selectedRoomColor = data.theme;
+        });
+        
+        document.getElementById('editRoomModal').classList.remove('hidden');
+        document.getElementById('editRoomModal').classList.add('flex');
+    };
+
+    window.closeEditRoomModal = () => {
+        document.getElementById('editRoomModal').classList.add('hidden');
+        document.getElementById('editRoomModal').classList.remove('flex');
+        editRoomCountry = null;
+        editRoomName = null;
+    };
+
+    window.selectRoomColor = (color) => {
+        selectedRoomColor = color;
+    };
+
+    window.saveRoomSettings = async () => {
+        if (!editRoomCountry || !editRoomName || !hasGlobalModAccess()) return;
+        
+        const welcome = document.getElementById('editRoomWelcome').value.trim();
+        await update(ref(db, `countries/${editRoomCountry}/rooms/${editRoomName}`), {
+            welcome: welcome || null,
+            theme: selectedRoomColor
+        });
+        
+        alert('تم حفظ إعدادات الغرفة ✅');
+        closeEditRoomModal();
+    };
+
+    // Admin Functions
+    window.openAdminPanel = () => {
+        if (!hasGlobalModAccess()) return;
+        document.getElementById('adminPanel').classList.remove('hidden');
+        document.getElementById('adminPanel').classList.add('flex');
+        loadAdminMembersList();
+    };
+
+    window.closeAdminPanel = () => {
+        document.getElementById('adminPanel').classList.add('hidden');
+        document.getElementById('adminPanel').classList.remove('flex');
+    };
+
+    window.addCountryWithRooms = () => {
+        if (!hasGlobalModAccess()) {
+            alert('ليس لديك صلاحية');
+            return;
+        }
+        
+        const countryInput = document.getElementById('newCountryInput');
+        const roomsInput = document.getElementById('newRoomInput');
+        const expiryInput = document.getElementById('expiryDateInput');
+        
+        const country = countryInput.value.trim();
+        const roomsText = roomsInput.value.trim();
+        const expiry = expiryInput.value;
+        
+        if (country.length < 2) {
+            alert('اسم الدولة قصير جداً');
+            return;
+        }
+        
+        const rooms = roomsText ? roomsText.split(',').map(r => r.trim()).filter(r => r) : ['عام'];
+        const roomsObj = {};
+        rooms.forEach(room => {
+            roomsObj[room] = { created: Date.now() };
+        });
+        
+        const countryData = {
+            name: country,
+            created: serverTimestamp(),
+            addedBy: currentUser.name,
+            rooms: roomsObj
+        };
+        
+        if (expiry) {
+            countryData.expiry = expiry;
+        }
+        
+        set(ref(db, `countries/${country}`), countryData).then(() => {
+            countryInput.value = '';
+            roomsInput.value = '';
+            expiryInput.value = '';
+            alert(`تم إضافة ${country} مع ${rooms.length} غرفة بنجاح ✅`);
+        });
+    };
+
+    window.showEditCountry = (country) => {
+        editingCountry = country;
+        document.getElementById('editCountryName').value = country;
+        document.getElementById('editCountryModal').classList.remove('hidden');
+        document.getElementById('editCountryModal').classList.add('flex');
+    };
+
+    window.closeEditCountryModal = () => {
+        document.getElementById('editCountryModal').classList.add('hidden');
+        document.getElementById('editCountryModal').classList.remove('flex');
+        editingCountry = null;
+    };
+
+    window.saveCountryEdit = async () => {
+        const newName = document.getElementById('editCountryName').value.trim();
+        
+        if (newName.length < 2) {
+            alert('اسم الدولة قصير جداً');
+            return;
+        }
+        
+        if (newName === editingCountry) {
+            closeEditCountryModal();
+            return;
+        }
+        
+        const oldRef = ref(db, `countries/${editingCountry}`);
+        onValue(oldRef, async (snapshot) => {
+            const data = snapshot.val();
+            if (!data) return;
+            
+            await set(ref(db, `countries/${newName}`), data);
+            await remove(ref(db, `countries/${editingCountry}`));
+            
+            const oldChatRef = ref(db, `chats/${editingCountry}`);
+            onValue(oldChatRef, async (chatSnapshot) => {
+                const chatData = chatSnapshot.val();
+                if (chatData) {
+                    await set(ref(db, `chats/${newName}`), chatData);
+                    await remove(ref(db, `chats/${editingCountry}`));
+                }
+            }, { onlyOnce: true });
+            
+            alert(`تم تعديل اسم الدولة بنجاح ✅`);
+            closeEditCountryModal();
+        }, { onlyOnce: true });
+    };
+
+    window.deleteCountry = async (country) => {
+        if (!hasGlobalModAccess()) {
+            alert('ليس لديك صلاحية');
+            return;
+        }
+        if (!confirm(`هل أنت متأكد من حذف دولة ${country}؟\nسيتم حذف جميع الغرف والرسائل!`)) return;
+        
+        await remove(ref(db, `countries/${country}`));
+        await remove(ref(db, `chats/${country}`));
+        alert(`تم حذف ${country} بنجاح`);
+        
+        if (currentCountry === country) {
+            backToCountries();
+        }
+    };
+
+    // UI Functions
+    window.toggleSidebar = () => {
+        const sidebar = document.getElementById('sidebar');
+        sidebar.classList.toggle('translate-x-full');
+    };
+
+    window.showUserMenu = () => {
+        const displayName = currentUser.tag ? `${currentUser.name} ${currentUser.tag}` : currentUser.name;
+        const roleText = {
+            'guest': 'زائر',
+            'member': 'عضو',
+            'owner': 'مالك',
+            'superadmin': 'سوبر أدمن'
+        };
+        
+        if (confirm(`${displayName}\n${roleText[currentUser.role]}\n\nتسجيل خروج؟`)) {
+            location.reload();
+        }
+    };
+
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', (e) => {
+        const now = Date.now();
+        if (now - lastTouchEnd <= 300) {
+            e.preventDefault();
+        }
+        lastTouchEnd = now;
+    }, false);
+</script>
+</body>
+</html>
