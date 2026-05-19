@@ -9,24 +9,24 @@
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;900&display=swap');
     * { font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; }
     body { overscroll-behavior: none; touch-action: pan-y; }
-   .marquee { white-space: nowrap; overflow: hidden; }
-   .marquee-content { display: inline-block; padding-left: 100%; animation: marquee 20s linear infinite; }
+  .marquee { white-space: nowrap; overflow: hidden; }
+  .marquee-content { display: inline-block; padding-left: 100%; animation: marquee 20s linear infinite; }
     @keyframes marquee { 0% { transform: translate3d(-100%, 0, 0); } 100% { transform: translate3d(0, 0, 0); } }
-   .scroll-smooth { scroll-behavior: smooth; }
-   .hide-scrollbar::-webkit-scrollbar { display: none; }
-   .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-   .message-appear { animation: slideIn 0.2s ease-out; }
+  .scroll-smooth { scroll-behavior: smooth; }
+  .hide-scrollbar::-webkit-scrollbar { display: none; }
+  .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .message-appear { animation: slideIn 0.2s ease-out; }
     @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-   .ripple { position: relative; overflow: hidden; }
-   .ripple:after { content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0; border-radius: 50%; background: rgba(255,255,255,0.5); transform: translate(-50%, -50%); transition: width 0.6s, height 0.6s; }
-   .ripple:active:after { width: 300px; height: 300px; }
-   .pinned-msg { border-right: 4px solid #eab308; }
-   .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
-   .owner-name { background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3); background-size: 400% 400%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: rainbow 3s ease infinite; font-weight: 900; }
+  .ripple { position: relative; overflow: hidden; }
+  .ripple:after { content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0; border-radius: 50%; background: rgba(255,255,255,0.5); transform: translate(-50%, -50%); transition: width 0.6s, height 0.6s; }
+  .ripple:active:after { width: 300px; height: 300px; }
+  .pinned-msg { border-right: 4px solid #eab308; }
+  .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
+  .owner-name { background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3); background-size: 400% 400%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: rainbow 3s ease infinite; font-weight: 900; }
     @keyframes rainbow { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
-   .owner-crown { display: inline-block; animation: crownFloat 2s ease-in-out infinite; }
+  .owner-crown { display: inline-block; animation: crownFloat 2s ease-in-out infinite; }
     @keyframes crownFloat { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-5px); } }
-   .message-selected { background: rgba(168, 85, 247, 0.3)!important; }
+  .message-selected { background: rgba(168, 85, 247, 0.3)!important; }
     :root { --room-grad: linear-gradient(135deg, #9333ea 0%, #ec4899 100%); }
 </style>
 </head>
@@ -130,7 +130,6 @@
                     <button onclick="selectRoomColor('#dc2626,#f97316')" class="h-14 rounded-xl bg-gradient-to-br from-red-600 to-orange-500 active:scale-95"></button>
                     <button onclick="selectRoomColor('#d97706,#eab308')" class="h-14 rounded-xl bg-gradient-to-br from-amber-600 to-yellow-500 active:scale-95"></button>
                 </div>
-            </div>
             <div class="flex gap-3">
                 <button onclick="saveRoomSettings()" class="ripple flex-1 bg-purple-600 hover:bg-purple-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">حفظ</button>
                 <button onclick="closeEditRoomModal()" class="ripple flex-1 bg-slate-700 hover:bg-slate-600 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">إلغاء</button>
@@ -218,11 +217,14 @@
     const royalIcons = ['🌸', '❤️', '☕', '💀', '😊'];
     const PROTECTED_OWNERS = ['الدعم الفني', 'Admin', 'Owner', 'Royal Master'];
     const RESERVED_ROLE_NAMES = ['المالك', 'سوبر أدمن', 'مشرف', 'ادمن', 'moderator', 'admin', 'owner'];
-    let currentUser = null, currentCountry = null, currentRoom = null, messagesRef = null, onlineRef = null, countriesRef = null, editingCountry = null, muteTargetUser = null, userMuteStatus = null, selectedRoomColor = '#9333ea,#ec4899', currentRoomMods = {}, deleteMode = false, selectedMessages = new Set();
+    let currentUser = null, currentCountry = null, currentRoom = null, messagesRef = null, onlineRef = null, countriesRef = null, editingCountry = null, muteTargetUser = null, userMuteStatus = null, selectedRoomColor = '#9333ea,#ec4899', currentRoomMods = {}, deleteMode = false, selectedMessages = new Set(), currentModPerms = {};
+
     window.onload = () => { countriesRef = ref(db, 'countries'); loadCountries(); loadGlobalAnnouncement(); checkBannedStatus(); };
+
     window.loginAsGuest = () => { const guestNum = Math.floor(Math.random() * 9000) + 1000; currentUser = { name: `زائر${guestNum}`, role: 'guest', icon: '👤' }; startApp(); };
     window.showMemberLogin = () => { document.getElementById('memberModal').classList.remove('hidden'); document.getElementById('memberModal').classList.add('flex'); };
     window.closeMemberModal = () => { document.getElementById('memberModal').classList.add('hidden'); document.getElementById('memberModal').classList.remove('flex'); };
+
     window.loginMember = async () => {
         const name = document.getElementById('memberName').value.trim(), pass = document.getElementById('memberPass').value;
         if (name.length < 3) { alert('الاسم يجب أن يكون 3 أحرف على الأقل'); return; }
@@ -241,14 +243,17 @@
         await update(ref(db, `members/${name}`), { name: name, password: pass, role: userRole, icon: userIcon, lastLogin: serverTimestamp() });
         closeMemberModal(); startApp();
     };
+
     window.showOwnerLogin = () => { document.getElementById('ownerModal').classList.remove('hidden'); document.getElementById('ownerModal').classList.add('flex'); };
     window.closeOwnerModal = () => { document.getElementById('ownerModal').classList.add('hidden'); document.getElementById('ownerModal').classList.remove('flex'); };
+
     window.loginOwner = () => {
         const name = document.getElementById('ownerName').value.trim(), pass = document.getElementById('ownerPass').value;
         if (name === 'الدعم الفني' && pass === '19952005') { currentUser = { name: name, role: 'owner', icon: '👑' }; closeOwnerModal(); startApp(); }
         else if (name === 'Royal Master' && pass === 'super2024') { currentUser = { name: name, role: 'superadmin', icon: '💎' }; closeOwnerModal(); startApp(); }
         else { alert('بيانات الدخول غير صحيحة'); }
     };
+
     function startApp() {
         checkBannedStatus().then(isBanned => {
             if (isBanned) { alert('تم حظرك من التطبيق'); location.reload(); return; }
@@ -258,7 +263,9 @@
             if (canUnpin()) document.getElementById('unpinBtn').classList.remove('hidden');
         });
     }
+
     async function checkBannedStatus() { if (!currentUser) return false; const snap = await get(ref(db, `banned/${currentUser.name.replace(/[.#$[\]]/g, '_')}`)); return snap.exists(); }
+
     async function loadUserMuteStatus() {
         if (!currentUser) return;
         const snap = await get(ref(db, `muted/${currentUser.name.replace(/[.#$[\]]/g, '_')}`));
@@ -269,5 +276,29 @@
             else { await remove(ref(db, `muted/${currentUser.name.replace(/[.#$[\]]/g, '_')}`)); userMuteStatus = null; }
         }
     }
+
     function updateUserInfo() {
         const isOwner = currentUser.name === 'الدعم الفني';
+        const displayName = isOwner? `<span class="owner-name">${currentUser.name}</span> <span class="owner-crown">👑</span>` : currentUser.name;
+        document.getElementById('currentUserName').innerHTML = displayName;
+        document.getElementById('userAvatar').textContent = currentUser.icon;
+        const roleText = { 'guest': 'زائر', 'member': 'عضو', 'owner': 'مالك', 'superadmin': 'سوبر أدمن', 'moderator': 'مشرف' };
+        document.getElementById('currentUserRole').textContent = roleText[currentUser.role] || 'مستخدم';
+    }
+
+    function hasGlobalModAccess() { return currentUser && (currentUser.role === 'owner' || currentUser.role === 'superadmin'); }
+    async function isRoomModerator(country, room, username) { const snap = await get(ref(db, `countries/${country}/rooms/${room}/moderators/${username.replace(/[.#$[\]]/g, '_')}`)); return snap.exists(); }
+    async function getModPermissions(country, room, username) { const snap = await get(ref(db, `countries/${country}/rooms/${room}/moderators/${username.replace(/[.#$[\]]/g, '_')}`)); return snap.exists()? snap.val().perms || {} : {}; }
+    async function hasRoomModAccess(country, room, username) { if (hasGlobalModAccess()) return true; if (!username) return false; return await isRoomModerator(country, room, username); }
+    function canUnpin() { return hasGlobalModAccess() || (currentUser && currentRoomMods[currentUser.name]); }
+
+    function loadCountries() {
+        onValue(countriesRef, (snapshot) => {
+            const countries = snapshot.val() || {};
+            const list = document.getElementById('countriesList');
+            list.innerHTML = '';
+            if (Object.keys(countries).length === 0) { list.innerHTML = '<p class="text-center text-purple-300 py-8">لا توجد دول حالياً</p>'; return; }
+            Object.entries(countries).forEach(([country, data]) => {
+                const btn = document.createElement('button');
+                btn.className = 'ripple w-full bg-gradient-to-r from-slate-800 to-slate-700 hover:from-purple-800 hover:to-pink-800 text-white text-xl font-bold py-5 rounded-2xl transition-all shadow-lg active:scale-95 flex items-center justify-between px-6';
+                btn.innerHTML = `<span
