@@ -1,1072 +1,172 @@
-                        </div>
-                        <button onclick="unpinMessage()" class="bg-red-600/50 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm active:scale-95 hidden" id="unpinBtn">إلغاء</button>
-                    </div>
-                </div>
-                <div id="messagesContainer" class="flex-1 overflow-y-auto hide-scrollbar p-4 space-y-3 scroll-smooth"></div>
-                
-                <!-- Input Area -->
-                <div class="bg-slate-900/90 backdrop-blur-lg border-t-2 border-purple-500/30 p-3 safe-area-bottom">
-                    <div class="flex gap-2">
-                        <input 
-                            id="messageInput" 
-                            type="text" 
-                            placeholder="اكتب رسالتك هنا..."
-                            class="flex-1 bg-slate-800 text-white text-xl px-6 py-5 rounded-2xl border-2 border-slate-700 focus:border-purple-500 outline-none"
-                            maxlength="500"
-                            onkeypress="if(event.key==='Enter') sendMessage()"
-                        >
-                        <button onclick="sendMessage()" class="ripple bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-5 rounded-2xl font-bold text-xl active:scale-95 shadow-lg">
-                            إرسال
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </main>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>دردشة عربية</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+* { font-family: 'Cairo', sans-serif; }
+.owner-name { 
+  background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3); 
+  background-size: 200% auto;
+  -webkit-background-clip: text; 
+  -webkit-text-fill-color: transparent; 
+  animation: rainbow 3s linear infinite; 
+  font-weight: 900; 
+}
+@keyframes rainbow { 
+  to { background-position: 200% center; } 
+}
+.chat-bg {
+  background-image: linear-gradient(rgba(17,24,39,0.95), rgba(17,24,39,0.95)), 
+  url('https://i.ibb.co/6n0hLxP/bg-pattern.png');
+}
+</style>
+</head>
+<body class="bg-gray-900 text-white chat-bg">
+<div id="app" class="h-screen flex flex-col">
+  
+  <!-- شاشة تسجيل الدخول -->
+  <div id="login" class="min-h-screen flex items-center justify-center p-4">
+    <div class="bg-gray-800/90 backdrop-blur p-8 rounded-2xl w-full max-w-md border border-purple-500/30">
+      <h1 class="text-3xl font-bold text-center mb-2 text-purple-400">دردشة عربية</h1>
+      <p class="text-center text-gray-400 mb-8">مرحباً بك في غرفة الدردشة</p>
+      <input id="username" type="text" placeholder="اسم المستخدم" class="w-full p-3 mb-4 bg-gray-700 rounded-lg text-white border border-gray-600 focus:border-purple-500 outline-none">
+      <input id="password" type="password" placeholder="كلمة المرور - للمالك فقط" class="w-full p-3 mb-6 bg-gray-700 rounded-lg text-white border border-gray-600 focus:border-purple-500 outline-none">
+      <button onclick="login()" class="w-full p-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-bold transition">دخول للدردشة</button>
+      <p class="text-xs text-gray-500 mt-4 text-center">الاعضاء يدخلون بالاسم فقط</p>
     </div>
+  </div>
+
+  <!-- شاشة الدردشة -->
+  <div id="chat" class="hidden h-screen flex-col">
+    <div class="bg-gray-800/90 backdrop-blur p-3 flex justify-between items-center border-b border-gray-700">
+      <div>
+        <h2 class="font-bold text-lg">غرفة الدردشة</h2>
+        <span id="userDisplay" class="text-sm"></span>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="clearChat()" id="clearBtn" class="hidden px-3 py-1 bg-red-600 hover:bg-red-700 rounded-lg text-sm">مسح الكل</button>
+        <button onclick="logout()" class="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm">خروج</button>
+      </div>
+    </div>
+    
+    <div id="messages" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+    
+    <div class="bg-gray-800/90 backdrop-blur p-3 flex gap-2 border-t border-gray-700">
+      <input id="msgInput" type="text" placeholder="اكتب رسالتك..." class="flex-1 p-3 bg-gray-700 rounded-lg border border-gray-600 focus:border-purple-500 outline-none">
+      <button onclick="sendMsg()" class="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-bold transition">ارسال</button>
+    </div>
+  </div>
 </div>
 
-<script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
-    import { getDatabase, ref, push, onValue, set, remove, off, onDisconnect, serverTimestamp, update, get } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
-
-    const firebaseConfig = {
-        databaseURL: "https://hashed-cht-default-rtdb.firebaseio.com/"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    // Royal names with icons
-    const royalIcons = ['🌸', '❤️', '☕', '💀', '😊'];
-    const royalUsers = {
-        'أميرة': '🌸',
-        'ملكة': '👑',
-        'سلطان': '👑',
-        'أمير': '👑',
-        'شيخة': '🌸'
-    };
-
-    // Protected names and roles
-    const PROTECTED_OWNERS = ['الدعم الفني', 'Admin', 'Owner'];
-    const PROTECTED_SUPER = ['Royal Master'];
-    const RESERVED_ROLE_NAMES = ['المالك', 'سوبر أدمن', 'مشرف', 'ادمن', 'moderator', 'admin', 'owner'];
-
-    // Global state
-    let currentUser = null;
-    let currentCountry = null;
-    let currentRoom = null;
-    let messagesRef = null;
-    let onlineRef = null;
-    let countriesRef = null;
-    let editingCountry = null;
-    let muteTargetUser = null;
-    let userMuteStatus = null;
-    let selectedRoomColor = '#9333ea,#ec4899';
-    let currentRoomMods = [];
-    let msgCountRef = null;
-
-    // Initialize
-    window.onload = () => {
-        countriesRef = ref(db, 'countries');
-        loadCountries();
-        loadGlobalAnnouncement();
-        checkBannedStatus();
-    };
-
-    // Login Functions
-    window.loginAsGuest = () => {
-        const guestNum = Math.floor(Math.random() * 9000) + 1000;
-        currentUser = {
-            name: `زائر${guestNum}`,
-            role: 'guest',
-            icon: '👤'
-        };
-        startApp();
-    };
-
-    window.showMemberLogin = () => {
-        document.getElementById('memberModal').classList.remove('hidden');
-        document.getElementById('memberModal').classList.add('flex');
-    };
-
-    window.closeMemberModal = () => {
-        document.getElementById('memberModal').classList.add('hidden');
-        document.getElementById('memberModal').classList.remove('flex');
-    };
-
-    window.loginMember = async () => {
-        const name = document.getElementById('memberName').value.trim();
-        const pass = document.getElementById('memberPass').value;
-        
-        if (name.length < 3) {
-            alert('الاسم يجب أن يكون 3 أحرف على الأقل');
-            return;
-        }
-        if (pass.length < 4) {
-            alert('كلمة المرور يجب أن تكون 4 أحرف على الأقل');
-            return;
-        }
-
-        // Check protected names
-        if (PROTECTED_OWNERS.includes(name) || PROTECTED_SUPER.includes(name) || RESERVED_ROLE_NAMES.some(r => name.includes(r))) {
-            alert('هذا الاسم محمي ولا يمكن استخدامه');
-            return;
-        }
-
-        // Check if user exists and get role
-        const memberSnap = await get(ref(db, `members/${name}`));
-        let userRole = 'member';
-        let userIcon = royalUsers[name] || royalIcons[Math.floor(Math.random() * royalIcons.length)];
-        let userTag = '';
-
-        if (memberSnap.exists()) {
-            const data = memberSnap.val();
-            if (data.password && data.password !== pass) {
-                alert('كلمة المرور غير صحيحة');
-                return;
-            }
-            userRole = data.role || 'member';
-            if (data.icon) userIcon = data.icon;
-            if (userRole === 'banned') {
-                alert('تم حظر حسابك من الدردشة');
-                return;
-            }
-        }
-
-        currentUser = {
-            name: name,
-            role: userRole,
-            icon: userIcon,
-            tag: userTag
-        };
-        
-        const memberData = {
-            name: name,
-            password: pass,
-            role: userRole,
-            icon: userIcon,
-            lastLogin: serverTimestamp()
-        };
-        
-        await update(ref(db, `members/${name}`), memberData);
-        
-        closeMemberModal();
-        startApp();
-    };
-
-    window.showOwnerLogin = () => {
-        document.getElementById('ownerModal').classList.remove('hidden');
-        document.getElementById('ownerModal').classList.add('flex');
-    };
-
-    window.closeOwnerModal = () => {
-        document.getElementById('ownerModal').classList.add('hidden');
-        document.getElementById('ownerModal').classList.remove('flex');
-    };
-
-    window.loginOwner = () => {
-        const name = document.getElementById('ownerName').value.trim();
-        const pass = document.getElementById('ownerPass').value;
-        
-        if (name === 'الدعم الفني' && pass === '19952005') {
-            currentUser = {
-                name: name,
-                role: 'owner',
-                icon: '👑',
-                tag: '[المالك 👑]'
-            };
-            closeOwnerModal();
-            startApp();
-        } else if (name === 'Royal Master' && pass === 'super2024') {
-            currentUser = {
-                name: name,
-                role: 'superadmin',
-                icon: '💎',
-                tag: '[سوبر أدمن 💎]'
-            };
-            closeOwnerModal();
-            startApp();
-        } else {
-            alert('بيانات الدخول غير صحيحة');
-        }
-    };
-
-    function startApp() {
-        checkBannedStatus().then(isBanned => {
-            if (isBanned) {
-                alert('تم حظرك من التطبيق');
-                location.reload();
-                return;
-            }
-            
-            document.getElementById('loginModal').classList.add('hidden');
-            document.getElementById('app').classList.remove('hidden');
-            
-            updateUserInfo();
-            loadUserMuteStatus();
-            
-            if (hasGlobalModAccess()) {
-                document.getElementById('adminBtn').classList.remove('hidden');
-            }
-            
-            if (canUnpin()) {
-                document.getElementById('unpinBtn').classList.remove('hidden');
-            }
-        });
-    }
-
-    async function checkBannedStatus() {
-        if (!currentUser) return false;
-        const snap = await get(ref(db, `banned/${currentUser.name.replace(/[.#$[\]]/g, '_')}`));
-        return snap.exists();
-    }
-
-    async function loadUserMuteStatus() {
-        if (!currentUser) return;
-        const snap = await get(ref(db, `muted/${currentUser.name.replace(/[.#$[\]]/g, '_')}`));
-        if (snap.exists()) {
-            const data = snap.val();
-            // Check if mute is room-specific
-            if (currentCountry && currentRoom) {
-                if (data.room && (data.room.country !== currentCountry || data.room.room !== currentRoom)) {
-                    userMuteStatus = null;
-                    return;
-                }
-            }
-            if (data.until && data.until > Date.now()) {
-                userMuteStatus = data;
-            } else {
-                await remove(ref(db, `muted/${currentUser.name.replace(/[.#$[\]]/g, '_')}`));
-                userMuteStatus = null;
-            }
-        }
-    }
-
-    function updateUserInfo() {
-        const displayName = currentUser.tag ? `${currentUser.name} ${currentUser.tag}` : currentUser.name;
-        document.getElementById('currentUserName').textContent = displayName;
-        document.getElementById('userAvatar').textContent = currentUser.icon;
-        
-        const roleText = {
-            'guest': 'زائر',
-            'member': 'عضو ✨',
-            'owner': 'مالك 👑',
-            'superadmin': 'سوبر أدمن 💎'
-        };
-        document.getElementById('currentUserRole').textContent = roleText[currentUser.role] || 'مستخدم';
-    }
-
-    function hasAdminAccess() {
-        return currentUser && (currentUser.role === 'owner' || currentUser.role === 'superadmin');
-    }
-
-    function hasGlobalModAccess() {
-        return currentUser && (currentUser.role === 'owner' || currentUser.role === 'superadmin');
-    }
-
-    async function isRoomModerator(country, room, username) {
-        const snap = await get(ref(db, `countries/${country}/rooms/${room}/moderators/${username.replace(/[.#$[\]]/g, '_')}`));
-        return snap.exists();
-    }
-
-    async function hasRoomModAccess(country, room, username) {
-        if (hasGlobalModAccess()) return true;
-        if (!username) return false;
-        return await isRoomModerator(country, room, username);
-    }
-
-    function canUnpin() {
-        return hasGlobalModAccess() || (currentUser && currentRoomMods.includes(currentUser.name));
-    }
-
-    // Countries Management
-    function loadCountries() {
-        onValue(countriesRef, (snapshot) => {
-            const countries = snapshot.val() || {};
-            const list = document.getElementById('countriesList');
-            list.innerHTML = '';
-            
-            if (Object.keys(countries).length === 0) {
-                list.innerHTML = '<p class="text-center text-purple-300 py-8">لا توجد دول حالياً</p>';
-                return;
-            }
-            
-            Object.entries(countries).forEach(([country, data]) => {
-                const btn = document.createElement('button');
-                btn.className = 'ripple w-full bg-gradient-to-r from-slate-800 to-slate-700 hover:from-purple-800 hover:to-pink-800 text-white text-xl font-bold py-5 rounded-2xl transition-all shadow-lg active:scale-95 flex items-center justify-between px-6';
-                btn.innerHTML = `
-                    <span>${country}</span>
-                    <span class="text-2xl">${data.rooms ? Object.keys(data.rooms).length : 0} غرفة</span>
-                `;
-                btn.onclick = () => selectCountry(country);
-                list.appendChild(btn);
-            });
-
-            updateAdminCountriesList(countries);
-            populateModSelectors(countries);
-        });
-    }
-
-    function populateModSelectors(countries) {
-        const countrySelect = document.getElementById('modCountrySelect');
-        if (!countrySelect) return;
-        
-        countrySelect.innerHTML = '<option value="">اختر الدولة</option>';
-        Object.keys(countries).forEach(country => {
-            const option = document.createElement('option');
-            option.value = country;
-            option.textContent = country;
-            countrySelect.appendChild(option);
-        });
-
-        countrySelect.onchange = () => {
-            const selectedCountry = countrySelect.value;
-            const roomSelect = document.getElementById('modRoomSelect');
-            roomSelect.innerHTML = '<option value="">اختر الغرفة</option>';
-            
-            if (selectedCountry && countries[selectedCountry]?.rooms) {
-                Object.keys(countries[selectedCountry].rooms).forEach(room => {
-                    const option = document.createElement('option');
-                    option.value = room;
-                    option.textContent = room;
-                    roomSelect.appendChild(option);
-                });
-            }
-        };
-    }
-
-    function loadGlobalAnnouncement() {
-        onValue(ref(db, 'announcement'), (snapshot) => {
-            const text = snapshot.val();
-            if (text) {
-                document.getElementById('globalMarquee').textContent = `📢 ${text} 📢`;
-            }
-        });
-    }
-
-    function updateAdminCountriesList(countries) {
-        const list = document.getElementById('adminCountriesList');
-        if (!list) return;
-        
-        list.innerHTML = '';
-        Object.entries(countries).forEach(([country, data]) => {
-            const div = document.createElement('div');
-            div.className = 'bg-slate-700/50 rounded-xl p-4';
-            div.innerHTML = `
-                <div class="flex items-center justify-between gap-2 mb-3">
-                    <div class="flex-1">
-                        <p class="font-bold text-lg">${country}</p>
-                        <p class="text-sm text-purple-300">${data.rooms ? Object.keys(data.rooms).length : 0} غرفة</p>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="showEditCountry('${country}')" class="bg-blue-600 hover:bg-blue-700 px-4 py-3 rounded-xl font-bold active:scale-95">✏️</button>
-                        <button onclick="deleteCountry('${country}')" class="bg-red-600 hover:bg-red-700 px-4 py-3 rounded-xl font-bold active:scale-95">🗑️</button>
-                    </div>
-                </div>
-            `;
-            if (data.rooms && hasGlobalModAccess()) {
-                const roomsDiv = document.createElement('div');
-                roomsDiv.className = 'space-y-2 mt-2';
-                Object.keys(data.rooms).forEach(room => {
-                    const roomBtn = document.createElement('button');
-                    roomBtn.className = 'w-full bg-slate-600 hover:bg-slate-500 px-4 py-3 rounded-lg text-sm font-bold active:scale-95 text-right flex items-center justify-between';
-                    roomBtn.innerHTML = `<span>${room}</span><span>⚙️</span>`;
-                    roomBtn.onclick = () => showEditRoomModal(country, room);
-                    roomsDiv.appendChild(roomBtn);
-                });
-                div.appendChild(roomsDiv);
-            }
-            list.appendChild(div);
-        });
-    }
-
-    function loadAdminMembersList() {
-        onValue(ref(db, 'members'), (snapshot) => {
-            const members = snapshot.val() || {};
-            const list = document.getElementById('adminMembersList');
-            if (!list) return;
-            
-            list.innerHTML = '';
-            
-            if (Object.keys(members).length === 0) {
-                list.innerHTML = '<p class="text-center text-purple-300 py-4">لا يوجد أعضاء</p>';
-                return;
-            }
-            
-            Object.entries(members).forEach(([name, data]) => {
-                const role = data.role || 'member';
-                if (role === 'banned' || role === 'owner' || role === 'superadmin') return;
-                
-                const div = document.createElement('div');
-                div.className = 'bg-slate-700/50 rounded-xl p-4';
-                
-                div.innerHTML = `
-                    <div class="flex items-center justify-between mb-3">
-                        <div class="flex-1">
-                            <p class="font-bold text-lg">${data.icon || '👤'} ${name}</p>
-                            <p class="text-sm text-cyan-300">عضو</p>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        ${hasGlobalModAccess() ? `
-                            <button onclick="showMuteModal('${name}')" class="bg-yellow-600 hover:bg-yellow-700 px-3 py-2 rounded-lg text-sm font-bold active:scale-95">كتم</button>
-                            <button onclick="banUser('${name}')" class="bg-red-600 hover:bg-red-700 px-3 py-2 rounded-lg text-sm font-bold active:scale-95">حظر</button>
-                        ` : ''}
-                    </div>
-                `;
-                list.appendChild(div);
-            });
-        });
-    }
-
-    window.selectCountry = (country) => {
-        currentCountry = country;
-        currentRoom = null;
-        
-        document.getElementById('sidebarTitle').textContent = country;
-        document.getElementById('breadcrumb').textContent = country;
-        document.getElementById('backToCountries').classList.remove('hidden');
-        document.getElementById('countriesList').classList.add('hidden');
-        document.getElementById('roomsList').classList.remove('hidden');
-        
-        loadRooms(country);
-        showExpiryForAdmin(country);
-    };
-
-    function showExpiryForAdmin(country) {
-        if (!hasGlobalModAccess()) {
-            document.getElementById('expiryInfo').classList.add('hidden');
-            return;
-        }
-        
-        onValue(ref(db, `countries/${country}`), (snapshot) => {
-            const data = snapshot.val();
-            if (data && data.expiry) {
-                const expiryDate = new Date(data.expiry);
-                document.getElementById('expiryInfo').textContent = `انتهاء الصلاحية: ${expiryDate.toLocaleDateString('ar-SA')}`;
-                document.getElementById('expiryInfo').classList.remove('hidden');
-            } else {
-                document.getElementById('expiryInfo').classList.add('hidden');
-            }
-        }, { onlyOnce: true });
-    }
-
-    function loadRooms(country) {
-        onValue(ref(db, `countries/${country}/rooms`), (snapshot) => {
-            const rooms = snapshot.val() || {};
-            const list = document.getElementById('roomsList');
-            list.innerHTML = '';
-            
-            if (Object.keys(rooms).length === 0) {
-                list.innerHTML = '<p class="text-center text-purple-300 py-8">لا توجد غرف في هذه الدولة</p>';
-                return;
-            }
-            
-            Object.keys(rooms).forEach(room => {
-                const btn = document.createElement('button');
-                btn.className = 'ripple w-full bg-gradient-to-r from-slate-800 to-slate-700 hover:from-cyan-800 hover:to-blue-800 text-white text-xl font-bold py-5 rounded-2xl transition-all shadow-lg active:scale-95 flex items-center justify-between px-6';
-                btn.innerHTML = `
-                    <span>${room}</span>
-                    <span class="text-2xl">💬</span>
-                `;
-                btn.onclick = () => selectRoom(country, room);
-                list.appendChild(btn);
-            });
-        });
-    }
-
-    window.backToCountries = () => {
-        currentCountry = null;
-        currentRoom = null;
-        currentRoomMods = [];
-        document.getElementById('sidebarTitle').textContent = 'الدول المتاحة';
-        document.getElementById('breadcrumb').textContent = 'الدول';
-        document.getElementById('backToCountries').classList.add('hidden');
-        document.getElementById('countriesList').classList.remove('hidden');
-        document.getElementById('roomsList').classList.add('hidden');
-        document.getElementById('expiryInfo').classList.add('hidden');
-        document.getElementById('welcomeScreen').classList.remove('hidden');
-        document.getElementById('chatScreen').classList.add('hidden');
-        document.getElementById('msgCount').textContent = 'الرسائل: 0';
-        
-        if (messagesRef) off(messagesRef);
-        if (onlineRef) {
-            remove(onlineRef);
-            off(onlineRef);
-        }
-        if (msgCountRef) off(msgCountRef);
-    };
-
-    window.selectRoom = (country, room) => {
-        if (currentRoom === room && currentCountry === country) {
-            toggleSidebar();
-            return;
-        }
-        
-        if (messagesRef) off(messagesRef);
-        if (onlineRef) {
-            remove(onlineRef);
-            off(onlineRef);
-        }
-        if (msgCountRef) off(msgCountRef);
-        
-        currentCountry = country;
-        currentRoom = room;
-        document.getElementById('breadcrumb').textContent = `${country} > ${room}`;
-        document.getElementById('welcomeScreen').classList.add('hidden');
-        document.getElementById('chatScreen').classList.remove('hidden');
-        
-        joinRoom(country, room);
-        toggleSidebar();
-    };
-
-    function joinRoom(country, room) {
-        const messagesContainer = document.getElementById('messagesContainer');
-        messagesContainer.innerHTML = '';
-        
-        loadRoomSettings(country, room);
-        loadPinnedMessage(country, room);
-        loadRoomModerators(country, room);
-        
-        messagesRef = ref(db, `chats/${country}/${room}/messages`);
-        onValue(messagesRef, (snapshot) => {
-            const messages = snapshot.val();
-            messagesContainer.innerHTML = '';
-            
-            if (messages) {
-                const count = Object.keys(messages).length;
-                document.getElementById('msgCount').textContent = `الرسائل: ${count}`;
-                Object.entries(messages).forEach(([key, msg]) => {
-                    addMessageToScreen(msg, key);
-                });
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            } else {
-                document.getElementById('msgCount').textContent = 'الرسائل: 0';
-            }
-        });
-        
-        const userPath = currentUser.name.replace(/[.#$[\]]/g, '_');
-        onlineRef = ref(db, `chats/${country}/${room}/online/${userPath}`);
-        set(onlineRef, {
-            name: currentUser.name,
-            icon: currentUser.icon,
-            tag: currentUser.tag || '',
-            role: currentUser.role,
-            timestamp: serverTimestamp()
-        });
-        onDisconnect(onlineRef).remove();
-        
-        onValue(ref(db, `chats/${country}/${room}/online`), (snapshot) => {
-            const online = snapshot.val() || {};
-            document.getElementById('onlineCount').textContent = `متصل: ${Object.keys(online).length}`;
-        });
-    }
-
-    function loadRoomSettings(country, room) {
-        onValue(ref(db, `countries/${country}/rooms/${room}`), (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                if (data.welcome) {
-                    document.getElementById('roomWelcome').textContent = data.welcome;
-                    document.getElementById('roomWelcome').classList.remove('hidden');
-                } else {
-                    document.getElementById('roomWelcome').classList.add('hidden');
-                }
-                if (data.theme) {
-                    const colors = data.theme.split(',');
-                    document.documentElement.style.setProperty('--room-grad', `linear-gradient(135deg, ${colors[0]} 0%, ${colors[1]} 100%)`);
-                } else {
-                    document.documentElement.style.setProperty('--room-grad', 'linear-gradient(135deg, #9333ea 0%, #ec4899 100%)');
-                }
-            }
-        });
-    }
-
-    function loadRoomModerators(country, room) {
-        onValue(ref(db, `countries/${country}/rooms/${room}/moderators`), async (snapshot) => {
-            const mods = snapshot.val() || {};
-            currentRoomMods = Object.keys(mods);
-            
-            if (currentRoomMods.length > 0) {
-                const modsNames = await Promise.all(currentRoomMods.map(async (modKey) => {
-                    const modSnap = await get(ref(db, `members/${modKey}`));
-                    return modSnap.exists() ? modSnap.val().name : modKey;
-                }));
-                document.getElementById('roomModsText').textContent = modsNames.join('، ');
-                document.getElementById('roomModsList').classList.remove('hidden');
-            } else {
-                document.getElementById('roomModsList').classList.add('hidden');
-            }
-            
-            if (canUnpin()) {
-                document.getElementById('unpinBtn').classList.remove('hidden');
-            } else {
-                document.getElementById('unpinBtn').classList.add('hidden');
-            }
-        });
-    }
-
-    function loadPinnedMessage(country, room) {
-        onValue(ref(db, `chats/${country}/${room}/pinned`), (snapshot) => {
-            const pinned = snapshot.val();
-            const container = document.getElementById('pinnedMessageContainer');
-            if (pinned && pinned.text) {
-                document.getElementById('pinnedMessageText').textContent = `${pinned.user}: ${pinned.text}`;
-                container.classList.remove('hidden');
-            } else {
-                container.classList.add('hidden');
-            }
-        });
-    }
-
-    window.unpinMessage = async () => {
-        if (!currentCountry || !currentRoom || !canUnpin()) return;
-        await remove(ref(db, `chats/${currentCountry}/${currentRoom}/pinned`));
-    };
-
-    function addMessageToScreen(msg, msgKey) {
-        const container = document.getElementById('messagesContainer');
-        const isOwn = msg.user === currentUser.name;
-        
-        const msgDiv = document.createElement('div');
-        msgDiv.className = `message-appear flex ${isOwn ? 'justify-start' : 'justify-end'}`;
-        msgDiv.id = `msg-${msgKey}`;
-        
-        const time = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }) : '';
-        const userIcon = royalUsers[msg.user] || msg.icon || '👤';
-        const userTag = msg.tag || '';
-        const isAnnouncement = msg.isAnnouncement;
-        
-        let modButtons = '';
-        (async () => {
-            if ((hasGlobalModAccess() || await hasRoomModAccess(currentCountry, currentRoom, currentUser.name)) && msg.user !== currentUser.name && !isAnnouncement) {
-                modButtons = `
-                    <div class="flex gap-2 mt-2">
-                        <button onclick="pinMessage('${msgKey}', '${escapeHtml(msg.text)}', '${msg.user}')" class="bg-yellow-600 hover:bg-yellow-700 px-3 py-1 rounded-lg text-xs font-bold active:scale-95">📌 تثبيت</button>
-                        <button onclick="showMuteModal('${msg.user}')" class="bg-orange-600 hover:bg-orange-700 px-3 py-1 rounded-lg text-xs font-bold active:scale-95">🔇 كتم</button>
-                        <button onclick="kickUser('${msg.user}')" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded-lg text-xs font-bold active:scale-95">👢 طرد</button>
-                    </div>
-                `;
-                const btnDiv = msgDiv.querySelector('.mod-buttons-placeholder');
-                if (btnDiv) btnDiv.innerHTML = modButtons;
-            }
-        })();
-        
-        const msgClass = isAnnouncement ? 'bg-gradient-to-r from-yellow-600 to-amber-600 pinned-msg' : (isOwn ? 'bg-gradient-to-r from-purple-600 to-pink-600' : 'bg-slate-700');
-        
-        msgDiv.innerHTML = `
-            <div class="max-w-[80%] ${msgClass} rounded-3xl px-5 py-3 shadow-lg">
-                <div class="flex items-center gap-2 mb-1 flex-wrap">
-                    <span class="text-xl">${userIcon}</span>
-                    <span class="font-bold text-lg ${isAnnouncement ? 'text-yellow-100' : (isOwn ? 'text-yellow-200' : 'text-purple-300')}">${msg.user} ${userTag}</span>
-                    <span class="text-xs text-white/50 mr-auto">${time}</span>
-                </div>
-                <p class="text-white text-lg break-words">${escapeHtml(msg.text)}</p>
-                <div class="mod-buttons-placeholder"></div>
-            </div>
-        `;
-        container.appendChild(msgDiv);
-    }
-
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    window.pinMessage = async (msgKey, text, user) => {
-        if (!currentCountry || !currentRoom || !(hasGlobalModAccess() || await hasRoomModAccess(currentCountry, currentRoom, currentUser.name))) return;
-        await set(ref(db, `chats/${currentCountry}/${currentRoom}/pinned`), {
-            text: text,
-            user: user,
-            timestamp: Date.now(),
-            pinnedBy: currentUser.name
-        });
-    };
-
-    window.sendMessage = async () => {
-        const input = document.getElementById('messageInput');
-        const text = input.value.trim();
-        
-        if (!text || !currentCountry || !currentRoom) return;
-        
-        // Check mute status
-        await loadUserMuteStatus();
-        if (userMuteStatus && userMuteStatus.until > Date.now()) {
-            const remaining = Math.ceil((userMuteStatus.until - Date.now()) / 60000);
-            alert(`أنت مكتوم لمدة ${remaining} دقيقة`);
-            return;
-        }
-        
-        push(ref(db, `chats/${currentCountry}/${currentRoom}/messages`), {
-            user: currentUser.name,
-            icon: currentUser.icon,
-            tag: currentUser.tag || '',
-            text: text,
-            timestamp: Date.now()
-        });
-        
-        input.value = '';
-    };
-
-    window.sendGlobalAnnouncement = async () => {
-        if (!hasGlobalModAccess()) {
-            alert('ليس لديك صلاحية');
-            return;
-        }
-        
-        const input = document.getElementById('announcementInput');
-        const text = input.value.trim();
-        
-        if (!text) return;
-        
-        await set(ref(db, 'announcement'), text);
-        
-        // Send to all countries and rooms
-        const countriesSnap = await get(ref(db, 'countries'));
-        if (countriesSnap.exists()) {
-            const countries = countriesSnap.val();
-            for (const [country, countryData] of Object.entries(countries)) {
-                if (countryData.rooms) {
-                    for (const room of Object.keys(countryData.rooms)) {
-                        await push(ref(db, `chats/${country}/${room}/messages`), {
-                            user: 'الإعلان العام',
-                            icon: '📢',
-                            tag: '[إعلان]',
-                            text: text,
-                            timestamp: Date.now(),
-                            isAnnouncement: true
-                        });
-                    }
-                }
-            }
-        }
-        
-        input.value = '';
-        alert('تم إرسال الإعلان بنجاح ✅');
-    };
-
-    // Moderation Functions
-    window.showMuteModal = (userName) => {
-        muteTargetUser = userName;
-        document.getElementById('muteUserName').textContent = userName;
-        document.getElementById('muteModal').classList.remove('hidden');
-        document.getElementById('muteModal').classList.add('flex');
-    };
-
-    window.closeMuteModal = () => {
-        document.getElementById('muteModal').classList.add('hidden');
-        document.getElementById('muteModal').classList.remove('flex');
-        muteTargetUser = null;
-    };
-
-    window.confirmMute = async () => {
-        if (!muteTargetUser || !(hasGlobalModAccess() || await hasRoomModAccess(currentCountry, currentRoom, currentUser.name))) return;
-        
-        const duration = parseInt(document.getElementById('muteDuration').value);
-        if (!duration || duration < 1) {
-            alert('المدة غير صحيحة');
-            return;
-        }
-        
-        const until = Date.now() + (duration * 60000);
-        const muteData = {
-            until: until,
-            mutedBy: currentUser.name,
-            timestamp: Date.now(),
-            room: { country: currentCountry, room: currentRoom }
-        };
-        
-        await set(ref(db, `muted/${muteTargetUser.replace(/[.#$[\]]/g, '_')}`), muteData);
-        
-        alert(`تم كتم ${muteTargetUser} لمدة ${duration} دقيقة في الغرفة`);
-        closeMuteModal();
-    };
-
-    window.kickUser = async (userName) => {
-        if (!(hasGlobalModAccess() || await hasRoomModAccess(currentCountry, currentRoom, currentUser.name)) || !currentCountry || !currentRoom) return;
-        if (!confirm(`هل تريد طرد ${userName} من الغرفة؟`)) return;
-        
-        await remove(ref(db, `chats/${currentCountry}/${currentRoom}/online/${userName.replace(/[.#$[\]]/g, '_')}`));
-        alert(`تم طرد ${userName} من الغرفة`);
-    };
-
-    window.banUser = async (userName) => {
-        if (!hasGlobalModAccess()) {
-            alert('ليس لديك صلاحية الحظر التام');
-            return;
-        }
-        if (!confirm(`هل تريد حظر ${userName} من التطبيق نهائياً؟`)) return;
-        
-        // Add to banned list
-        await set(ref(db, `banned/${userName.replace(/[.#$[\]]/g, '_')}`), {
-            bannedBy: currentUser.name,
-            timestamp: Date.now()
-        });
-        
-        // Update member role
-        await update(ref(db, `members/${userName}`), { role: 'banned' });
-        
-        // Remove from all online lists
-        const countriesSnap = await get(ref(db, 'countries'));
-        if (countriesSnap.exists()) {
-            const countries = countriesSnap.val();
-            for (const [country, countryData] of Object.entries(countries)) {
-                if (countryData.rooms) {
-                    for (const room of Object.keys(countryData.rooms)) {
-                        await remove(ref(db, `chats/${country}/${room}/online/${userName.replace(/[.#$[\]]/g, '_')}`));
-                    }
-                }
-            }
-        }
-        
-        alert(`تم حظر ${userName} بنجاح`);
-    };
-
-    window.assignRoomModerator = async () => {
-        if (!hasGlobalModAccess()) {
-            alert('ليس لديك صلاحية');
-            return;
-        }
-        
-        const country = document.getElementById('modCountrySelect').value;
-        const room = document.getElementById('modRoomSelect').value;
-        const username = document.getElementById('modUsernameInput').value.trim();
-        
-        if (!country || !room || !username) {
-            alert('الرجاء ملء جميع الحقول');
-            return;
-        }
-        
-        const memberSnap = await get(ref(db, `members/${username}`));
-        if (!memberSnap.exists()) {
-            alert('المستخدم غير موجود');
-            return;
-        }
-        
-        await set(ref(db, `countries/${country}/rooms/${room}/moderators/${username.replace(/[.#$[\]]/g, '_')}`), {
-            name: username,
-            assignedBy: currentUser.name,
-            assignedAt: Date.now()
-        });
-        
-        document.getElementById('modUsernameInput').value = '';
-        alert(`تم تعيين ${username} مشرفاً على غرفة ${room} في ${country}`);
-    };
-
-    window.removeRoomModerator = async () => {
-        if (!hasGlobalModAccess()) {
-            alert('ليس لديك صلاحية');
-            return;
-        }
-        
-        const country = document.getElementById('modCountrySelect').value;
-        const room = document.getElementById('modRoomSelect').value;
-        const username = document.getElementById('modUsernameInput').value.trim();
-        
-        if (!country || !room || !username) {
-            alert('الرجاء ملء جميع الحقول');
-            return;
-        }
-        
-        await remove(ref(db, `countries/${country}/rooms/${room}/moderators/${username.replace(/[.#$[\]]/g, '_')}`));
-        
-        document.getElementById('modUsernameInput').value = '';
-        alert(`تم إلغاء إشراف ${username} من غرفة ${room}`);
-    };
-
-    // Room Settings Functions
-    let editRoomCountry = null;
-    let editRoomName = null;
-
-    window.showEditRoomModal = (country, room) => {
-        editRoomCountry = country;
-        editRoomName = room;
-        document.getElementById('editRoomTitle').textContent = `${country} > ${room}`;
-        
-        get(ref(db, `countries/${country}/rooms/${room}`)).then(snap => {
-            const data = snap.val() || {};
-            document.getElementById('editRoomWelcome').value = data.welcome || '';
-            if (data.theme) selectedRoomColor = data.theme;
-        });
-        
-        document.getElementById('editRoomModal').classList.remove('hidden');
-        document.getElementById('editRoomModal').classList.add('flex');
-    };
-
-    window.closeEditRoomModal = () => {
-        document.getElementById('editRoomModal').classList.add('hidden');
-        document.getElementById('editRoomModal').classList.remove('flex');
-        editRoomCountry = null;
-        editRoomName = null;
-    };
-
-    window.selectRoomColor = (color) => {
-        selectedRoomColor = color;
-    };
-
-    window.saveRoomSettings = async () => {
-        if (!editRoomCountry || !editRoomName || !hasGlobalModAccess()) return;
-        
-        const welcome = document.getElementById('editRoomWelcome').value.trim();
-        await update(ref(db, `countries/${editRoomCountry}/rooms/${editRoomName}`), {
-            welcome: welcome || null,
-            theme: selectedRoomColor
-        });
-        
-        alert('تم حفظ إعدادات الغرفة ✅');
-        closeEditRoomModal();
-    };
-
-    // Admin Functions
-    window.openAdminPanel = () => {
-        if (!hasGlobalModAccess()) return;
-        document.getElementById('adminPanel').classList.remove('hidden');
-        document.getElementById('adminPanel').classList.add('flex');
-        loadAdminMembersList();
-    };
-
-    window.closeAdminPanel = () => {
-        document.getElementById('adminPanel').classList.add('hidden');
-        document.getElementById('adminPanel').classList.remove('flex');
-    };
-
-    window.addCountryWithRooms = () => {
-        if (!hasGlobalModAccess()) {
-            alert('ليس لديك صلاحية');
-            return;
-        }
-        
-        const countryInput = document.getElementById('newCountryInput');
-        const roomsInput = document.getElementById('newRoomInput');
-        const expiryInput = document.getElementById('expiryDateInput');
-        
-        const country = countryInput.value.trim();
-        const roomsText = roomsInput.value.trim();
-        const expiry = expiryInput.value;
-        
-        if (country.length < 2) {
-            alert('اسم الدولة قصير جداً');
-            return;
-        }
-        
-        const rooms = roomsText ? roomsText.split(',').map(r => r.trim()).filter(r => r) : ['عام'];
-        const roomsObj = {};
-        rooms.forEach(room => {
-            roomsObj[room] = { created: Date.now() };
-        });
-        
-        const countryData = {
-            name: country,
-            created: serverTimestamp(),
-            addedBy: currentUser.name,
-            rooms: roomsObj
-        };
-        
-        if (expiry) {
-            countryData.expiry = expiry;
-        }
-        
-        set(ref(db, `countries/${country}`), countryData).then(() => {
-            countryInput.value = '';
-            roomsInput.value = '';
-            expiryInput.value = '';
-            alert(`تم إضافة ${country} مع ${rooms.length} غرفة بنجاح ✅`);
-        });
-    };
-
-    window.showEditCountry = (country) => {
-        editingCountry = country;
-        document.getElementById('editCountryName').value = country;
-        document.getElementById('editCountryModal').classList.remove('hidden');
-        document.getElementById('editCountryModal').classList.add('flex');
-    };
-
-    window.closeEditCountryModal = () => {
-        document.getElementById('editCountryModal').classList.add('hidden');
-        document.getElementById('editCountryModal').classList.remove('flex');
-        editingCountry = null;
-    };
-
-    window.saveCountryEdit = async () => {
-        const newName = document.getElementById('editCountryName').value.trim();
-        
-        if (newName.length < 2) {
-            alert('اسم الدولة قصير جداً');
-            return;
-        }
-        
-        if (newName === editingCountry) {
-            closeEditCountryModal();
-            return;
-        }
-        
-        const oldRef = ref(db, `countries/${editingCountry}`);
-        onValue(oldRef, async (snapshot) => {
-            const data = snapshot.val();
-            if (!data) return;
-            
-            await set(ref(db, `countries/${newName}`), data);
-            await remove(ref(db, `countries/${editingCountry}`));
-            
-            const oldChatRef = ref(db, `chats/${editingCountry}`);
-            onValue(oldChatRef, async (chatSnapshot) => {
-                const chatData = chatSnapshot.val();
-                if (chatData) {
-                    await set(ref(db, `chats/${newName}`), chatData);
-                    await remove(ref(db, `chats/${editingCountry}`));
-                }
-            }, { onlyOnce: true });
-            
-            alert(`تم تعديل اسم الدولة بنجاح ✅`);
-            closeEditCountryModal();
-        }, { onlyOnce: true });
-    };
-
-    window.deleteCountry = async (country) => {
-        if (!hasGlobalModAccess()) {
-            alert('ليس لديك صلاحية');
-            return;
-        }
-        if (!confirm(`هل أنت متأكد من حذف دولة ${country}؟\nسيتم حذف جميع الغرف والرسائل!`)) return;
-        
-        await remove(ref(db, `countries/${country}`));
-        await remove(ref(db, `chats/${country}`));
-        alert(`تم حذف ${country} بنجاح`);
-        
-        if (currentCountry === country) {
-            backToCountries();
-        }
-    };
-
-    // UI Functions
-    window.toggleSidebar = () => {
-        const sidebar = document.getElementById('sidebar');
-        sidebar.classList.toggle('translate-x-full');
-    };
-
-    window.showUserMenu = () => {
-        const displayName = currentUser.tag ? `${currentUser.name} ${currentUser.tag}` : currentUser.name;
-        const roleText = {
-            'guest': 'زائر',
-            'member': 'عضو',
-            'owner': 'مالك',
-            'superadmin': 'سوبر أدمن'
-        };
-        
-        if (confirm(`${displayName}\n${roleText[currentUser.role]}\n\nتسجيل خروج؟`)) {
-            location.reload();
-        }
-    };
-
-    let lastTouchEnd = 0;
-    document.addEventListener('touchend', (e) => {
-        const now = Date.now();
-        if (now - lastTouchEnd <= 300) {
-            e.preventDefault();
-        }
-        lastTouchEnd = now;
-    }, false);
+<script>
+let currentUser = '';
+let currentRole = 'member';
+let messages = JSON.parse(localStorage.getItem('chat_msgs') || '[]');
+
+function login() {
+  const u = document.getElementById('username').value.trim();
+  const p = document.getElementById('password').value;
+  
+  if (!u) return alert('اكتب اسم المستخدم');
+  
+  currentUser = u;
+  // اذا الاسم "الدعم الفني" والباسورد صح = مالك
+  currentRole = (u === 'الدعم الفني' && p === '19952005') ? 'owner' : 'member';
+  
+  localStorage.setItem('chat_user', JSON.stringify({u, r: currentRole}));
+  showChat();
+}
+
+function showChat() {
+  document.getElementById('login').classList.add('hidden');
+  document.getElementById('chat').classList.remove('hidden');
+  document.getElementById('chat').classList.add('flex');
+  
+  const badge = currentRole === 'owner' ? '👑 المالك' : '👤 عضو';
+  const nameClass = currentRole === 'owner' ? 'owner-name' : 'text-purple-400';
+  document.getElementById('userDisplay').innerHTML = `<span class="${nameClass}">${currentUser}</span> • ${badge}`;
+  
+  if (currentRole === 'owner') {
+    document.getElementById('clearBtn').classList.remove('hidden');
+  }
+  
+  renderMsgs();
+}
+
+function sendMsg() {
+  const txt = document.getElementById('msgInput').value.trim();
+  if (!txt) return;
+  
+  messages.push({
+    u: currentUser, 
+    r: currentRole, 
+    t: txt, 
+    time: new Date().toLocaleTimeString('ar-IQ', {hour: '2-digit', minute:'2-digit'})
+  });
+  
+  localStorage.setItem('chat_msgs', JSON.stringify(messages));
+  document.getElementById('msgInput').value = '';
+  renderMsgs();
+}
+
+function renderMsgs() {
+  const msgBox = document.getElementById('messages');
+  msgBox.innerHTML = messages.map((m, i) => `
+    <div class="bg-gray-800/70 backdrop-blur p-3 rounded-lg border border-gray-700/50">
+      <div class="flex justify-between items-center mb-1">
+        <span class="font-bold ${m.r === 'owner' ? 'owner-name' : 'text-blue-400'}">
+          ${m.r === 'owner' ? '👑' : '👤'} ${m.u}
+        </span>
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-gray-500">${m.time}</span>
+          ${currentRole === 'owner' ? `<button onclick="deleteMsg(${i})" class="text-red-500 hover:text-red-400 text-xs">حذف</button>` : ''}
+        </div>
+      <p class="text-gray-200 break-words">${m.t}</p>
+    </div>
+  `).join('');
+  msgBox.scrollTop = msgBox.scrollHeight;
+}
+
+function deleteMsg(index) {
+  if (currentRole !== 'owner') return;
+  if (confirm('حذف الرسالة؟')) {
+    messages.splice(index, 1);
+    localStorage.setItem('chat_msgs', JSON.stringify(messages));
+    renderMsgs();
+  }
+}
+
+function clearChat() {
+  if (currentRole !== 'owner') return;
+  if (confirm('مسح كل الرسائل؟ لا يمكن التراجع!')) {
+    messages = [];
+    localStorage.setItem('chat_msgs', JSON.stringify(messages));
+    renderMsgs();
+  }
+}
+
+function logout() {
+  localStorage.removeItem('chat_user');
+  location.reload();
+}
+
+// تسجيل دخول تلقائي اذا مسجل من قبل
+const saved = localStorage.getItem('chat_user');
+if (saved) {
+  const data = JSON.parse(saved);
+  currentUser = data.u;
+  currentRole = data.r;
+  showChat();
+}
+
+// ارسال بالانتر
+document.getElementById('msgInput')?.addEventListener('keypress', e => {
+  if (e.key === 'Enter') sendMsg();
+});
 </script>
 </body>
 </html>
