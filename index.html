@@ -1,372 +1,415 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0">
-<title>دردشة عربية | Arab Chat</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;900&display=swap');
-    * { font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { overscroll-behavior: none; touch-action: pan-y; }
- .marquee { white-space: nowrap; overflow: hidden; }
- .marquee-content { display: inline-block; padding-left: 100%; animation: marquee 20s linear infinite; }
-    @keyframes marquee { 0% { transform: translate3d(-100%, 0, 0); } 100% { transform: translate3d(0, 0, 0); } }
- .scroll-smooth { scroll-behavior: smooth; }
- .hide-scrollbar::-webkit-scrollbar { display: none; }
- .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
- .message-appear { animation: slideIn 0.2s ease-out; }
-    @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
- .ripple { position: relative; overflow: hidden; }
- .ripple:after { content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0; border-radius: 50%; background: rgba(255,255,255,0.5); transform: translate(-50%, -50%); transition: width 0.6s, height 0.6s; }
- .ripple:active:after { width: 300px; height: 300px; }
- .pinned-msg { border-right: 4px solid #eab308; }
- .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
- .owner-name { background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3); background-size: 400% 400%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: rainbow 3s ease infinite; font-weight: 900; }
-    @keyframes rainbow { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
- .owner-crown { display: inline-block; animation: crownFloat 2s ease-in-out infinite; }
-    @keyframes crownFloat { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-5px); } }
- .message-selected { background: rgba(168, 85, 247, 0.3)!important; }
-    :root { --room-grad: linear-gradient(135deg, #9333ea 0%, #ec4899 100%); }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoomRom - Master System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+        body { font-family: 'Cairo', sans-serif; }
+       .room-card { transition: all 0.3s; }
+       .room-card:hover { transform: translateY(-2px); }
+    </style>
 </head>
-<body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white h-screen overflow-hidden">
-<!-- Login Modal -->
-<div id="loginModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl shadow-2xl w-full max-w-md border border-purple-500/30 overflow-hidden">
-        <div class="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-center">
-            <h2 class="text-3xl font-black mb-2">أهلاً بك في الدردشة</h2>
-            <p class="text-purple-100 text-lg">اختر طريقة الدخول</p>
-        </div>
-        <div class="p-6 space-y-4">
-            <button onclick="loginAsGuest()" class="ripple w-full bg-slate-700 hover:bg-slate-600 text-white text-xl font-bold py-5 rounded-2xl transition-all shadow-lg active:scale-95">دخول كزائر 👤</button>
-            <button onclick="showMemberLogin()" class="ripple w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white text-xl font-bold py-5 rounded-2xl transition-all shadow-lg active:scale-95">دخول كعضو ✨</button>
-            <button onclick="showOwnerLogin()" class="ripple w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white text-xl font-bold py-5 rounded-2xl transition-all shadow-lg active:scale-95">دخول كمالك 👑</button>
-        </div>
-    </div>
-</div>
+<body class="bg-gradient-to-br from-slate-900 to-slate-700 min-h-screen p-4">
+    <div id="app" class="w-full max-w-6xl mx-auto"></div>
 
-<!-- Member Login Modal -->
-<div id="memberModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-    <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl shadow-2xl w-full max-w-md border border-blue-500/30">
-        <div class="bg-gradient-to-r from-blue-600 to-cyan-600 p-6 text-center rounded-t-3xl"><h2 class="text-3xl font-black">تسجيل عضو</h2></div>
-        <div class="p-6 space-y-4">
-            <input id="memberName" type="text" placeholder="اسم المستخدم" class="w-full bg-slate-700 text-white text-xl px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-blue-500 outline-none" maxlength="20">
-            <input id="memberPass" type="password" placeholder="كلمة المرور" class="w-full bg-slate-700 text-white text-xl px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-blue-500 outline-none">
-            <div class="flex gap-3">
-                <button onclick="loginMember()" class="ripple flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">دخول</button>
-                <button onclick="closeMemberModal()" class="ripple flex-1 bg-slate-700 hover:bg-slate-600 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">إلغاء</button>
-            </div>
-        </div>
-    </div>
-</div>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getDatabase, ref, push, onValue, remove, set, update, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
-<!-- Owner Login Modal -->
-<div id="ownerModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-    <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl shadow-2xl w-full max-w-md border border-amber-500/30">
-        <div class="bg-gradient-to-r from-amber-600 to-orange-600 p-6 text-center rounded-t-3xl"><h2 class="text-3xl font-black">دخول المالك</h2></div>
-        <div class="p-6 space-y-4">
-            <input id="ownerName" type="text" placeholder="اسم المالك" class="w-full bg-slate-700 text-white text-xl px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-amber-500 outline-none">
-            <input id="ownerPass" type="password" placeholder="كلمة المرور" class="w-full bg-slate-700 text-white text-xl px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-amber-500 outline-none">
-            <div class="flex gap-3">
-                <button onclick="loginOwner()" class="ripple flex-1 bg-amber-600 hover:bg-amber-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">دخول</button>
-                <button onclick="closeOwnerModal()" class="ripple flex-1 bg-slate-700 hover:bg-slate-600 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">إلغاء</button>
-            </div>
-        </div>
-    </div>
-</div>
+        const MASTER_CODE = "19952005"; // رمز الماستر
 
-<!-- Admin Panel -->
-<div id="adminPanel" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl shadow-2xl w-full max-w-4xl border border-purple-500/30 my-4">
-        <div class="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-center rounded-t-3xl"><h2 class="text-3xl font-black">لوحة التحكم 👑</h2></div>
-        <div class="p-6 space-y-6 max-h-[70vh] overflow-y-auto hide-scrollbar">
-            <div class="bg-slate-800/50 rounded-2xl p-5 border border-purple-500/20">
-                <h3 class="text-xl font-bold mb-4 text-purple-300">إضافة دولة وغرف - لحد 1000 غرفة</h3>
-                <input id="newCountryInput" type="text" placeholder="اسم الدولة الجديدة" class="w-full bg-slate-700 text-white text-xl px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-purple-500 outline-none mb-3">
-                <textarea id="newRoomInput" placeholder="اسماء الغرف - افصل بفاصلة (مثال: عام, شباب, بنات)" class="w-full bg-slate-700 text-white text-lg px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-purple-500 outline-none mb-3 h-32"></textarea>
-                <p class="text-xs text-yellow-300 mb-3">ملاحظة: الغرف لا يمكن حذفها أو استبدالها بعد الإنشاء إلا من الدعم الفني</p>
-                <button onclick="addCountryWithRooms()" class="ripple w-full bg-green-600 hover:bg-green-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">إضافة دولة ➕</button>
-            </div>
-            <div class="bg-slate-800/50 rounded-2xl p-5 border border-yellow-500/20">
-                <h3 class="text-xl font-bold mb-4 text-yellow-300">إعلان عام لجميع الغرف 📢</h3>
-                <input id="announcementInput" type="text" placeholder="اكتب الإعلان هنا..." class="w-full bg-slate-700 text-white text-lg px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-yellow-500 outline-none mb-3" maxlength="300">
-                <button onclick="sendGlobalAnnouncement()" class="ripple w-full bg-yellow-600 hover:bg-yellow-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">إرسال الإعلان</button>
-            </div>
-            <div class="bg-slate-800/50 rounded-2xl p-5 border border-cyan-500/20">
-                <h3 class="text-xl font-bold mb-4 text-cyan-300">تعيين مشرف للغرفة 🛡️</h3>
-                <select id="modCountrySelect" class="w-full bg-slate-700 text-white text-lg px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-cyan-500 outline-none mb-3"><option value="">اختر الدولة</option></select>
-                <select id="modRoomSelect" class="w-full bg-slate-700 text-white text-lg px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-cyan-500 outline-none mb-3"><option value="">اختر الغرفة</option></select>
-                <input id="modUsernameInput" type="text" placeholder="اسم المستخدم" class="w-full bg-slate-700 text-white text-lg px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-cyan-500 outline-none mb-3">
-                <div class="grid grid-cols-2 gap-2 mb-3">
-                    <label class="flex items-center gap-2 bg-slate-700 p-3 rounded-xl"><input type="checkbox" id="permDelete" class="w-5 h-5"><span>حذف رسائل</span></label>
-                    <label class="flex items-center gap-2 bg-slate-700 p-3 rounded-xl"><input type="checkbox" id="permPin" class="w-5 h-5"><span>تثبيت</span></label>
-                    <label class="flex items-center gap-2 bg-slate-700 p-3 rounded-xl"><input type="checkbox" id="permMute" class="w-5 h-5"><span>كتم</span></label>
-                    <label class="flex items-center gap-2 bg-slate-700 p-3 rounded-xl"><input type="checkbox" id="permKick" class="w-5 h-5"><span>طرد</span></label>
-                </div>
-                <div class="flex gap-3">
-                    <button onclick="assignRoomModerator()" class="ripple flex-1 bg-cyan-600 hover:bg-cyan-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">تعيين مشرف</button>
-                    <button onclick="removeRoomModerator()" class="ripple flex-1 bg-red-600 hover:bg-red-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">إلغاء إشراف</button>
-                </div>
-            </div>
-            <div class="bg-slate-800/50 rounded-2xl p-5 border border-purple-500/20"><h3 class="text-xl font-bold mb-4 text-purple-300">إدارة الدول الحالية</h3><div id="adminCountriesList" class="space-y-3"></div></div>
-            <div class="bg-slate-800/50 rounded-2xl p-5 border border-cyan-500/20"><h3 class="text-xl font-bold mb-4 text-cyan-300">إدارة الأعضاء</h3><div id="adminMembersList" class="space-y-3"></div></div>
-            <button onclick="closeAdminPanel()" class="ripple w-full bg-slate-700 hover:bg-slate-600 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">إغلاق</button>
-        </div>
-    </div>
-</div>
+        const firebaseConfig = {
+          apiKey: "AIzaSyAGpES78mV7-jgEQzi63R0TONGKfUQHFHc",
+          authDomain: "hashed-cht.firebaseapp.com",
+          databaseURL: "https://hashed-cht-default-rtdb.firebaseio.com",
+          projectId: "hashed-cht",
+          storageBucket: "hashed-cht.firebasestorage.app",
+          messagingSenderId: "442699332645",
+          appId: "1:442699332645:web:08d332758ac215a07453cc"
+        };
 
-<!-- Edit Room Modal -->
-<div id="editRoomModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-    <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl shadow-2xl w-full max-w-md border border-purple-500/30">
-        <div class="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-center rounded-t-3xl"><h2 class="text-2xl font-black">إعدادات الغرفة</h2><p class="text-sm text-purple-100 mt-1" id="editRoomTitle"></p></div>
-        <div class="p-6 space-y-4">
-            <input id="editRoomWelcome" type="text" placeholder="رسالة ترحيب الغرفة" class="w-full bg-slate-700 text-white text-lg px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-purple-500 outline-none" maxlength="200">
-            <div><label class="block text-sm text-purple-300 mb-2">لون ثيم الغرفة</label>
-                <div class="grid grid-cols-5 gap-2">
-                    <button onclick="selectRoomColor('#9333ea,#ec4899')" class="h-14 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 active:scale-95"></button>
-                    <button onclick="selectRoomColor('#2563eb,#06b6d4')" class="h-14 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500 active:scale-95"></button>
-                    <button onclick="selectRoomColor('#16a34a,#22c55e')" class="h-14 rounded-xl bg-gradient-to-br from-green-600 to-green-400 active:scale-95"></button>
-                    <button onclick="selectRoomColor('#dc2626,#f97316')" class="h-14 rounded-xl bg-gradient-to-br from-red-600 to-orange-500 active:scale-95"></button>
-                    <button onclick="selectRoomColor('#d97706,#eab308')" class="h-14 rounded-xl bg-gradient-to-br from-amber-600 to-yellow-500 active:scale-95"></button>
-                </div>
-            </div>
-            <div class="flex gap-3">
-                <button onclick="saveRoomSettings()" class="ripple flex-1 bg-purple-600 hover:bg-purple-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">حفظ</button>
-                <button onclick="closeEditRoomModal()" class="ripple flex-1 bg-slate-700 hover:bg-slate-600 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">إلغاء</button>
-            </div>
-        </div>
-    </div>
-</div>
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+        const appDiv = document.getElementById('app');
 
-<!-- Mute User Modal -->
-<div id="muteModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-    <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl shadow-2xl w-full max-w-md border border-red-500/30">
-        <div class="bg-gradient-to-r from-red-600 to-orange-600 p-6 text-center rounded-t-3xl"><h2 class="text-2xl font-black">كتم المستخدم 🔇</h2><p class="text-sm text-red-100 mt-2" id="muteUserName"></p></div>
-        <div class="p-6 space-y-4">
-            <input id="muteDuration" type="number" placeholder="المدة بالدقائق" min="1" max="10080" class="w-full bg-slate-700 text-white text-xl px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-red-500 outline-none">
-            <div class="flex gap-3">
-                <button onclick="confirmMute()" class="ripple flex-1 bg-red-600 hover:bg-red-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">كتم</button>
-                <button onclick="closeMuteModal()" class="ripple flex-1 bg-slate-700 hover:bg-slate-600 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">إلغاء</button>
-            </div>
-        </div>
-    </div>
-</div>
+        let currentUser = { role: 'guest', name: 'ضيف' };
+        let currentCountry = null;
+        let currentRoom = null;
 
-<!-- Main App -->
-<div id="app" class="hidden h-screen flex flex-col">
-    <header class="bg-gradient-to-r from-purple-900 via-pink-900 to-purple-900 shadow-xl">
-        <div class="marquee bg-black/30 py-2"><div class="marquee-content text-yellow-300 text-lg font-bold" id="globalMarquee">🌟 مرحباً بكم في شات الدول العربية 🌟 دردشة ممتعة للجميع 🌟 احترم الآخرين 🌟</div></div>
-        <div class="flex items-center justify-between px-4 py-3">
-            <button onclick="toggleSidebar()" class="ripple bg-white/10 hover:bg-white/20 p-3 rounded-2xl active:scale-95"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
-            <div class="text-center flex-1">
-                <h1 class="text-xl font-black"><span id="breadcrumb">الدول</span></h1>
-                <div class="flex items-center justify-center gap-3 text-sm"><p class="text-purple-200" id="onlineCount">متصل: 0</p><span class="text-purple-400">•</span><p class="text-purple-200" id="msgCount">الرسائل: 0</p></div>
-            </div>
-            <button onclick="showUserMenu()" class="ripple bg-white/10 hover:bg-white/20 p-3 rounded-2xl active:scale-95"><div class="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center text-xl font-bold" id="userAvatar">👤</div></button>
-        </div>
-        <div id="deleteBar" class="hidden bg-red-900/90 px-4 py-3 flex items-center justify-between">
-            <span class="text-white font-bold">وضع الحذف: <span id="selectedCount">0</span> رسالة</span>
-            <div class="flex gap-2">
-                <button onclick="deleteSelectedMessages()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-xl font-bold active:scale-95">حذف المحدد 🗑️</button>
-                <button onclick="cancelDeleteMode()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl font-bold active:scale-95">إلغاء</button>
-            </div>
-        </div>
-    </header>
-    <div class="flex flex-1 overflow-hidden">
-        <aside id="sidebar" class="w-full md:w-80 bg-slate-900/95 backdrop-blur-lg border-l border-purple-500/30 fixed md:relative inset-0 z-40 transform translate-x-full md:translate-x-0 transition-transform duration-300 flex flex-col">
-            <div class="p-4 bg-gradient-to-r from-purple-900/50 to-pink-900/50 border-b border-purple-500/30 flex items-center justify-between">
-                <h2 class="text-2xl font-black" id="sidebarTitle">الدول المتاحة</h2>
-                <button onclick="toggleSidebar()" class="md:hidden ripple bg-white/10 p-2 rounded-xl active:scale-95"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
-            </div>
-            <div id="sidebarWrapper" class="flex-1 overflow-y-auto hide-scrollbar p-3 space-y-2">
-                <button id="backToCountries" onclick="backToCountries()" class="hidden ripple w-full bg-slate-800 hover:bg-slate-700 text-white text-lg font-bold py-4 rounded-2xl mb-3 active:scale-95">← رجوع للدول</button>
-                <div id="countriesList" class="space-y-2"></div>
-                <div id="roomsList" class="hidden space-y-2"></div>
-                <button id="adminBtn" onclick="openAdminPanel()" class="hidden ripple w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white text-xl font-bold py-5 rounded-2xl mt-4 active:scale-95">لوحة التحكم 👑</button>
-            </div>
-            <div class="p-4 bg-black/30 border-t border-purple-500/30"><div class="text-center"><p class="text-lg font-bold" id="currentUserName">زائر</p><p class="text-sm text-purple-300" id="currentUserRole">غير مسجل</p></div></div>
-        </aside>
-        <main class="flex-1 flex flex-col bg-gradient-to-br from-slate-900/50 to-purple-900/30">
-            <div id="welcomeScreen" class="flex-1 flex items-center justify-center p-8 text-center"><div><div class="text-8xl mb-6">💬</div><h2 class="text-4xl font-black mb-4 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">اختر دولة للبدء</h2><p class="text-xl text-purple-200">اضغط على أيقونة القائمة لاختيار الدولة ثم الغرفة</p></div></div>
-            <div id="chatScreen" class="hidden flex-1 flex flex-col">
-                <div id="roomHeaderBar" class="bg-gradient-to-r sticky top-0 z-10" style="background:var(--room-grad)">
-                    <div id="roomWelcome" class="px-4 py-3 text-center text-white text-lg font-bold hidden"></div>
-                    <div id="roomModsList" class="bg-black/20 px-4 py-2 text-center text-sm hidden"><span class="text-yellow-300">المشرفون: </span><span id="roomModsText" class="text-white"></span></div>
-                </div>
-                <div id="pinnedMessageContainer" class="hidden bg-yellow-600/20 border-b-2 border-yellow-500 px-4 py-3">
-                    <div class="flex items-center justify-between gap-2"><div class="flex items-center gap-2 flex-1"><span class="text-yellow-400 text-2xl">📌</span><div class="flex-1"><p class="text-sm text-yellow-300 font-bold">رسالة مثبتة</p><p class="text-white text-lg" id="pinnedMessageText"></p></div></div><button onclick="unpinMessage()" class="bg-red-600/50 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm active:scale-95 hidden" id="unpinBtn">إلغاء</button></div>
-                </div>
-                <div id="messagesContainer" class="flex-1 overflow-y-auto hide-scrollbar p-4 space-y-3 scroll-smooth"></div>
-                <div class="bg-slate-900/90 backdrop-blur-lg border-t-2 border-purple-500/30 p-3 safe-area-bottom">
-                    <div class="flex gap-2">
-                        <input id="messageInput" type="text" placeholder="اكتب رسالتك هنا..." class="flex-1 bg-slate-800 text-white text-xl px-6 py-5 rounded-2xl border-2 border-slate-700 focus:border-purple-500 outline-none" maxlength="500" onkeypress="if(event.key==='Enter') sendMessage()">
-                        <button onclick="sendMessage()" class="ripple bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-5 rounded-2xl font-bold text-xl active:scale-95 shadow-lg">إرسال</button>
-                    </div>
-                </div>
-            </div>
-        </main>
-    </div>
-</div>
+        signInAnonymously(auth);
 
-<script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
-    import { getDatabase, ref, push, onValue, set, remove, off, onDisconnect, serverTimestamp, update, get } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
-
-    // ⚠️ مهم: بدّل هاي القيم بمعلومات مشروعك من Firebase Console
-    const firebaseConfig = {
-      apiKey: "حط_هنا_apiKey",
-      authDomain: "hashed-cht.firebaseapp.com", 
-      databaseURL: "https://hashed-cht-default-rtdb.firebaseio.com/",
-      projectId: "hashed-cht",
-      storageBucket: "hashed-cht.appspot.com",
-      messagingSenderId: "حط_هنا_messagingSenderId",
-      appId: "حط_هنا_appId"
-    };
-    
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const auth = getAuth(app);
-    
-    const royalIcons = ['🌸', '❤️', '☕', '💀', '😊'];
-    const PROTECTED_OWNERS = ['الدعم الفني', 'Admin', 'Owner', 'Royal Master'];
-    const RESERVED_ROLE_NAMES = ['المالك', 'سوبر أدمن', 'مشرف', 'ادمن', 'moderator', 'admin', 'owner'];
-    let currentUser = null, currentCountry = null, currentRoom = null, messagesRef = null, onlineRef = null, countriesRef = null, editingCountry = null, muteTargetUser = null, userMuteStatus = null, selectedRoomColor = '#9333ea,#ec4899', currentRoomMods = {}, deleteMode = false, selectedMessages = new Set(), currentModPerms = {};
-
-    window.onload = () => { 
-        countriesRef = ref(db, 'countries'); 
-        loadCountries(); 
-        loadGlobalAnnouncement(); 
-        checkBannedStatus(); 
-        
-        // راقب حالة تسجيل الدخول
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, user => {
             if (user) {
-                console.log('User logged in:', user.email);
+                currentUser.uid = user.uid;
+                showMainMenu();
+            }
+        });
+
+        function showMainMenu() {
+            appDiv.innerHTML = `
+                <div class="bg-slate-800 rounded-2xl shadow-2xl p-8 text-white">
+                    <div class="text-center mb-8">
+                        <h1 class="text-4xl font-bold mb-2 text-purple-400">RoomRom System</h1>
+                        <p class="text-slate-300">نظام دول وغرف متكامل</p>
+                        <div class="mt-4 text-sm">
+                            ${currentUser.role === 'master'? 
+                                '<span class="bg-yellow-500 text-black px-4 py-1 rounded-full"><i class="fa-solid fa-crown"></i> الماستر</span>' : 
+                                currentUser.role === 'admin'? 
+                                '<span class="bg-blue-500 px-4 py-1 rounded-full"><i class="fa-solid fa-shield"></i> مشرف</span>' :
+                                '<span class="bg-slate-600 px-4 py-1 rounded-full">عضو</span>'
+                            }
+                        </div>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-4 mb-6">
+                        <button onclick="enterAsMember()" class="bg-purple-600 hover:bg-purple-700 p-6 rounded-xl font-bold text-lg">
+                            <i class="fa-solid fa-users text-3xl mb-2"></i><br>دخول كعضو
+                        </button>
+                        <button onclick="showMasterLogin()" class="bg-yellow-600 hover:bg-yellow-700 text-black p-6 rounded-xl font-bold text-lg">
+                            <i class="fa-solid fa-crown text-3xl mb-2"></i><br>دخول الماستر
+                        </button>
+                    </div>
+
+                    <div id="countriesList" class="grid md:grid-cols-3 gap-4"></div>
+                </div>
+            `;
+            loadCountries();
+        }
+
+        window.showMasterLogin = () => {
+            appDiv.innerHTML = `
+                <div class="bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-md mx-auto text-white">
+                    <h2 class="text-2xl font-bold mb-6 text-center text-yellow-400">دخول الماستر</h2>
+                    <input id="masterCode" type="password" placeholder="ادخل رمز الماستر" class="w-full p-3 mb-4 rounded-lg text-black text-center text-xl">
+                    <button onclick="checkMaster()" class="w-full bg-yellow-600 text-black p-3 rounded-lg font-bold mb-2">دخول</button>
+                    <button onclick="showMainMenu()" class="w-full bg-slate-600 p-3 rounded-lg">رجوع</button>
+                    <p id="masterError" class="text-red-400 text-sm mt-3 text-center"></p>
+                </div>
+            `;
+        };
+
+        window.checkMaster = () => {
+            const code = document.getElementById('masterCode').value;
+            if(code === MASTER_CODE){
+                currentUser = { uid: auth.currentUser.uid, role: 'master', name: 'الماستر' };
+                showMasterPanel();
             } else {
-                console.log('User logged out');
+                document.getElementById('masterError').textContent = 'الرمز غلط';
             }
-        });
-    };
+        };
 
-    window.loginAsGuest = () => { 
-        const guestNum = Math.floor(Math.random() * 9000) + 1000; 
-        currentUser = { name: `زائر${guestNum}`, role: 'guest', icon: '👤' }; 
-        startApp(); 
-    };
-    
-    window.showMemberLogin = () => { 
-        document.getElementById('memberModal').classList.remove('hidden'); 
-        document.getElementById('memberModal').classList.add('flex'); 
-    };
-    
-    window.closeMemberModal = () => { 
-        document.getElementById('memberModal').classList.add('hidden'); 
-        document.getElementById('memberModal').classList.remove('flex'); 
-    };
+        window.enterAsMember = () => {
+            const name = prompt('اكتب اسمك:');
+            if(name) {
+                currentUser = { uid: auth.currentUser.uid, role: 'member', name: name };
+                showMainMenu();
+            }
+        };
 
-    window.loginMember = async () => {
-        const name = document.getElementById('memberName').value.trim();
-        const pass = document.getElementById('memberPass').value;
-        
-        if (name.length < 3) { alert('الاسم يجب أن يكون 3 أحرف على الأقل'); return; }
-        if (pass.length < 4) { alert('كلمة المرور يجب أن تكون 4 أحرف على الأقل'); return; }
-        if (PROTECTED_OWNERS.includes(name) || RESERVED_ROLE_NAMES.some(r => name.includes(r))) { 
-            alert('هذا الاسم محمي ولا يمكن استخدامه'); return; 
+        function showMasterPanel() {
+            appDiv.innerHTML = `
+                <div class="bg-slate-800 rounded-2xl shadow-2xl p-6 text-white">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-yellow-400"><i class="fa-solid fa-crown"></i> لوحة تحكم الماستر</h2>
+                        <button onclick="showMainMenu()" class="bg-slate-600 px-4 py-2 rounded">رجوع</button>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-4 mb-6">
+                        <div class="bg-slate-700 p-4 rounded-xl">
+                            <h3 class="font-bold mb-3">انشاء دولة جديدة</h3>
+                            <input id="countryName" placeholder="اسم الدولة" class="w-full p-2 mb-2 rounded text-black">
+                            <input id="countryFlag" placeholder="علم الدولة 🇮🇶" class="w-full p-2 mb-2 rounded text-black">
+                            <button onclick="createCountry()" class="w-full bg-green-600 p-2 rounded font-bold">انشاء</button>
+                        </div>
+                        
+                        <div class="bg-slate-700 p-4 rounded-xl">
+                            <h3 class="font-bold mb-3">احصائيات</h3>
+                            <div id="stats" class="space-y-2 text-sm"></div>
+                        </div>
+                    </div>
+
+                    <h3 class="font-bold mb-3 text-xl">الدول الحالية:</h3>
+                    <div id="adminCountriesList" class="grid md:grid-cols-3 gap-4"></div>
+                </div>
+            `;
+            loadCountriesAdmin();
+            loadStats();
         }
 
-        try {
-            // سجل دخول بـ Firebase Auth
-            const email = name + '@chat.com'; // نحول الاسم لايميل وهمي
-            let userCredential;
+        window.createCountry = async () => {
+            const name = document.getElementById('countryName').value;
+            const flag = document.getElementById('countryFlag').value;
+            if(!name) return alert('اكتب اسم الدولة');
             
-            try {
-                // جرب تسجيل دخول
-                userCredential = await signInWithEmailAndPassword(auth, email, pass);
-            } catch (error) {
-                // اذا ما موجود، سوي حساب جديد
-                if (error.code === 'auth/user-not-found') {
-                    userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-                } else {
-                    throw error;
-                }
-            }
-
-            const memberSnap = await get(ref(db, `members/${name}`));
-            let userRole = 'member';
-            let userIcon = royalIcons[Math.floor(Math.random() * royalIcons.length)];
-            
-            if (memberSnap.exists()) {
-                const data = memberSnap.val();
-                userRole = data.role || 'member';
-                if (data.icon) userIcon = data.icon;
-                if (userRole === 'banned') { 
-                    await signOut(auth);
-                    alert('تم حظر حسابك من الدردشة'); 
-                    return; 
-                }
-            }
-
-            currentUser = { name: name, role: userRole, icon: userIcon, uid: userCredential.user.uid };
-            await update(ref(db, `members/${name}`), { 
-                name: name, 
-                role: userRole, 
-                icon: userIcon, 
-                lastLogin: serverTimestamp() 
+            await push(ref(db, 'countries'), {
+                name: name,
+                flag: flag || '🌍',
+                createdAt: Date.now(),
+                createdBy: 'master'
             });
+            document.getElementById('countryName').value = '';
+            document.getElementById('countryFlag').value = '';
+            loadCountriesAdmin();
+        };
+
+        function loadCountries() {
+            onValue(ref(db, 'countries'), snap => {
+                const countries = snap.val();
+                let html = '';
+                for(let id in countries){
+                    const c = countries[id];
+                    html += `
+                        <div onclick="openCountry('${id}')" class="room-card bg-slate-700 p-6 rounded-xl cursor-pointer hover:bg-slate-600">
+                            <div class="text-4xl mb-2">${c.flag}</div>
+                            <div class="font-bold text-lg">${c.name}</div>
+                            <div class="text-xs text-slate-400 mt-2">اضغط للدخول</div>
+                        </div>
+                    `;
+                }
+                document.getElementById('countriesList').innerHTML = html || '<p class="text-center col-span-3 text-slate-400">لا توجد دول بعد</p>';
+            });
+        }
+
+        function loadCountriesAdmin() {
+            onValue(ref(db, 'countries'), snap => {
+                const countries = snap.val();
+                let html = '';
+                for(let id in countries){
+                    const c = countries[id];
+                    html += `
+                        <div class="bg-slate-700 p-4 rounded-xl">
+                            <div class="text-3xl mb-2">${c.flag}</div>
+                            <div class="font-bold mb-3">${c.name}</div>
+                            <div class="flex gap-2">
+                                <button onclick="manageCountry('${id}')" class="flex-1 bg-blue-600 p-2 rounded text-xs">ادارة</button>
+                                <button onclick="deleteCountry('${id}')" class="bg-red-600 p-2 rounded text-xs"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </div>
+                    `;
+                }
+                document.getElementById('adminCountriesList').innerHTML = html;
+            });
+        }
+
+        window.openCountry = (countryId) => {
+            currentCountry = countryId;
+            showRooms(countryId);
+        };
+
+        window.manageCountry = (countryId) => {
+            currentCountry = countryId;
+            showRoomsAdmin(countryId);
+        };
+
+        function showRooms(countryId) {
+            get(ref(db, `countries/${countryId}`)).then(snap => {
+                const country = snap.val();
+                appDiv.innerHTML = `
+                    <div class="bg-slate-800 rounded-2xl shadow-2xl p-6 text-white">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-bold">${country.flag} ${country.name}</h2>
+                            <button onclick="showMainMenu()" class="bg-slate-600 px-4 py-2 rounded">رجوع للدول</button>
+                        </div>
+                        <div id="roomsList" class="grid md:grid-cols-4 gap-4"></div>
+                    </div>
+                `;
+                loadRooms(countryId);
+            });
+        }
+
+        function showRoomsAdmin(countryId) {
+            get(ref(db, `countries/${countryId}`)).then(snap => {
+                const country = snap.val();
+                appDiv.innerHTML = `
+                    <div class="bg-slate-800 rounded-2xl shadow-2xl p-6 text-white">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-bold">${country.flag} ${country.name} - ادارة الماستر</h2>
+                            <button onclick="showMasterPanel()" class="bg-slate-600 px-4 py-2 rounded">رجوع</button>
+                        </div>
+
+                        <div class="bg-slate-700 p-4 rounded-xl mb-6">
+                            <h3 class="font-bold mb-3">انشاء غرفة جديدة</h3>
+                            <div class="grid md:grid-cols-4 gap-2">
+                                <input id="roomName" placeholder="اسم الغرفة" class="p-2 rounded text-black">
+                                <input id="roomColor" type="color" value="#8b5cf6" class="p-2 rounded h-10">
+                                <input id="roomAdmin" placeholder="اسم المشرف" class="p-2 rounded text-black">
+                                <button onclick="createRoom('${countryId}')" class="bg-green-600 p-2 rounded font-bold">انشاء</button>
+                            </div>
+                        </div>
+
+                        <div id="adminRoomsList" class="grid md:grid-cols-3 gap-4"></div>
+                    </div>
+                `;
+                loadRoomsAdmin(countryId);
+            });
+        }
+
+        window.createRoom = async (countryId) => {
+            const name = document.getElementById('roomName').value;
+            const color = document.getElementById('roomColor').value;
+            const admin = document.getElementById('roomAdmin').value;
+            if(!name) return alert('اكتب اسم الغرفة');
             
-            closeMemberModal(); 
-            startApp();
-        } catch (error) {
-            console.error(error);
-            alert('خطأ: ' + error.message);
+            await push(ref(db, `countries/${countryId}/rooms`), {
+                name: name,
+                color: color,
+                admin: admin || 'لا يوجد',
+                createdAt: Date.now()
+            });
+            document.getElementById('roomName').value = '';
+            document.getElementById('roomAdmin').value = '';
+            loadRoomsAdmin(countryId);
+        };
+
+        function loadRooms(countryId) {
+            onValue(ref(db, `countries/${countryId}/rooms`), snap => {
+                const rooms = snap.val();
+                let html = '';
+                for(let id in rooms){
+                    const r = rooms[id];
+                    html += `
+                        <div onclick="enterRoom('${countryId}', '${id}')" style="background:${r.color}" class="room-card p-6 rounded-xl cursor-pointer text-white">
+                            <i class="fa-solid fa-comments text-3xl mb-2"></i>
+                            <div class="font-bold">${r.name}</div>
+                            <div class="text-xs opacity-80 mt-1">مشرف: ${r.admin}</div>
+                        </div>
+                    `;
+                }
+                document.getElementById('roomsList').innerHTML = html || '<p class="text-center col-span-4 text-slate-400">لا توجد غرف بعد</p>';
+            });
         }
-    };
 
-    window.showOwnerLogin = () => { 
-        document.getElementById('ownerModal').classList.remove('hidden'); 
-        document.getElementById('ownerModal').classList.add('flex'); 
-    };
-    
-    window.closeOwnerModal = () => { 
-        document.getElementById('ownerModal').classList.add('hidden'); 
-        document.getElementById('ownerModal').classList.remove('flex'); 
-    };
-
-    window.loginOwner = () => {
-        const name = document.getElementById('ownerName').value.trim();
-        const pass = document.getElementById('ownerPass').value;
-        
-        if (name === 'الدعم الفني' && pass === '19952005') { 
-            currentUser = { name: name, role: 'owner', icon: '👑' }; 
-            closeOwnerModal(); 
-            startApp(); 
-        } else if (name === 'Royal Master' && pass === 'super2024') { 
-            currentUser = { name: name, role: 'superadmin', icon: '💎' }; 
-            closeOwnerModal(); 
-            startApp(); 
-        } else { 
-            alert('بيانات الدخول غير صحيحة'); 
+        function loadRoomsAdmin(countryId) {
+            onValue(ref(db, `countries/${countryId}/rooms`), snap => {
+                const rooms = snap.val();
+                let html = '';
+                for(let id in rooms){
+                    const r = rooms[id];
+                    html += `
+                        <div style="background:${r.color}" class="p-4 rounded-xl text-white">
+                            <div class="font-bold mb-2">${r.name}</div>
+                            <div class="text-xs mb-3">مشرف: ${r.admin}</div>
+                            <div class="flex gap-2">
+                                <button onclick="editRoom('${countryId}','${id}')" class="flex-1 bg-white/20 p-2 rounded text-xs">تعديل</button>
+                                <button onclick="deleteRoom('${countryId}','${id}')" class="bg-red-600 p-2 rounded text-xs"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </div>
+                    `;
+                }
+                document.getElementById('adminRoomsList').innerHTML = html;
+            });
         }
-    };
 
-    function startApp() {
-        checkBannedStatus().then(isBanned => {
-            if (isBanned) { 
-                alert('تم حظرك من التطبيق'); 
-                location.reload(); 
-                return; 
+        window.enterRoom = (countryId, roomId) => {
+            currentRoom = { countryId, roomId };
+            showChatRoom();
+        };
+
+        function showChatRoom() {
+            get(ref(db, `countries/${currentRoom.countryId}/rooms/${currentRoom.roomId}`)).then(snap => {
+                const room = snap.val();
+                appDiv.innerHTML = `
+                    <div class="bg-slate-800 rounded-2xl shadow-2xl text-white">
+                        <div style="background:${room.color}" class="p-4 rounded-t-2xl">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h2 class="font-bold text-xl">${room.name}</h2>
+                                    <div class="text-xs opacity-80">مشرف: ${room.admin}</div>
+                                </div>
+                                <button onclick="showRooms('${currentRoom.countryId}')" class="bg-white/20 px-4 py-2 rounded">خروج</button>
+                            </div>
+                        </div>
+                        
+                        <div id="messages" class="h-96 overflow-y-auto p-4 space-y-2 bg-slate-900"></div>
+                        
+                        <div class="p-4 border-t border-slate-700 flex gap-2">
+                            <input id="msgInput" type="text" placeholder="اكتب رسالة..." class="flex-1 p-3 rounded-lg text-black">
+                            <button onclick="sendRoomMsg()" class="bg-purple-600 px-6 rounded-lg font-bold">ارسال</button>
+                        </div>
+                    </div>
+                `;
+                loadRoomMessages();
+            });
+        }
+
+        function loadRoomMessages() {
+            onValue(ref(db, `countries/${currentRoom.countryId}/rooms/${currentRoom.roomId}/messages`), snap => {
+                const msgs = snap.val();
+                let html = '';
+                for(let id in msgs){
+                    const m = msgs[id];
+                    html += `
+                        <div class="bg-slate-800 p-3 rounded-lg flex justify-between items-start group">
+                            <div>
+                                <b class="text-purple-400">${m.user}:</b>
+                                <span class="mr-2">${m.text}</span>
+                            </div>
+                            ${currentUser.role === 'master'? `<button onclick="deleteRoomMsg('${id}')" class="text-red-500 opacity-0 group-hover:opacity-100 text-xs"><i class="fa-solid fa-trash"></i></button>` : ''}
+                        </div>
+                    `;
+                }
+                document.getElementById('messages').innerHTML = html;
+                document.getElementById('messages').scrollTop = 999999;
+            });
+        }
+
+        window.sendRoomMsg = () => {
+            const input = document.getElementById('msgInput');
+            if (input.value.trim()) {
+                push(ref(db, `countries/${currentRoom.countryId}/rooms/${currentRoom.roomId}/messages`), {
+                    user: currentUser.name,
+                    text: input.value,
+                    time: Date.now(),
+                    uid: currentUser.uid
+                });
+                input.value = '';
             }
-            document.getElementById('loginModal').classList.add('hidden'); 
-            document.getElementById('app').classList.remove('hidden');
-            updateUserInfo(); 
-            loadUserMuteStatus();
-            if (hasGlobalModAccess()) document.getElementById('adminBtn').classList.remove('hidden');
-            if (canUnpin()) document.getElementById('unpinBtn').classList.remove('hidden');
-        });
-    }
+        };
 
-    async function checkBannedStatus() { 
-        if (!currentUser) return false; 
-        const snap = await get(ref(db, `banned/${
+        window.deleteRoomMsg = (msgId) => {
+            remove(ref(db, `countries/${currentRoom.countryId}/rooms/${currentRoom.roomId}/messages/${msgId}`));
+        };
+
+        window.deleteCountry = (id) => {
+            if(confirm('متأكد تحذف الدولة وكل غرفها؟')){
+                remove(ref(db, `countries/${id}`));
+            }
+        };
+
+        window.deleteRoom = (countryId, roomId) => {
+            if(confirm('متأكد تحذف الغرفة؟')){
+                remove(ref(db, `countries/${countryId}/rooms/${roomId}`));
+            }
+        };
+
+        window.editRoom = (countryId, roomId) => {
+            const newColor = prompt('اللون الجديد (hex):');
+            const newAdmin = prompt('اسم المشرف الجديد:');
+            if(newColor) update(ref(db, `countries/${countryId}/rooms/${roomId}`), {color: newColor});
+            if(newAdmin) update(ref(db, `countries/${countryId}/rooms/${roomId}`), {admin: newAdmin});
+        };
+
+        function loadStats() {
+            onValue(ref(db, 'countries'), snap => {
+                const countries = snap.val();
+                let totalRooms = 0;
+                let totalCountries = 0;
+                for(let cid in countries){
+                    totalCountries++;
+                    if(countries[cid].rooms) totalRooms += Object.keys(countries[cid].rooms).length;
+                }
+                document.getElementById('stats').innerHTML = `
+                    <div>📍 عدد الدول: ${totalCountries}</div>
+                    <div>💬 عدد الغرف: ${totalRooms}</div>
+                `;
+            });
+        }
+    </script>
+</body>
+</html>
