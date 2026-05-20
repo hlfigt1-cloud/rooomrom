@@ -1,1538 +1,279 @@
-
-        .logo-section {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .iraq-flag {
-            width: 40px;
-            height: 28px;
-            border-radius: 4px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            display: flex;
-            flex-direction: column;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .iraq-flag .stripe {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .iraq-flag .red { background: #ce1126; }
-        .iraq-flag .white { background: #fff; position: relative; }
-        .iraq-flag .black { background: #000; }
-
-        .iraq-flag .white::before {
-            content: 'الله أكبر';
-            font-family: 'Tajawal', sans-serif;
-            font-size: 6px;
-            font-weight: 900;
-            color: #00843d;
-            position: absolute;
-        }
-
-        .logo-text {
-            font-size: 24px;
-            font-weight: 900;
-            background: linear-gradient(135deg, var(--accent), var(--accent-light));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .header-actions {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .header-btn {
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            color: var(--text-secondary);
-            padding: 8px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-family: 'Tajawal', sans-serif;
-            font-size: 13px;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .header-btn:hover {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary-light);
-        }
-
-        .header-btn.active {
-            background: var(--primary);
-            color: white;
-        }
-
-        /* الحاوية الرئيسية */
-        .main-container {
-            display: flex;
-            height: calc(100vh - 110px);
-        }
-
-        /* الشريط الجانبي */
-        .sidebar {
-            width: 280px;
-            background: var(--bg-card);
-            border-left: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            transition: all 0.3s;
-        }
-
-        .sidebar-header {
-            padding: 15px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .sidebar-header i {
-            color: var(--accent);
-            font-size: 18px;
-        }
-
-        .sidebar-header h3 {
-            font-size: 16px;
-            font-weight: 700;
-        }
-
-        .users-list {
-            flex: 1;
-            overflow-y: auto;
-            padding: 10px;
-        }
-
-        .user-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-bottom: 4px;
-        }
-
-        .user-item:hover {
-            background: var(--bg-input);
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 16px;
-            position: relative;
-        }
-
-        .user-avatar.owner { background: linear-gradient(135deg, #d4af37, #b8960c); }
-        .user-avatar.admin { background: linear-gradient(135deg, #e53935, #b71c1c); }
-        .user-avatar.master { background: linear-gradient(135deg, #8e24aa, #6a1b9a); }
-        .user-avatar.super { background: linear-gradient(135deg, #1e88e5, #1565c0); }
-        .user-avatar.moderator { background: linear-gradient(135deg, #43a047, #2e7d32); }
-        .user-avatar.user { background: linear-gradient(135deg, #78909c, #546e7a); }
-
-        .online-indicator {
-            position: absolute;
-            bottom: 2px;
-            right: 2px;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            border: 2px solid var(--bg-card);
-        }
-
-        .online-indicator.online { background: var(--success); }
-        .online-indicator.away { background: var(--warning); }
-        .online-indicator.busy { background: var(--danger); }
-
-        .user-info {
-            flex: 1;
-        }
-
-        .user-name {
-            font-weight: 700;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .user-role-badge {
-            font-size: 9px;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: 700;
-        }
-
-        .role-owner { background: var(--owner); color: #000; }
-        .role-admin { background: var(--admin); color: white; }
-        .role-master { background: var(--master); color: white; }
-        .role-super { background: var(--super); color: white; }
-        .role-moderator { background: var(--moderator); color: white; }
-        .role-user { background: var(--user); color: white; }
-
-        .user-country {
-            font-size: 11px;
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .country-flag {
-            font-size: 14px;
-        }
-
-        /* منطقة الدردشة */
-        .chat-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: var(--bg-dark);
-        }
-
-        .chat-header {
-            padding: 12px 20px;
-            background: var(--bg-card);
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .room-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .room-info h2 {
-            font-size: 16px;
-            font-weight: 700;
-        }
-
-        .room-stats {
-            display: flex;
-            gap: 15px;
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-
-        .room-stats span {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        /* رسائل الدردشة */
-        .messages-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .message {
-            display: flex;
-            gap: 12px;
-            max-width: 80%;
-            animation: messageSlide 0.3s ease;
-        }
-
-        @keyframes messageSlide {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .message.own {
-            align-self: flex-start;
-            flex-direction: row;
-        }
-
-        .message.other {
-            align-self: flex-end;
-            flex-direction: row-reverse;
-        }
-
-        .message-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 14px;
-            flex-shrink: 0;
-        }
-
-        .message-content {
-            background: var(--bg-card);
-            padding: 10px 14px;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            position: relative;
-        }
-
-        .message.own .message-content {
-            border-top-right-radius: 2px;
-        }
-
-        .message.other .message-content {
-            border-top-left-radius: 2px;
-            background: var(--primary-dark);
-            border-color: var(--primary);
-        }
-
-        .message-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 4px;
-        }
-
-        .message-author {
-            font-weight: 700;
-            font-size: 13px;
-        }
-
-        .message-time {
-            font-size: 10px;
-            color: var(--text-secondary);
-        }
-
-        .message-text {
-            font-size: 14px;
-            line-height: 1.6;
-            word-wrap: break-word;
-        }
-
-        /* رسائل النظام */
-        .system-message {
-            align-self: center;
-            background: rgba(212, 175, 55, 0.1);
-            border: 1px solid var(--accent);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            color: var(--accent-light);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* منطقة الإدخال */
-        .input-area {
-            padding: 15px 20px;
-            background: var(--bg-card);
-            border-top: 1px solid var(--border);
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .input-wrapper {
-            flex: 1;
-            position: relative;
-        }
-
-        .message-input {
-            width: 100%;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 12px 15px;
-            color: var(--text-primary);
-            font-family: 'Tajawal', sans-serif;
-            font-size: 14px;
-            outline: none;
-            transition: all 0.3s;
-        }
-
-        .message-input:focus {
-            border-color: var(--primary-light);
-            box-shadow: 0 0 0 3px rgba(45, 138, 66, 0.2);
-        }
-
-        .input-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .action-btn {
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            border: none;
-            background: var(--bg-input);
-            color: var(--text-secondary);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            transition: all 0.3s;
-        }
-
-        .action-btn:hover {
-            background: var(--primary);
-            color: white;
-            transform: scale(1.1);
-        }
-
-        .send-btn {
-            background: var(--primary) !important;
-            color: white !important;
-        }
-
-        .send-btn:hover {
-            background: var(--primary-light) !important;
-        }
-
-        /* لوحة التحكم */
-        .control-panel {
-            position: fixed;
-            top: 0;
-            right: -400px;
-            width: 400px;
-            height: 100vh;
-            background: var(--bg-card);
-            border-left: 2px solid var(--accent);
-            z-index: 1000;
-            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            flex-direction: column;
-            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
-        }
-
-        .control-panel.open {
-            right: 0;
-        }
-
-        .panel-header {
-            padding: 20px;
-            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
-            border-bottom: 2px solid var(--accent);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .panel-header h2 {
-            font-size: 18px;
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .panel-header h2 i {
-            color: var(--accent);
-        }
-
-        .close-panel {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 20px;
-            cursor: pointer;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-        }
-
-        .close-panel:hover {
-            background: rgba(255,255,255,0.1);
-        }
-
-        .panel-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-        }
-
-        .panel-section {
-            margin-bottom: 25px;
-        }
-
-        .panel-section h3 {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--accent);
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .panel-section h3::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: var(--border);
-        }
-
-        .control-group {
-            margin-bottom: 15px;
-        }
-
-        .control-label {
-            display: block;
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin-bottom: 6px;
-        }
-
-        .control-input {
-            width: 100%;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 10px 12px;
-            color: var(--text-primary);
-            font-family: 'Tajawal', sans-serif;
-            font-size: 13px;
-            outline: none;
-            transition: all 0.3s;
-        }
-
-        .control-input:focus {
-            border-color: var(--primary-light);
-        }
-
-        .control-btn {
-            width: 100%;
-            padding: 10px;
-            border-radius: 8px;
-            border: none;
-            font-family: 'Tajawal', sans-serif;
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: var(--primary-light);
-            transform: translateY(-2px);
-        }
-
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #b71c1c;
-        }
-
-        .btn-warning {
-            background: var(--warning);
-            color: #000;
-        }
-
-        .btn-info {
-            background: var(--info);
-            color: white;
-        }
-
-        .role-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-        }
-
-        .role-btn {
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            background: var(--bg-input);
-            color: var(--text-secondary);
-            font-family: 'Tajawal', sans-serif;
-            font-size: 12px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-align: center;
-        }
-
-        .role-btn:hover, .role-btn.active {
-            color: white;
-            transform: scale(1.05);
-        }
-
-        .role-btn.owner:hover, .role-btn.owner.active { background: var(--owner); border-color: var(--owner); color: #000; }
-        .role-btn.admin:hover, .role-btn.admin.active { background: var(--admin); border-color: var(--admin); }
-        .role-btn.master:hover, .role-btn.master.active { background: var(--master); border-color: var(--master); }
-        .role-btn.super:hover, .role-btn.super.active { background: var(--super); border-color: var(--super); }
-        .role-btn.moderator:hover, .role-btn.moderator.active { background: var(--moderator); border-color: var(--moderator); }
-
-        /* نافذة تسجيل الدخول */
-        .login-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.9);
-            z-index: 2000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .login-box {
-            background: var(--bg-card);
-            border: 2px solid var(--accent);
-            border-radius: 20px;
-            padding: 40px;
-            width: 90%;
-            max-width: 450px;
-            text-align: center;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-        }
-
-        .login-logo {
-            font-size: 36px;
-            font-weight: 900;
-            background: linear-gradient(135deg, var(--accent), var(--accent-light));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
-        }
-
-        .login-subtitle {
-            color: var(--text-secondary);
-            font-size: 14px;
-            margin-bottom: 30px;
-        }
-
-        .login-input {
-            width: 100%;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 14px 16px;
-            color: var(--text-primary);
-            font-family: 'Tajawal', sans-serif;
-            font-size: 15px;
-            outline: none;
-            margin-bottom: 12px;
-            transition: all 0.3s;
-        }
-
-        .login-input:focus {
-            border-color: var(--primary-light);
-            box-shadow: 0 0 0 3px rgba(45, 138, 66, 0.2);
-        }
-
-        .login-btn {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            border: none;
-            border-radius: 12px;
-            color: white;
-            font-family: 'Tajawal', sans-serif;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-top: 10px;
-        }
-
-        .login-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(45, 138, 66, 0.4);
-        }
-
-        .owner-login {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid var(--border);
-        }
-
-        .owner-login-text {
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-        }
-
-        .owner-code-input {
-            width: 100%;
-            background: rgba(212, 175, 55, 0.1);
-            border: 1px solid var(--accent);
-            border-radius: 8px;
-            padding: 10px;
-            color: var(--accent);
-            font-family: 'Tajawal', sans-serif;
-            font-size: 14px;
-            text-align: center;
-            outline: none;
-            letter-spacing: 4px;
-        }
-
-        /* قائمة الدول */
-        .countries-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-            max-height: 200px;
-            overflow-y: auto;
-            padding: 5px;
-        }
-
-        .country-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            padding: 8px 4px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 11px;
-        }
-
-        .country-item:hover, .country-item.active {
-            background: var(--bg-input);
-        }
-
-        .country-flag-emoji {
-            font-size: 24px;
-        }
-
-        .country-name {
-            font-size: 10px;
-            text-align: center;
-        }
-
-        /* تأثيرات إضافية */
-        .typing-indicator {
-            display: flex;
-            gap: 4px;
-            padding: 10px 14px;
-            background: var(--bg-card);
-            border-radius: 12px;
-            align-self: flex-start;
-            margin-bottom: 10px;
-        }
-
-        .typing-dot {
-            width: 8px;
-            height: 8px;
-            background: var(--primary-light);
-            border-radius: 50%;
-            animation: typingBounce 1.4s infinite ease-in-out;
-        }
-
-        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-
-        @keyframes typingBounce {
-            0%, 60%, 100% { transform: translateY(0); }
-            30% { transform: translateY(-10px); }
-        }
-
-        /* زر المايك */
-        .mic-btn {
-            position: relative;
-        }
-
-        .mic-btn.recording {
-            background: var(--danger) !important;
-            color: white !important;
-            animation: pulse 1s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(198, 40, 40, 0.7); }
-            50% { box-shadow: 0 0 0 10px rgba(198, 40, 40, 0); }
-        }
-
-        /* شريط التمرير المخصص */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: var(--bg-dark);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--primary);
-            border-radius: 3px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--primary-light);
-        }
-
-        /* تأثيرات الدخول */
-        .fade-in {
-            animation: fadeIn 0.5s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        /* زر العودة للأعلى */
-        .scroll-top {
-            position: fixed;
-            bottom: 80px;
-            left: 20px;
-            width: 40px;
-            height: 40px;
-            background: var(--primary);
-            border: none;
-            border-radius: 50%;
-            color: white;
-            cursor: pointer;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            z-index: 100;
-        }
-
-        .scroll-top.show {
-            display: flex;
-        }
-
-        /* قائمة المستخدم المنبثقة */
-        .user-menu {
-            position: absolute;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 8px 0;
-            min-width: 180px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            z-index: 500;
-            display: none;
-        }
-
-        .user-menu.show {
-            display: block;
-        }
-
-        .user-menu-item {
-            padding: 8px 15px;
-            font-size: 13px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s;
-        }
-
-        .user-menu-item:hover {
-            background: var(--bg-input);
-        }
-
-        .user-menu-item i {
-            width: 16px;
-            text-align: center;
-        }
-
-        .menu-divider {
-            height: 1px;
-            background: var(--border);
-            margin: 6px 0;
-        }
-
-        /* إشعار */
-        .notification {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-100px);
-            background: var(--bg-card);
-            border: 1px solid var(--accent);
-            border-radius: 12px;
-            padding: 12px 24px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 14px;
-            font-weight: 700;
-            z-index: 3000;
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        .notification.show {
-            transform: translateX(-50%) translateY(0);
-        }
-
-        .notification i {
-            color: var(--accent);
-        }
-
-        /* للجوال */
-        @media (max-width: 768px) {
-            .sidebar {
-                position: fixed;
-                right: -280px;
-                top: 110px;
-                height: calc(100vh - 110px);
-                z-index: 500;
-            }
-            
-            .sidebar.open {
-                right: 0;
-            }
-            
-            .control-panel {
-                width: 100%;
-                right: -100%;
-            }
-        }
-
-        /* زر تبديل القائمة */
-        .menu-toggle {
-            display: none;
-        }
-
-        @media (max-width: 768px) {
-            .menu-toggle {
-                display: flex;
-            }
-        }
+const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
+
+// ⚠️ ضع اسمك أو رمزك الخاص هنا. من يكتب هذا الاسم في التطبيق يصبح المالك فوراً!
+const MY_SECRET_OWNER_NAME = "Abood_99"; 
+
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
+
+let chatRooms = {
+    "العراق": {
+        "بغداد الثقافية": { owner: MY_SECRET_OWNER_NAME, admins: [], members: [] },
+        "جلسة شبابية": { owner: MY_SECRET_OWNER_NAME, admins: [], members: [] }
+    },
+    "السعودية": {
+        "مجلس الرياض": { owner: MY_SECRET_OWNER_NAME, admins: [], members: [] }
+    },
+    "مصر": {
+        "قهوة المحروسة": { owner: MY_SECRET_OWNER_NAME, admins: [], members: [] }
+    }
+};
+
+let bannedUsers = new Set(); 
+let userRoles = {}; 
+
+app.get('/', (req, res) => {
+    res.send(`
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>تطبيق دردشة المالك المتكامل</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin:0; padding:0; }
+        body { display: flex; height: 100vh; background: #eef2f3; }
+        #sidebar { width: 320px; background: #2c3e50; color: white; padding: 20px; display: flex; flex-direction: column; gap: 15px; box-shadow: 2px 0 5px rgba(0,0,0,0.1); }
+        #chat-panel { flex: 1; display: flex; flex-direction: column; background: #fff; }
+        #messages { flex: 1; padding: 20px; overflow-y: auto; background: #f9f9f9; display: flex; flex-direction: column; gap: 8px; }
+        
+        .msg { padding: 10px 14px; border-radius: 8px; max-width: 70%; word-wrap: break-word; font-size: 0.95rem; line-height: 1.4; }
+        .msg.owner { background: #f1c40f; color: #000; font-weight: bold; border-right: 4px solid #d35400; align-self: flex-start; }
+        .msg.admin { background: #e67e22; color: white; font-weight: bold; align-self: flex-start; }
+        .msg.user { background: #3498db; color: white; align-self: flex-start; }
+        .sys { color: #7f8c8d; font-style: italic; text-align: center; font-size: 0.85rem; margin: 5px 0; }
+        
+        #input-area { padding: 15px; display: flex; gap: 10px; background: #f0f0f0; border-top: 1px solid #ddd; }
+        input, select, button { padding: 12px; border-radius: 25px; border: 1px solid #ccc; outline: none; font-size: 0.95rem; }
+        input[type="text"] { padding-right: 15px; }
+        button { background: #2ecc71; color: white; cursor: pointer; border: none; font-weight: bold; transition: background 0.2s; }
+        button:hover { background: #27ae60; }
+        
+        .admin-zone { background: #c0392b; padding: 15px; border-radius: 10px; margin-top: auto; display: flex; flex-direction: column; gap: 8px; }
+        .admin-zone h4 { text-align: center; margin-bottom: 5px; border-bottom: 1px solid rgba(255,255,255,0.3); padding-bottom: 5px; }
+        .admin-zone button { background: #8e44ad; }
+        .admin-zone button:hover { background: #713391; }
     </style>
 </head>
 <body>
-    <!-- شريط الترحيب المتحرك -->
-    <div class="welcome-bar" id="welcomeBar">
-        <span class="welcome-text" id="welcomeText">🎉 أهلاً وسهلاً بكم في دردشة لقانا - نتمنى لكم أوقاتاً سعيدة 🎉</span>
-    </div>
 
-    <!-- رأس الصفحة -->
-    <div class="header">
-        <div class="logo-section">
-            <div class="iraq-flag">
-                <div class="stripe red"></div>
-                <div class="stripe white"></div>
-                <div class="stripe black"></div>
-            </div>
-            <span class="logo-text">لقانا</span>
-        </div>
-        <div class="header-actions">
-            <button class="header-btn menu-toggle" onclick="toggleSidebar()">
-                <i class="fas fa-users"></i>
-                <span>المتواجدون</span>
-            </button>
-            <button class="header-btn" onclick="showCountries()">
-                <i class="fas fa-globe"></i>
-                <span id="currentCountry">العراق 🇮🇶</span>
-            </button>
-            <button class="header-btn" onclick="toggleControlPanel()">
-                <i class="fas fa-cog"></i>
-                <span>الإعدادات</span>
-            </button>
-        </div>
-    </div>
+    <div id="sidebar">
+        <h3>بوابة التحكم والدردشة</h3>
+        <hr style="opacity:0.2;">
+        
+        <label>اسم المستخدم:</label>
+        <input type="text" id="username" placeholder="اكتب اسمك هنا">
+        
+        <label>اختر الدولة:</label>
+        <select id="countrySelect" onchange="updateRooms()"></select>
 
-    <!-- الحاوية الرئيسية -->
-    <div class="main-container">
-        <!-- الشريط الجانبي -->
-        <div class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <i class="fas fa-users"></i>
-                <h3>المتواجدون الآن <span style="color: var(--accent);">(24)</span></h3>
-            </div>
-            <div class="users-list" id="usersList">
-                <!-- سيتم ملؤها بالJavaScript -->
-            </div>
-        </div>
+        <label>اختر الغرفة:</label>
+        <select id="roomSelect"></select>
+        
+        <button onclick="joinChat()">دخول الغرفة</button>
 
-        <!-- منطقة الدردشة -->
-        <div class="chat-area">
-            <div class="chat-header">
-                <div class="room-info">
-                    <i class="fas fa-comments" style="color: var(--accent);"></i>
-                    <h2>الغرفة العامة</h2>
-                </div>
-                <div class="room-stats">
-                    <span><i class="fas fa-user"></i> 24 متصل</span>
-                    <span><i class="fas fa-clock"></i> 02:45 ص</span>
-                </div>
-            </div>
-
-            <div class="messages-container" id="messagesContainer">
-                <!-- الرسائل -->
-            </div>
-
-            <div class="input-area">
-                <div class="input-actions">
-                    <button class="action-btn" onclick="toggleEmoji()">
-                        <i class="fas fa-smile"></i>
-                    </button>
-                    <button class="action-btn mic-btn" id="micBtn" onclick="toggleMic()">
-                        <i class="fas fa-microphone"></i>
-                    </button>
-                </div>
-                <div class="input-wrapper">
-                    <input type="text" class="message-input" id="messageInput" placeholder="اكتب رسالتك هنا..." onkeypress="handleKeyPress(event)">
-                </div>
-                <div class="input-actions">
-                    <button class="action-btn send-btn" onclick="sendMessage()">
-                        <i class="fas fa-paper-plane"></i>
-                    </button>
-                </div>
+        <!-- لوحة تحكم المالك العام -->
+        <div class="admin-zone">
+            <h4>لوحة تحكم الإدارة</h4>
+            <input type="text" id="newRoomName" placeholder="اسم الغرفة الجديدة">
+            <select id="newRoomCountry">
+                <option value="العراق">العراق</option>
+                <option value="السعودية">السعودية</option>
+                <option value="مصر">مصر</option>
+            </select>
+            <button onclick="createNewRoom()">إضافة الغرفة فوراً</button>
+            <hr style="opacity:0.3; margin: 5px 0;">
+            <input type="text" id="targetUser" placeholder="اسم المستخدم المستهدف">
+            <div style="display:flex; gap:5px;">
+                <button onclick="adminAction('ban')" style="background:#7f8c8d; flex:1;">حظر</button>
+                <button onclick="adminAction('promote')" style="background:#2980b9; flex:1;">ترقية مشرف</button>
             </div>
         </div>
     </div>
 
-    <!-- زر العودة للأعلى -->
-    <button class="scroll-top" id="scrollTop" onclick="scrollToTop()">
-        <i class="fas fa-chevron-up"></i>
-    </button>
-
-    <!-- لوحة التحكم -->
-    <div class="control-panel" id="controlPanel">
-        <div class="panel-header">
-            <h2><i class="fas fa-shield-alt"></i> لوحة تحكم المالك</h2>
-            <button class="close-panel" onclick="toggleControlPanel()">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="panel-content">
-            <!-- شريط الترحيب -->
-            <div class="panel-section">
-                <h3><i class="fas fa-bullhorn"></i> شريط الترحيب المتحرك</h3>
-                <div class="control-group">
-                    <label class="control-label">نص الترحيب:</label>
-                    <input type="text" class="control-input" id="welcomeInput" value="🎉 أهلاً وسهلاً بكم في دردشة لقانا - نتمنى لكم أوقاتاً سعيدة 🎉">
-                </div>
-                <button class="control-btn btn-primary" onclick="updateWelcome()">
-                    <i class="fas fa-save"></i> تحديث شريط الترحيب
-                </button>
-            </div>
-
-            <!-- إدارة المستخدمين -->
-            <div class="panel-section">
-                <h3><i class="fas fa-user-shield"></i> ترقية المستخدمين</h3>
-                <div class="control-group">
-                    <label class="control-label">اسم المستخدم:</label>
-                    <input type="text" class="control-input" id="targetUser" placeholder="أدخل اسم المستخدم">
-                </div>
-                <div class="control-group">
-                    <label class="control-label">الرتبة الجديدة:</label>
-                    <div class="role-grid">
-                        <button class="role-btn moderator" onclick="setRole('moderator')">مشرف</button>
-                        <button class="role-btn super" onclick="setRole('super')">سوبر</button>
-                        <button class="role-btn master" onclick="setRole('master')">ماستر</button>
-                        <button class="role-btn admin" onclick="setRole('admin')">أدمن</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- إدارة الغرف -->
-            <div class="panel-section">
-                <h3><i class="fas fa-door-open"></i> إدارة الغرف</h3>
-                <button class="control-btn btn-primary" onclick="createRoom()">
-                    <i class="fas fa-plus"></i> إنشاء غرفة جديدة
-                </button>
-                <button class="control-btn btn-danger" onclick="closeRoom()">
-                    <i class="fas fa-lock"></i> إغلاق الغرفة الحالية
-                </button>
-            </div>
-
-            <!-- أدوات المالك -->
-            <div class="panel-section">
-                <h3><i class="fas fa-tools"></i> أدوات المالك</h3>
-                <button class="control-btn btn-warning" onclick="clearChat()">
-                    <i class="fas fa-trash"></i> مسح الدردشة
-                </button>
-                <button class="control-btn btn-danger" onclick="banUser()">
-                    <i class="fas fa-ban"></i> حظر مستخدم
-                </button>
-                <button class="control-btn btn-info" onclick="broadcastMessage()">
-                    <i class="fas fa-broadcast-tower"></i> رسالة إدارية للجميع
-                </button>
-            </div>
-
-            <!-- إعدادات عامة -->
-            <div class="panel-section">
-                <h3><i class="fas fa-sliders-h"></i> إعدادات عامة</h3>
-                <button class="control-btn btn-primary" onclick="toggleRegistration()">
-                    <i class="fas fa-user-plus"></i> تفعيل/تعطيل التسجيل
-                </button>
-                <button class="control-btn btn-primary" onclick="togglePrivateChat()">
-                    <i class="fas fa-envelope"></i> تفعيل/تعطيل المحادثات الخاصة
-                </button>
-            </div>
+    <div id="chat-panel">
+        <div id="messages"></div>
+        <div id="input-area">
+            <input type="text" id="msgInput" style="flex:1;" placeholder="اكتب رسالتك هنا..." disabled onkeypress="handleKeyPress(event)">
+            <button id="sendBtn" onclick="sendMsg()" disabled>إرسال</button>
         </div>
     </div>
 
-    <!-- نافذة تسجيل الدخول -->
-    <div class="login-overlay" id="loginOverlay">
-        <div class="login-box">
-            <div class="login-logo">لقانا</div>
-            <div class="login-subtitle">دردشة كتابية عربية - تواصل مع العالم</div>
-            
-            <input type="text" class="login-input" id="loginNickname" placeholder="أدخل nickname الخاص بك">
-            
-            <div style="margin-bottom: 12px;">
-                <label style="display: block; text-align: right; font-size: 12px; color: var(--text-secondary); margin-bottom: 6px;">اختر دولتك:</label>
-                <div class="countries-grid" id="loginCountries">
-                    <!-- سيتم ملؤها بالJavaScript -->
-                </div>
-            </div>
-            
-            <button class="login-btn" onclick="login()">
-                <i class="fas fa-sign-in-alt"></i> دخول الدردشة
-            </button>
-            
-            <div class="owner-login">
-                <div class="owner-login-text">دخول المالك (Owner)</div>
-                <input type="password" class="owner-code-input" id="ownerCode" placeholder="رمز المالك" maxlength="8">
-                <button class="login-btn" style="margin-top: 8px; background: linear-gradient(135deg, var(--accent), var(--accent-light)); color: #000;" onclick="ownerLogin()">
-                    <i class="fas fa-crown"></i> دخول كمالك
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- إشعارات -->
-    <div class="notification" id="notification">
-        <i class="fas fa-check-circle"></i>
-        <span id="notificationText">تمت العملية بنجاح</span>
-    </div>
-
-    <!-- قائمة المستخدم -->
-    <div class="user-menu" id="userMenu">
-        <div class="user-menu-item" onclick="privateChat()">
-            <i class="fas fa-envelope"></i> محادثة خاصة
-        </div>
-        <div class="user-menu-item" onclick="viewProfile()">
-            <i class="fas fa-user"></i> عرض الملف الشخصي
-        </div>
-        <div class="menu-divider"></div>
-        <div class="user-menu-item" onclick="ignoreUser()">
-            <i class="fas fa-eye-slash"></i> تجاهل
-        </div>
-        <div class="user-menu-item" onclick="reportUser()">
-            <i class="fas fa-exclamation-triangle"></i> إبلاغ
-        </div>
-    </div>
-
+    <script src="/socket.io/socket.io.js"></script>
     <script>
-        // البيانات
-        let currentUser = null;
-        let isOwner = false;
-        let selectedCountry = 'IQ';
-        let selectedRole = 'moderator';
-        let users = [];
-        let messages = [];
+        const socket = io();
+        let allRoomsData = {};
 
-        const countries = [
-            { code: 'IQ', name: 'العراق', flag: '🇮🇶' },
-            { code: 'SA', name: 'السعودية', flag: '🇸🇦' },
-            { code: 'AE', name: 'الإمارات', flag: '🇦🇪' },
-            { code: 'KW', name: 'الكويت', flag: '🇰🇼' },
-            { code: 'QA', name: 'قطر', flag: '🇶🇦' },
-            { code: 'BH', name: 'البحرين', flag: '🇧🇭' },
-            { code: 'OM', name: 'عمان', flag: '🇴🇲' },
-            { code: 'YE', name: 'اليمن', flag: '🇾🇪' },
-            { code: 'JO', name: 'الأردن', flag: '🇯🇴' },
-            { code: 'SY', name: 'سوريا', flag: '🇸🇾' },
-            { code: 'LB', name: 'لبنان', flag: '🇱🇧' },
-            { code: 'PS', name: 'فلسطين', flag: '🇵🇸' },
-            { code: 'EG', name: 'مصر', flag: '🇪🇬' },
-            { code: 'SD', name: 'السودان', flag: '🇸🇩' },
-            { code: 'LY', name: 'ليبيا', flag: '🇱🇾' },
-            { code: 'TN', name: 'تونس', flag: '🇹🇳' },
-            { code: 'DZ', name: 'الجزائر', flag: '🇩🇿' },
-            { code: 'MA', name: 'المغرب', flag: '🇲🇦' },
-            { code: 'MR', name: 'موريتانيا', flag: '🇲🇷' },
-            { code: 'SO', name: 'الصومال', flag: '🇸🇴' },
-            { code: 'DJ', name: 'جيبوتي', flag: '🇩🇯' },
-            { code: 'KM', name: 'جزر القمر', flag: '🇰🇲' },
-        ];
-
-        const sampleUsers = [
-            { name: 'المحترف', role: 'owner', country: 'IQ', status: 'online', avatar: 'م' },
-            { name: 'نورالدين', role: 'admin', country: 'SA', status: 'online', avatar: 'ن' },
-            { name: 'فاطمة', role: 'master', country: 'AE', status: 'online', avatar: 'ف' },
-            { name: 'أحمد', role: 'super', country: 'KW', status: 'away', avatar: 'أ' },
-            { name: 'سارة', role: 'moderator', country: 'QA', status: 'online', avatar: 'س' },
-            { name: 'خالد', role: 'user', country: 'BH', status: 'online', avatar: 'خ' },
-            { name: 'ليلى', role: 'user', country: 'OM', status: 'busy', avatar: 'ل' },
-            { name: 'محمد', role: 'user', country: 'YE', status: 'online', avatar: 'م' },
-            { name: 'عائشة', role: 'user', country: 'JO', status: 'online', avatar: 'ع' },
-            { name: 'يوسف', role: 'user', country: 'SY', status: 'away', avatar: 'ي' },
-            { name: 'رنا', role: 'user', country: 'LB', status: 'online', avatar: 'ر' },
-            { name: 'عمر', role: 'user', country: 'PS', status: 'online', avatar: 'ع' },
-        ];
-
-        const sampleMessages = [
-            { author: 'المحترف', role: 'owner', text: 'أهلاً وسهلاً بالجميع! 🎉', time: '02:30 ص', type: 'own' },
-            { author: 'نورالدين', role: 'admin', text: 'مساء الخير يا شباب، كيف الحال؟', time: '02:32 ص', type: 'other' },
-            { author: 'فاطمة', role: 'master', text: 'الحمد لله بخير، والجميع؟', time: '02:33 ص', type: 'own' },
-            { author: 'أحمد', role: 'super', text: 'اليوم الجو جميل جداً في الكويت ☀️', time: '02:35 ص', type: 'other' },
-            { author: 'سارة', role: 'moderator', text: 'أنا من قطر، هنا الحرارة 40 درجة! 🔥', time: '02:36 ص', type: 'own' },
-            { author: 'خالد', role: 'user', text: 'ههههه صحيح يا سارة، الخليج كلها حر 🔥', time: '02:37 ص', type: 'other' },
-            { author: 'ليلى', role: 'user', text: 'السلام عليكم، أنا جديدة هنا 😊', time: '02:38 ص', type: 'own' },
-            { author: 'المحترف', role: 'owner', text: 'أهلاً ليلى! نورتي الدردشة 🌟', time: '02:39 ص', type: 'other' },
-        ];
-
-        // تهيئة
-        function init() {
-            renderCountries();
-            renderUsers();
-            renderMessages();
-        }
-
-        // عرض الدول
-        function renderCountries() {
-            const container = document.getElementById('loginCountries');
-            container.innerHTML = countries.map(c => `
-                <div class="country-item ${c.code === selectedCountry ? 'active' : ''}" onclick="selectCountry('${c.code}')">
-                    <span class="country-flag-emoji">${c.flag}</span>
-                    <span class="country-name">${c.name}</span>
-                </div>
-            `).join('');
-        }
-
-        function selectCountry(code) {
-            selectedCountry = code;
-            renderCountries();
-        }
-
-        // عرض المستخدمين
-        function renderUsers() {
-            const container = document.getElementById('usersList');
-            const allUsers = currentUser ? [currentUser, ...sampleUsers] : sampleUsers;
+        socket.on('initData', (data) => {
+            allRoomsData = data;
+            const countrySelect = document.getElementById('countrySelect');
+            const currentSelected = countrySelect.value;
+            countrySelect.innerHTML = '';
             
-            container.innerHTML = allUsers.map(u => {
-                const country = countries.find(c => c.code === u.country);
-                return `
-                    <div class="user-item" onclick="showUserMenu(event, '${u.name}')">
-                        <div class="user-avatar ${u.role}">
-                            ${u.avatar}
-                            <div class="online-indicator ${u.status}"></div>
-                        </div>
-                        <div class="user-info">
-                            <div class="user-name">
-                                ${u.name}
-                                <span class="user-role-badge role-${u.role}">${getRoleName(u.role)}</span>
-                            </div>
-                            <div class="user-country">
-                                <span class="country-flag">${country ? country.flag : '🏳️'}</span>
-                                ${country ? country.name : u.country}
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
+            Object.keys(data).forEach(country => {
+                let opt = document.createElement('option');
+                opt.value = country;
+                opt.innerText = country;
+                countrySelect.appendChild(opt);
+            });
+            if(currentSelected) countrySelect.value = currentSelected;
+            updateRooms();
+        });
 
-        function getRoleName(role) {
-            const roles = {
-                owner: 'مالك',
-                admin: 'أدمن',
-                master: 'ماستر',
-                super: 'سوبر',
-                moderator: 'مشرف',
-                user: 'عضو'
-            };
-            return roles[role] || role;
-        }
-
-        // عرض الرسائل
-        function renderMessages() {
-            const container = document.getElementById('messagesContainer');
-            const msgs = currentUser ? sampleMessages : [];
-            
-            container.innerHTML = msgs.map(m => `
-                <div class="message ${m.type}">
-                    <div class="message-avatar ${m.role}">${m.avatar || m.author[0]}</div>
-                    <div class="message-content">
-                        <div class="message-header">
-                            <span class="message-author" style="color: var(--${m.role === 'owner' ? 'owner' : m.role === 'admin' ? 'admin' : m.role === 'master' ? 'master' : m.role === 'super' ? 'super' : m.role === 'moderator' ? 'moderator' : 'user'})">${m.author}</span>
-                            <span class="message-time">${m.time}</span>
-                        </div>
-                        <div class="message-text">${m.text}</div>
-                    </div>
-                </div>
-            `).join('');
-            
-            container.scrollTop = container.scrollHeight;
-        }
-
-        // تسجيل الدخول
-        function login() {
-            const nickname = document.getElementById('loginNickname').value.trim();
-            if (!nickname) {
-                showNotification('الرجاء إدخال nickname', 'error');
-                return;
-            }
-            
-            const country = countries.find(c => c.code === selectedCountry);
-            currentUser = {
-                name: nickname,
-                role: 'user',
-                country: selectedCountry,
-                status: 'online',
-                avatar: nickname[0]
-            };
-            
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('currentCountry').textContent = `${country.name} ${country.flag}`;
-            renderUsers();
-            renderMessages();
-            showNotification(`أهلاً ${nickname}! تم الدخول بنجاح`);
-        }
-
-        // دخول المالك
-        function ownerLogin() {
-            const code = document.getElementById('ownerCode').value;
-            if (code === '19952005') {
-                isOwner = true;
-                const nickname = document.getElementById('loginNickname').value.trim() || 'المالك';
-                const country = countries.find(c => c.code === selectedCountry);
-                
-                currentUser = {
-                    name: nickname,
-                    role: 'owner',
-                    country: selectedCountry,
-                    status: 'online',
-                    avatar: nickname[0]
-                };
-                
-                document.getElementById('loginOverlay').style.display = 'none';
-                document.getElementById('currentCountry').textContent = `${country.name} ${country.flag}`;
-                renderUsers();
-                renderMessages();
-                showNotification('تم الدخول كمالك! ✅', 'success');
-            } else {
-                showNotification('رمز المالك غير صحيح!', 'error');
+        function updateRooms() {
+            const country = document.getElementById('countrySelect').value;
+            const roomSelect = document.getElementById('roomSelect');
+            roomSelect.innerHTML = '';
+            if(allRoomsData[country]) {
+                Object.keys(allRoomsData[country]).forEach(room => {
+                    let opt = document.createElement('option');
+                    opt.value = room;
+                    opt.innerText = room;
+                    roomSelect.appendChild(opt);
+                });
             }
         }
 
-        // إرسال رسالة
-        function sendMessage() {
-            const input = document.getElementById('messageInput');
-            const text = input.value.trim();
-            if (!text || !currentUser) return;
+        function joinChat() {
+            const username = document.getElementById('username').value.trim();
+            const country = document.getElementById('countrySelect').value;
+            const room = document.getElementById('roomSelect').value;
+
+            if(!username) return alert('الرجاء كتابة اسم المستخدم');
+
+            socket.emit('joinRoom', { username, country, room });
             
-            const msg = {
-                author: currentUser.name,
-                role: currentUser.role,
-                text: text,
-                time: new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }),
-                type: 'own'
-            };
-            
-            sampleMessages.push(msg);
-            input.value = '';
-            renderMessages();
+            document.getElementById('msgInput').disabled = false;
+            document.getElementById('sendBtn').disabled = false;
+            document.getElementById('messages').innerHTML = '<div class="sys">تم دخولك إلى غرفة ('+room+') بنجاح</div>';
+        }
+
+        function sendMsg() {
+            const input = document.getElementById('msgInput');
+            if(input.value.trim() !== "") {
+                socket.emit('chatMessage', input.value);
+                input.value = '';
+            }
         }
 
         function handleKeyPress(e) {
-            if (e.key === 'Enter') sendMessage();
+            if(e.key === 'Enter') sendMsg();
         }
 
-        // لوحة التحكم
-        function toggleControlPanel() {
-            if (!isOwner) {
-                showNotification('هذه الميزة متاحة للمالك فقط!', 'error');
-                return;
-            }
-            document.getElementById('controlPanel').classList.toggle('open');
-        }
-
-        // تحديث شريط الترحيب
-        function updateWelcome() {
-            const text = document.getElementById('welcomeInput').value;
-            document.getElementById('welcomeText').textContent = text;
-            showNotification('تم تحديث شريط الترحيب! ✅');
-        }
-
-        // تعيين رتبة
-        function setRole(role) {
-            selectedRole = role;
-            document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-        }
-
-        // أدوات المالك
-        function clearChat() {
-            sampleMessages.length = 0;
-            renderMessages();
-            showNotification('تم مسح الدردشة!');
-        }
-
-        function banUser() {
-            const user = document.getElementById('targetUser').value;
-            if (user) {
-                showNotification(`تم حظر المستخدم: ${user}`);
-            }
-        }
-
-        function broadcastMessage() {
-            const text = prompt('أدخل الرسالة الإدارية:');
-            if (text) {
-                sampleMessages.push({
-                    author: 'النظام',
-                    role: 'owner',
-                    text: `📢 إعلان إداري: ${text}`,
-                    time: new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }),
-                    type: 'system'
-                });
-                renderMessages();
-            }
-        }
-
-        function createRoom() {
-            const name = prompt('اسم الغرفة الجديدة:');
-            if (name) {
-                showNotification(`تم إنشاء الغرفة: ${name}`);
-            }
-        }
-
-        function closeRoom() {
-            if (confirm('هل أنت متأكد من إغلاق الغرفة؟')) {
-                showNotification('تم إغلاق الغرفة!');
-            }
-        }
-
-        function toggleRegistration() {
-            showNotification('تم تبديل حالة التسجيل!');
-        }
-
-        function togglePrivateChat() {
-            showNotification('تم تبديل حالة المحادثات الخاصة!');
-        }
-
-        // قائمة المستخدم
-        function showUserMenu(event, username) {
-            event.stopPropagation();
-            const menu = document.getElementById('userMenu');
-            menu.style.display = 'block';
-            menu.style.top = event.pageY + 'px';
-            menu.style.left = event.pageX + 'px';
-        }
-
-        function privateChat() {
-            showNotification('تم فتح محادثة خاصة');
-            document.getElementById('userMenu').style.display = 'none';
-        }
-
-        function viewProfile() {
-            showNotification('عرض الملف الشخصي');
-            document.getElementById('userMenu').style.display = 'none';
-        }
-
-        function ignoreUser() {
-            showNotification('تم تجاهل المستخدم');
-            document.getElementById('userMenu').style.display = 'none';
-        }
-
-        function reportUser() {
-            showNotification('تم الإبلاغ عن المستخدم');
-            document.getElementById('userMenu').style.display = 'none';
-        }
-
-        // إشعارات
-        function showNotification(text, type = 'success') {
-            const notif = document.getElementById('notification');
-            const notifText = document.getElementById('notificationText');
-            notifText.textContent = text;
-            notif.classList.add('show');
-            setTimeout(() => notif.classList.remove('show'), 3000);
-        }
-
-        // المايك
-        function toggleMic() {
-            const btn = document.getElementById('micBtn');
-            btn.classList.toggle('recording');
-            if (btn.classList.contains('recording')) {
-                showNotification('🎤 جاري التسجيل...');
-            } else {
-                showNotification('✅ تم إرسال الرسالة الصوتية');
-            }
-        }
-
-        // إيموجي
-        function toggleEmoji() {
-            showNotification('😊 قائمة الإيموجي قريباً!');
-        }
-
-        // الدول
-        function showCountries() {
-            showNotification('🌍 قائمة الدول قريباً!');
-        }
-
-        // القائمة الجانبية للجوال
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('open');
-        }
-
-        // التمرير
-        function scrollToTop() {
-            document.getElementById('messagesContainer').scrollTop = 0;
-        }
-
-        document.getElementById('messagesContainer').addEventListener('scroll', function() {
-            document.getElementById('scrollTop').classList.toggle('show', this.scrollTop > 300);
+        socket.on('message', (data) => {
+            const msgDiv = document.createElement('div');
+            msgDiv.classList.add('msg', data.role);
+            
+            let roleTitle = data.role === 'owner' ? 'المالك' : (data.role === 'admin' ? 'مشرف' : 'عضو');
+            msgDiv.innerHTML = '<strong>[' + roleTitle + '] ' + data.user + ':</strong> ' + data.text;
+            
+            const messagesContainer = document.getElementById('messages');
+            messagesContainer.appendChild(msgDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
         });
 
-        // إغلاق القوائم عند النقر خارجها
-        document.addEventListener('click', function() {
-            document.getElementById('userMenu').style.display = 'none';
+        socket.on('sysMessage', (msg) => {
+            const msgDiv = document.createElement('div');
+            msgDiv.classList.add('sys');
+            msgDiv.innerText = msg;
+            const messagesContainer = document.getElementById('messages');
+            messagesContainer.appendChild(msgDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
         });
 
-        // بدء التشغيل
-        init();
+        socket.on('errorMessage', (msg) => {
+            alert(msg);
+        });
+
+        function createNewRoom() {
+            const roomName = document.getElementById('newRoomName').value.trim();
+            const country = document.getElementById('newRoomCountry').value;
+            if(!roomName) return alert('اكتب اسم الغرفة أولاً');
+            socket.emit('createRoom', { country, roomName });
+            document.getElementById('newRoomName').value = '';
+        }
+
+        function adminAction(action) {
+            const targetUser = document.getElementById('targetUser').value.trim();
+            if(!targetUser) return alert('اكتب اسم المستخدم المستهدف');
+            socket.emit('adminAction', { action, targetUser });
+            document.getElementById('targetUser').value = '';
+        }
     </script>
 </body>
-</html>"""
+</html>
+    `);
+});
 
-# حفظ الملف
-with open('/mnt/agents/output/laqana_chat.html', 'w', encoding='utf-8') as f:
-    f.write(html_content)
+io.on('connection', (socket) => {
+    socket.emit('initData', chatRooms);
 
-print("✅ تم إنشاء تطبيق الدردشة بنجاح!")
-print("📁 المسار: /mnt/agents/output/laqana_chat.html")
+    socket.on('joinRoom', ({ username, country, room }) => {
+        if (bannedUsers.has(username)) {
+            socket.emit('errorMessage', 'أنت محظور من دخول هذا التطبيق تماماً.');
+            return;
+        }
+
+        socket.join(room);
+        socket.username = username;
+        socket.room = room;
+        socket.country = country;
+        
+        // التحقق من الاسم فقط لمنح رتبة المالك
+        if (username === MY_SECRET_OWNER_NAME) {
+            socket.role = "owner";
+        } else if (userRoles[username] === "admin") {
+            socket.role = "admin";
+        } else {
+            socket.role = "user";
+        }
+
+        io.to(room).emit('sysMessage', `النظام: انضم ${username} إلى الغرفة برتبة (${socket.role === 'owner' ? 'المالك' : (socket.role === 'admin' ? 'مشرف' : 'عضو')})`);
+    });
+
+    socket.on('chatMessage', (msg) => {
+        if (bannedUsers.has(socket.username)) return;
+
+        io.to(socket.room).emit('message', {
+            user: socket.username,
+            text: msg,
+            role: socket.role
+        });
+    });
+
+    socket.on('createRoom', ({ country, roomName }) => {
+        if (socket.role === "owner") {
+            if (!chatRooms[country]) chatRooms[country] = {};
+            chatRooms[country][roomName] = { owner: MY_SECRET_OWNER_NAME, admins: [], members: [] };
+            io.emit('initData', chatRooms);
+        } else {
+            socket.emit('errorMessage', 'خطأ: صلاحية إنشاء الغرف محصورة بمالك التطبيق فقط!');
+        }
+    });
+
+    socket.on('adminAction', ({ action, targetUser }) => {
+        if (socket.role === 'owner' || socket.role === 'admin') {
+            if (action === 'ban') {
+                if (targetUser === MY_SECRET_OWNER_NAME) return socket.emit('errorMessage', 'لا يمكن حظر المالك العام للتطبيق!');
+                bannedUsers.add(targetUser);
+                io.emit('sysMessage', `تنبيه: تم حظر المستخدم [${targetUser}] نهائياً من الدردشة.`);
+            } else if (action === 'promote') {
+                userRoles[targetUser] = "admin";
+                io.emit('sysMessage', `مبروك: تم ترقية المستخدم [${targetUser}] إلى رتبة مشرف بنجاح.`);
+            }
+        } else {
+            socket.emit('errorMessage', 'ليس لديك صلاحيات كافية لتنفيذ هذا الإجراء.');
+        }
+    });
+
+    socket.on('disconnect', () => {
+        if (socket.room) {
+            io.to(socket.room).emit('sysMessage', `غادر ${socket.username} الدردشة.`);
+        }
+    });
+});
+
+const PORT = 3000;
+server.listen(PORT, () => console.log(`التطبيق يعمل على: http://localhost:${PORT}`));
