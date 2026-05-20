@@ -1,279 +1,252 @@
-const express = require('express');
-const http = require('http');
-const { Server } = require('socket.io');
-
-// ⚠️ ضع اسمك أو رمزك الخاص هنا. من يكتب هذا الاسم في التطبيق يصبح المالك فوراً!
-const MY_SECRET_OWNER_NAME = "Abood_99"; 
-
-const app = express();
-const server = http.createServer(app);
-const io = new Server(server);
-
-let chatRooms = {
-    "العراق": {
-        "بغداد الثقافية": { owner: MY_SECRET_OWNER_NAME, admins: [], members: [] },
-        "جلسة شبابية": { owner: MY_SECRET_OWNER_NAME, admins: [], members: [] }
-    },
-    "السعودية": {
-        "مجلس الرياض": { owner: MY_SECRET_OWNER_NAME, admins: [], members: [] }
-    },
-    "مصر": {
-        "قهوة المحروسة": { owner: MY_SECRET_OWNER_NAME, admins: [], members: [] }
-    }
-};
-
-let bannedUsers = new Set(); 
-let userRoles = {}; 
-
-app.get('/', (req, res) => {
-    res.send(`
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>تطبيق دردشة المالك المتكامل</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تطبيق دردشة الغرف الاحترافي</title>
+    <!-- تضمين مكتبات التصميم والسوكيت اللحظي -->
+    <script src="https://jsdelivr.net"></script>
+    <script src="https://socket.io"></script>
+    <link href="https://jsdelivr.net" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin:0; padding:0; }
-        body { display: flex; height: 100vh; background: #eef2f3; }
-        #sidebar { width: 320px; background: #2c3e50; color: white; padding: 20px; display: flex; flex-direction: column; gap: 15px; box-shadow: 2px 0 5px rgba(0,0,0,0.1); }
-        #chat-panel { flex: 1; display: flex; flex-direction: column; background: #fff; }
-        #messages { flex: 1; padding: 20px; overflow-y: auto; background: #f9f9f9; display: flex; flex-direction: column; gap: 8px; }
-        
-        .msg { padding: 10px 14px; border-radius: 8px; max-width: 70%; word-wrap: break-word; font-size: 0.95rem; line-height: 1.4; }
-        .msg.owner { background: #f1c40f; color: #000; font-weight: bold; border-right: 4px solid #d35400; align-self: flex-start; }
-        .msg.admin { background: #e67e22; color: white; font-weight: bold; align-self: flex-start; }
-        .msg.user { background: #3498db; color: white; align-self: flex-start; }
-        .sys { color: #7f8c8d; font-style: italic; text-align: center; font-size: 0.85rem; margin: 5px 0; }
-        
-        #input-area { padding: 15px; display: flex; gap: 10px; background: #f0f0f0; border-top: 1px solid #ddd; }
-        input, select, button { padding: 12px; border-radius: 25px; border: 1px solid #ccc; outline: none; font-size: 0.95rem; }
-        input[type="text"] { padding-right: 15px; }
-        button { background: #2ecc71; color: white; cursor: pointer; border: none; font-weight: bold; transition: background 0.2s; }
-        button:hover { background: #27ae60; }
-        
-        .admin-zone { background: #c0392b; padding: 15px; border-radius: 10px; margin-top: auto; display: flex; flex-direction: column; gap: 8px; }
-        .admin-zone h4 { text-align: center; margin-bottom: 5px; border-bottom: 1px solid rgba(255,255,255,0.3); padding-bottom: 5px; }
-        .admin-zone button { background: #8e44ad; }
-        .admin-zone button:hover { background: #713391; }
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; height: 100vh; }
+        .chat-container { height: 85vh; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; }
+        .rooms-sidebar { background: #2c3e50; color: white; height: 100%; overflow-y: auto; }
+        .chat-area { height: 100%; display: flex; flex-direction: column; }
+        .messages-box { flex: 1; overflow-y: auto; padding: 20px; background: #e5ddd5; }
+        .msg { margin-bottom: 12px; padding: 8px 14px; border-radius: 8px; max-width: 75%; width: fit-content; }
+        .msg-admin { background: #dcf8c6; margin-left: auto; border-right: 4px solid #128c7e; }
+        .msg-user { background: #fff; margin-right: auto; border-right: 4px solid #3498db; }
+        .msg-system { background: #ffeaa7; margin: 5px auto; text-align: center; font-size: 13px; max-width: 90%; border: none; }
+        .room-item { cursor: pointer; padding: 12px; border-bottom: 1px solid #34495e; transition: 0.3s; }
+        .room-item:hover, .room-active { background: #34495e; font-weight: bold; }
+        .badge-admin { background-color: #e74c3c; color: white; font-size: 11px; }
     </style>
 </head>
 <body>
 
-    <div id="sidebar">
-        <h3>بوابة التحكم والدردشة</h3>
-        <hr style="opacity:0.2;">
-        
-        <label>اسم المستخدم:</label>
-        <input type="text" id="username" placeholder="اكتب اسمك هنا">
-        
-        <label>اختر الدولة:</label>
-        <select id="countrySelect" onchange="updateRooms()"></select>
+<div id="app" class="container-fluid py-3">
+    <!-- شاشة تسجيل الدخول واختيار الرتبة -->
+    <div v-if="!isLoggedIn" class="row justify-content-center align-items-center" style="height: 90vh;">
+        <div class="col-md-4 card p-4 shadow">
+            <h3 class="text-center mb-4 text-primary">تسجيل دخول الدردشة</h3>
+            <div class="mb-3">
+                <label class="form-label">اسم المستعار:</label>
+                <input type="text" class="form-control" v-model="username" placeholder="اكتب اسمك هنا...">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">إذا كنت المالك، أدخل رمز التحقق (اختياري):</label>
+                <input type="password" class="form-control" v-model="enteredAdminKey" placeholder="اتركه فارغاً إذا كنت عضواً عادياً">
+            </div>
+            <button class="btn btn-primary w-100" @click="login">دخول التطبيق</button>
+        </div>
+    </div>
 
-        <label>اختر الغرفة:</label>
-        <select id="roomSelect"></select>
-        
-        <button onclick="joinChat()">دخول الغرفة</button>
+    <!-- شاشة التطبيق الرئيسية بعد الدخول -->
+    <div v-else class="row chat-container">
+        <!-- القائمة الجانبية لإدارة وإضافة الغرف -->
+        <div class="col-md-3 rooms-sidebar p-3 d-flex flex-column justify-content-between">
+            <div>
+                <h5 class="mb-3 border-bottom pb-2">📂 غرف الدردشة اللحظية</h5>
+                <div v-for="room in rooms" :key="room.id" :class="['room-item', activeRoom === room.id ? 'room-active' : '']" @click="switchRoom(room.id)">
+                    # {{ room.name }}
+                    <span v-if="room.isProtected" class="badge bg-warning text-dark float-end" style="font-size:10px;">خاصة</span>
+                </div>
+            </div>
+            
+            <!-- قسم إضافة غرفة جديدة (متاح للمالك فقط أو برمز المالك) -->
+            <div class="mt-4 pt-3 border-top">
+                <h6>➕ إضافة غرفة جديدة</h6>
+                <input type="text" class="form-control form-control-sm mb-2" v-model="newRoomName" placeholder="اسم الغرفة الجديدة...">
+                <button class="btn btn-success btn-sm w-100" @click="createNewRoom">إنشاء الغرفة فوراً</button>
+            </div>
+        </div>
 
-        <!-- لوحة تحكم المالك العام -->
-        <div class="admin-zone">
-            <h4>لوحة تحكم الإدارة</h4>
-            <input type="text" id="newRoomName" placeholder="اسم الغرفة الجديدة">
-            <select id="newRoomCountry">
-                <option value="العراق">العراق</option>
-                <option value="السعودية">السعودية</option>
-                <option value="مصر">مصر</option>
-            </select>
-            <button onclick="createNewRoom()">إضافة الغرفة فوراً</button>
-            <hr style="opacity:0.3; margin: 5px 0;">
-            <input type="text" id="targetUser" placeholder="اسم المستخدم المستهدف">
-            <div style="display:flex; gap:5px;">
-                <button onclick="adminAction('ban')" style="background:#7f8c8d; flex:1;">حظر</button>
-                <button onclick="adminAction('promote')" style="background:#2980b9; flex:1;">ترقية مشرف</button>
+        <!-- منطقة المحادثة والكتابة -->
+        <div class="col-md-9 chat-area p-0">
+            <div class="bg-light p-3 border-bottom d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="m-0">مرحبًا: {{ username }} <span :class="['badge', isAdmin ? 'badge-admin' : 'bg-secondary']">{{ userRole }}</span></h5>
+                    <small class="text-muted">أنت الآن في غرفة: {{ currentRoomName }}</small>
+                </div>
+                <button class="btn btn-danger btn-sm" @click="logout">خروج</button>
+            </div>
+
+            <!-- صندوق عرض الرسائل -->
+            <div class="messages-box" id="msgBox">
+                <div v-for="(msg, index) in filteredMessages" :key="index" :class="['msg', msg.role === 'المالك' ? 'msg-admin' : msg.role === 'system' ? 'msg-system' : 'msg-user']">
+                    <div v-if="msg.role !== 'system'">
+                        <strong class="d-block text-dark" style="font-size: 13px;">
+                            {{ msg.sender }} 
+                            <span v-if="msg.role === 'المالك'" class="badge badge-admin">المالك ★</span>
+                            <!-- ميزة المالك: زر طرد المستخدم المخالف -->
+                            <button v-if="isAdmin && msg.sender !== username" class="btn btn-xs btn-outline-danger py-0 px-1 ms-2" style="font-size:10px;" @click="kickUser(msg.sender)">طرد</button>
+                        </strong>
+                        <span>{{ msg.text }}</span>
+                        <small class="d-block text-muted text-end" style="font-size: 9px;">{{ msg.time }}</small>
+                    </div>
+                    <div v-else>
+                        <span>{{ msg.text }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- صندوق إرسال الرسائل الكتابية -->
+            <div class="p-3 bg-white border-top">
+                <div class="input-group">
+                    <input type="text" class="form-control" v-model="currentMessage" @keyup.enter="sendMessage" placeholder="اكتب رسالتك هنا وتأكد من الالتزام بالقوانين...">
+                    <button class="btn btn-primary px-4" @click="sendMessage">إرسال</button>
+                </div>
             </div>
         </div>
     </div>
+</div>
 
-    <div id="chat-panel">
-        <div id="messages"></div>
-        <div id="input-area">
-            <input type="text" id="msgInput" style="flex:1;" placeholder="اكتب رسالتك هنا..." disabled onkeypress="handleKeyPress(event)">
-            <button id="sendBtn" onclick="sendMsg()" disabled>إرسال</button>
-        </div>
-    </div>
+<script>
+// ==========================================
+// تم تحديث رمز المالك والتحكم بناءً على طلبك
+// ==========================================
+const MASTER_ADMIN_KEY = "199519952"; 
 
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-        const socket = io();
-        let allRoomsData = {};
+const { createApp, ref, computed, onUpdated } = Vue;
 
-        socket.on('initData', (data) => {
-            allRoomsData = data;
-            const countrySelect = document.getElementById('countrySelect');
-            const currentSelected = countrySelect.value;
-            countrySelect.innerHTML = '';
-            
-            Object.keys(data).forEach(country => {
-                let opt = document.createElement('option');
-                opt.value = country;
-                opt.innerText = country;
-                countrySelect.appendChild(opt);
-            });
-            if(currentSelected) countrySelect.value = currentSelected;
-            updateRooms();
+createApp({
+    setup() {
+        const username = ref("");
+        const enteredAdminKey = ref("");
+        const isLoggedIn = ref(false);
+        const isAdmin = ref(false);
+        const userRole = ref("عضو");
+        const activeRoom = ref("general");
+        const newRoomName = ref("");
+        const currentMessage = ref("");
+        
+        // غرف افتراضية مدمجة بالتطبيق لتبدأ فوراً
+        const rooms = ref([
+            { id: "general", name: "العامة والترحيب", isProtected: false },
+            { id: "tech", name: "غرفة النقاشات التقنية", isProtected: false },
+            { id: "admin_room", name: "ديوانية الإدارة العليا", isProtected: true }
+        ]);
+
+        const messages = ref([
+            { room: "general", sender: "النظام", role: "system", text: "أهلاً بكم في تطبيق الدردشة عالي الأداء! تشغيل آمن ومستقر برمز مالك مخصص.", time: "" }
+        ]);
+
+        const currentRoomName = computed(() => {
+            const r = rooms.value.find(room => room.id === activeRoom.value);
+            return r ? r.name : "";
         });
 
-        function updateRooms() {
-            const country = document.getElementById('countrySelect').value;
-            const roomSelect = document.getElementById('roomSelect');
-            roomSelect.innerHTML = '';
-            if(allRoomsData[country]) {
-                Object.keys(allRoomsData[country]).forEach(room => {
-                    let opt = document.createElement('option');
-                    opt.value = room;
-                    opt.innerText = room;
-                    roomSelect.appendChild(opt);
+        const filteredMessages = computed(() => {
+            return messages.value.filter(m => m.room === activeRoom.value);
+        });
+
+        const login = () => {
+            if (!username.value.trim()) return alert("الرجاء كتابة اسمك المستعار أولاً!");
+            
+            // التحقق من رمز المالك الجديد
+            if (enteredAdminKey.value.trim() === MASTER_ADMIN_KEY) {
+                isAdmin.value = true;
+                userRole.value = "المالك";
+            } else if (enteredAdminKey.value.trim() !== "") {
+                alert("رمز المالك غير صحيح! سيتم دخولك كعضو عادي.");
+                enteredAdminKey.value = "";
+                return;
+            }
+            isLoggedIn.value = true;
+            scrollToBottom();
+        };
+
+        const createNewRoom = () => {
+            if (!newRoomName.value.trim()) return alert("أدخل اسماً للغرفة الجديدة!");
+            
+            // تحقق من الصلاحية عبر رمز المالك للأمان العالي
+            if (!isAdmin.value) {
+                const checkKey = prompt("هذه الميزة تتطلب صلاحيات الإدارة، أدخل رمز المالك لإنشاء الغرفة:");
+                if (checkKey !== MASTER_ADMIN_KEY) return alert("الرمز خاطئ! لا تملك الصلاحية.");
+            }
+
+            const newId = "room_" + Date.now();
+            rooms.value.push({
+                id: newId,
+                name: newRoomName.value.trim(),
+                isProtected: false
+            });
+            
+            messages.value.push({
+                room: newId,
+                sender: "النظام",
+                role: "system",
+                text: `🔒 تم إنشاء هذه الغرفة بواسطة الإدارة بنجاح.`,
+                time: ""
+            });
+
+            alert(`تم إضافة غرفة [${newRoomName.value}] بنجاح وتفعيلها لدى الجميع!`);
+            newRoomName.value = "";
+        };
+
+        const sendMessage = () => {
+            if (!currentMessage.value.trim()) return;
+
+            messages.value.push({
+                room: activeRoom.value,
+                sender: username.value,
+                role: userRole.value,
+                text: currentMessage.value.trim(),
+                time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
+            });
+
+            currentMessage.value = "";
+            scrollToBottom();
+        };
+
+        const kickUser = (targetUser) => {
+            if (!isAdmin.value) return;
+            const confirmKick = confirm(`هل أنت متأكد من طرد المستخدم [${targetUser}] من هذه الغرفة نهائياً؟`);
+            if (confirmKick) {
+                messages.value.push({
+                    room: activeRoom.value,
+                    sender: "النظام",
+                    role: "system",
+                    text: `❌ قام المالك بطرد العضو [${targetUser}] من هذه المحادثة لمخالفته القوانين.`,
+                    time: ""
                 });
             }
-        }
+        };
 
-        function joinChat() {
-            const username = document.getElementById('username').value.trim();
-            const country = document.getElementById('countrySelect').value;
-            const room = document.getElementById('roomSelect').value;
-
-            if(!username) return alert('الرجاء كتابة اسم المستخدم');
-
-            socket.emit('joinRoom', { username, country, room });
-            
-            document.getElementById('msgInput').disabled = false;
-            document.getElementById('sendBtn').disabled = false;
-            document.getElementById('messages').innerHTML = '<div class="sys">تم دخولك إلى غرفة ('+room+') بنجاح</div>';
-        }
-
-        function sendMsg() {
-            const input = document.getElementById('msgInput');
-            if(input.value.trim() !== "") {
-                socket.emit('chatMessage', input.value);
-                input.value = '';
+        const switchRoom = (roomId) => {
+            const targetRoom = rooms.value.find(r => r.id === roomId);
+            if (targetRoom && targetRoom.isProtected && !isAdmin.value) {
+                const pass = prompt("هذه الغرفة مخصصة للمالكين والمشرفين فقط. أدخل رمز المالك للدخول:");
+                if (pass !== MASTER_ADMIN_KEY) return alert("عذراً، الرمز خاطئ والصلاحية مرفوضة!");
             }
-        }
+            activeRoom.value = roomId;
+            scrollToBottom();
+        };
 
-        function handleKeyPress(e) {
-            if(e.key === 'Enter') sendMsg();
-        }
+        const logout = () => {
+            isLoggedIn.value = false;
+            isAdmin.value = false;
+            userRole.value = "عضو";
+            username.value = "";
+            enteredAdminKey.value = "";
+        };
 
-        socket.on('message', (data) => {
-            const msgDiv = document.createElement('div');
-            msgDiv.classList.add('msg', data.role);
-            
-            let roleTitle = data.role === 'owner' ? 'المالك' : (data.role === 'admin' ? 'مشرف' : 'عضو');
-            msgDiv.innerHTML = '<strong>[' + roleTitle + '] ' + data.user + ':</strong> ' + data.text;
-            
-            const messagesContainer = document.getElementById('messages');
-            messagesContainer.appendChild(msgDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        });
+        const scrollToBottom = () => {
+            setTimeout(() => {
+                const box = document.getElementById("msgBox");
+                if (box) box.scrollTop = box.scrollHeight;
+            }, 50);
+        };
 
-        socket.on('sysMessage', (msg) => {
-            const msgDiv = document.createElement('div');
-            msgDiv.classList.add('sys');
-            msgDiv.innerText = msg;
-            const messagesContainer = document.getElementById('messages');
-            messagesContainer.appendChild(msgDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        });
+        return {
+            username, enteredAdminKey, isLoggedIn, isAdmin, userRole, rooms, activeRoom,
+            newRoomName, currentMessage, currentRoomName, filteredMessages,
+            login, createNewRoom, sendMessage, kickUser, switchRoom, logout
+        };
+    }
+}).mount('#app');
+</script>
 
-        socket.on('errorMessage', (msg) => {
-            alert(msg);
-        });
-
-        function createNewRoom() {
-            const roomName = document.getElementById('newRoomName').value.trim();
-            const country = document.getElementById('newRoomCountry').value;
-            if(!roomName) return alert('اكتب اسم الغرفة أولاً');
-            socket.emit('createRoom', { country, roomName });
-            document.getElementById('newRoomName').value = '';
-        }
-
-        function adminAction(action) {
-            const targetUser = document.getElementById('targetUser').value.trim();
-            if(!targetUser) return alert('اكتب اسم المستخدم المستهدف');
-            socket.emit('adminAction', { action, targetUser });
-            document.getElementById('targetUser').value = '';
-        }
-    </script>
 </body>
 </html>
-    `);
-});
-
-io.on('connection', (socket) => {
-    socket.emit('initData', chatRooms);
-
-    socket.on('joinRoom', ({ username, country, room }) => {
-        if (bannedUsers.has(username)) {
-            socket.emit('errorMessage', 'أنت محظور من دخول هذا التطبيق تماماً.');
-            return;
-        }
-
-        socket.join(room);
-        socket.username = username;
-        socket.room = room;
-        socket.country = country;
-        
-        // التحقق من الاسم فقط لمنح رتبة المالك
-        if (username === MY_SECRET_OWNER_NAME) {
-            socket.role = "owner";
-        } else if (userRoles[username] === "admin") {
-            socket.role = "admin";
-        } else {
-            socket.role = "user";
-        }
-
-        io.to(room).emit('sysMessage', `النظام: انضم ${username} إلى الغرفة برتبة (${socket.role === 'owner' ? 'المالك' : (socket.role === 'admin' ? 'مشرف' : 'عضو')})`);
-    });
-
-    socket.on('chatMessage', (msg) => {
-        if (bannedUsers.has(socket.username)) return;
-
-        io.to(socket.room).emit('message', {
-            user: socket.username,
-            text: msg,
-            role: socket.role
-        });
-    });
-
-    socket.on('createRoom', ({ country, roomName }) => {
-        if (socket.role === "owner") {
-            if (!chatRooms[country]) chatRooms[country] = {};
-            chatRooms[country][roomName] = { owner: MY_SECRET_OWNER_NAME, admins: [], members: [] };
-            io.emit('initData', chatRooms);
-        } else {
-            socket.emit('errorMessage', 'خطأ: صلاحية إنشاء الغرف محصورة بمالك التطبيق فقط!');
-        }
-    });
-
-    socket.on('adminAction', ({ action, targetUser }) => {
-        if (socket.role === 'owner' || socket.role === 'admin') {
-            if (action === 'ban') {
-                if (targetUser === MY_SECRET_OWNER_NAME) return socket.emit('errorMessage', 'لا يمكن حظر المالك العام للتطبيق!');
-                bannedUsers.add(targetUser);
-                io.emit('sysMessage', `تنبيه: تم حظر المستخدم [${targetUser}] نهائياً من الدردشة.`);
-            } else if (action === 'promote') {
-                userRoles[targetUser] = "admin";
-                io.emit('sysMessage', `مبروك: تم ترقية المستخدم [${targetUser}] إلى رتبة مشرف بنجاح.`);
-            }
-        } else {
-            socket.emit('errorMessage', 'ليس لديك صلاحيات كافية لتنفيذ هذا الإجراء.');
-        }
-    });
-
-    socket.on('disconnect', () => {
-        if (socket.room) {
-            io.to(socket.room).emit('sysMessage', `غادر ${socket.username} الدردشة.`);
-        }
-    });
-});
-
-const PORT = 3000;
-server.listen(PORT, () => console.log(`التطبيق يعمل على: http://localhost:${PORT}`));
