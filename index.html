@@ -1,37 +1,437 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoOOm Rom - نظام الدعم الفني</title>
+    <style>
+        :root { --main-color: #ff006e; --bg-color: #0f0f0f; --msg-color: #2a2a2a; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg-color); color: #fff; }
+        .marquee { background: var(--main-color); padding: 8px; white-space: nowrap; overflow: hidden; }
+        .marquee span { display: inline-block; animation: marquee 15s linear infinite; }
+        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+        .broadcast { background: #ffd700; color: #000; padding: 10px; text-align: center; font-weight: bold; animation: blink 1s; }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.5} }
+        .app { display: flex; height: calc(100vh - 80px); }
+        .sidebar { width: 280px; background: #1a1a1a; padding: 15px; overflow-y: auto; }
+        .country { margin-bottom: 15px; background: #222; padding: 10px; border-radius: 8px; }
+        .country-name { font-weight: bold; color: var(--main-color); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .room { padding: 8px 12px; margin: 5px 0; background: #2a2a2a; border-radius: 8px; cursor: pointer; border-right: 3px solid transparent; display: flex; justify-content: space-between; align-items: center; }
+        .room.active { border-right-color: var(--main-color); background: #333; }
+        .room-expired { opacity: 0.4; text-decoration: line-through; }
+        .chat-area { flex: 1; display: flex; flex-direction: column; }
+        .header { background: var(--main-color); padding: 15px; font-size: 18px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .messages { flex: 1; overflow-y: auto; padding: 20px; background: #1a1a1a; }
+        .msg { padding: 10px 15px; margin-bottom: 10px; border-radius: 10px; background: var(--msg-color); }
+        .msg-name { font-weight: bold; margin-bottom: 5px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        .user-icon { font-size: 18px; }
+        .owner { background: linear-gradient(45deg, #ff006e, #ffd700, #ff006e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: rainbow 3s linear infinite; }
+        .royal { color: #ffd700; font-weight: bold; }
+        @keyframes rainbow { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
+        .tag { background: gold; color: #000; padding: 2px 6px; border-radius: 5px; font-size: 11px; }
+        .input-area { padding: 15px; background: #0f0f0f; }
+        .emoji-bar { display: flex; gap: 5px; margin-bottom: 10px; overflow-x: auto; padding: 5px; background: #1a1a1a; border-radius: 10px; }
+        .emoji { font-size: 24px; cursor: pointer; padding: 5px; border-radius: 5px; transition: 0.2s; }
+        .emoji:hover { background: #333; transform: scale(1.2); }
+        .input-row { display: flex; gap: 10px; }
+        input, select, textarea { flex: 1; padding: 12px; border: none; border-radius: 25px; background: #2a2a2a; color: #fff; }
+        button { padding: 10px 20px; border: none; border-radius: 20px; background: var(--main-color); color: #fff; font-weight: bold; cursor: pointer; font-size: 14px; }
+        .btn-small { padding: 4px 8px; font-size: 11px; margin-right: 5px; }
+        .btn-danger { background: #dc3545; }
+        .btn-success { background: #28a745; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-box { background: #1a1a1a; padding: 30px; border-radius: 15px; width: 90%; max-width: 450px; }
+        .modal-box input, .modal-box select { width: 100%; margin: 10px 0; }
+        .icon-selector { display: flex; gap: 10px; margin: 10px 0; justify-content: center; }
+        .icon-option { font-size: 30px; cursor: pointer; padding: 10px; border-radius: 10px; border: 2px solid transparent; }
+        .icon-option.selected { border-color: var(--main-color); background: #333; }
+        .admin-panel { position: fixed; left: 10px; top: 50px; background: #1a1a1a; padding: 15px; border-radius: 10px; border: 2px solid var(--main-color); z-index: 999; display: none; width: 300px; max-height: 85vh; overflow-y: auto; }
+        .admin-panel h3 { color: var(--main-color); margin-bottom: 10px; }
+        .admin-panel input, .admin-panel textarea { width: 100%; margin: 5px 0; }
+        .admin-panel button { width: 100%; margin: 5px 0; padding: 8px; }
+        .hidden { display: none; }
+        .expiry { font-size: 10px; color: #888; }
+        .user-info { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: #1a1a1a; padding: 20px; border-radius: 10px; border: 2px solid var(--main-color); z-index: 1001; display: none; min-width: 250px; }
+    </style>
+</head>
+<body>
+    <div class="marquee" id="marquee"><span id="marqueeText">مرحبا بكم في RoOOm Rom - بإدارة الدعم الفني 🔥</span></div>
+    <div class="broadcast hidden" id="broadcast"></div>
 
-<!-- Member Login">إعلان عام لجميع الغرف 📢</h3>
-                <input id="announcementInput" type="text" placeholder="اكتب الإعلان هنا..." class="w-full bg-slate-700 text-white text-lg px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-yellow-500 outline-none mb-3" maxlength="300">
-                <button onclick="sendGlobalAnnouncement()" class="ripple w-full bg-yellow-600 hover:bg-yellow-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">إرسال الإعلان</button>
-            </div>
-            <div id="roomModSection" class="bg-slate-800/50 rounded-2xl p-5 border border-cyan-500/20">
-                <h3 class="text-xl font-bold mb-4 text-cyan-300">تعيين مشرف للغرفة 🛡️</h3>
-                <select id="modCountrySelect" class="w-full bg-slate-700 text-white text-lg px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-cyan-500 outline-none mb-3">
-                    <option value="">اختر الدولة</option>
-                </select>
-                <select id="modRoomSelect" class="w-full bg-slate-700 text-white text-lg px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-cyan-500 outline-none mb-3">
-                    <option value="">اختر الغرفة</option>
-                </select>
-                <input id="modUsernameInput" type="text" placeholder="اسم المستخدم" class="w-full bg-slate-700 text-white text-lg px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-cyan-500 outline-none mb-3">
-                <div class="flex gap-3">
-                    <button onclick="assignRoomModerator()" class="ripple flex-1 bg-cyan-600 hover:bg-cyan-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">تعيين مشرف</button>
-                    <button onclick="removeRoomModerator()" class="ripple flex-1 bg-red-600 hover:bg-red-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">إلغاء إشراف</button>
+    <div class="modal" id="loginModal">
+        <div class="modal-box">
+            <h2>دخول الدردشة</h2>
+            <select id="userType" onchange="toggleLoginFields()">
+                <option value="guest">دخول كزائر</option>
+                <option value="member">دخول كعضو</option>
+                <option value="owner">دخول المسجل - المالك</option>
+            </select>
+            <input type="text" id="usernameInput" class="hidden" placeholder="اكتب اسمك" maxlength="20">
+            
+            <div id="iconSelector" class="hidden">
+                <p style="text-align:center;margin:10px 0">اختر أيقونة:</p>
+                <div class="icon-selector">
+                    <div class="icon-option" data-icon="🌸" onclick="selectIcon('🌸')">🌸</div>
+                    <div class="icon-option" data-icon="❤️" onclick="selectIcon('❤️')">❤️</div>
+                    <div class="icon-option" data-icon="☕" onclick="selectIcon('☕')">☕</div>
+                    <div class="icon-option" data-icon="💀" onclick="selectIcon('💀')">💀</div>
+                    <div class="icon-option selected" data-icon="😊" onclick="selectIcon('😊')">😊</div>
                 </div>
-            <div class="bg-slate-800/50 rounded-2xl p-5 border border-purple-500/20">
-                <h3 class="text-xl font-bold mb-4 text-purple-300">إدارة الدول الحالية</h3>
-                <div id="adminCountriesList" class="space-y-3"></div>
             </div>
-            <div class="bg-slate-800/50 rounded-2xl p-5 border border-cyan-500/20">
-                <h3 class="text-xl font-bold mb-4 text-cyan-300">إدارة الأعضاء</h3>
-                <div id="adminMembersList" class="space-y-3"></div>
-            </div>
-            <button onclick="closeAdminPanel()" class="ripple w-full bg-slate-700 hover:bg-slate-600 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">إغلاق</button>
+            
+            <input type="password" id="passwordInput" class="hidden" placeholder="رمز المالك">
+            <button onclick="login()">دخول</button>
         </div>
     </div>
-</div>
 
-<!-- Edit Room Modal -->
-<div id="editRoomModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-    <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl shadow-2xl w-full max-w-md border border-purple-500/30">
-        <div class="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-center rounded-t-3xl">
-            <h2 class="text-2xl font-black">إعدادات الغرفة</h2>
-            <p class="text-sm text-purple-100 mt-1" id
+    <div class="user-info" id="userInfo">
+        <h3 id="infoName"></h3>
+        <p id="infoBio"></p>
+        <button onclick="closeUserInfo()">اغلاق</button>
+    </div>
+
+    <div class="app">
+        <div class="sidebar" id="sidebar"></div>
+        <div class="chat-area">
+            <div class="header">
+                <span id="roomTitle">اختر غرفة</span>
+                <button id="adminBtn" class="hidden" onclick="toggleAdminPanel()">لوحة المالك 👑</button>
+            </div>
+            <div class="messages" id="messages"></div>
+            <div class="input-area">
+                <div class="emoji-bar">
+                    <span class="emoji" onclick="addEmoji('😂')">😂</span>
+                    <span class="emoji" onclick="addEmoji('❤️')">❤️</span>
+                    <span class="emoji" onclick="addEmoji('🔥')">🔥</span>
+                    <span class="emoji" onclick="addEmoji('👍')">👍</span>
+                    <span class="emoji" onclick="addEmoji('😍')">😍</span>
+                    <span class="emoji" onclick="addEmoji('🎉')">🎉</span>
+                    <span class="emoji" onclick="addEmoji('💯')">💯</span>
+                    <span class="emoji" onclick="addEmoji('😭')">😭</span>
+                    <span class="emoji" onclick="addEmoji('🙏')">🙏</span>
+                    <span class="emoji" onclick="addEmoji('😎')">😎</span>
+                    <span class="emoji" onclick="addEmoji('🤣')">🤣</span>
+                    <span class="emoji" onclick="addEmoji('💔')">💔</span>
+                    <span class="emoji" onclick="addEmoji('✨')">✨</span>
+                    <span class="emoji" onclick="addEmoji('🌹')">🌹</span>
+                    <span class="emoji" onclick="addEmoji('👑')">👑</span>
+                    <span class="emoji" onclick="addEmoji('💪')">💪</span>
+                    <span class="emoji" onclick="addEmoji('🎁')">🎁</span>
+                    <span class="emoji" onclick="addEmoji('🌙')">🌙</span>
+                    <span class="emoji" onclick="addEmoji('⭐')">⭐</span>
+                    <span class="emoji" onclick="addEmoji('🚀')">🚀</span>
+                </div>
+                <div class="input-row">
+                    <input type="text" id="messageInput" placeholder="اكتب رسالتك..." onkeypress="if(event.key==='Enter') sendMessage()">
+                    <button onclick="sendMessage()">ارسال</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-panel" id="adminPanel">
+        <h3>لوحة تحكم الدعم الفني</h3>
+        <label>رسالة عامة لكل الغرف:</label>
+        <textarea id="broadcastMsg" rows="2" placeholder="اكتب رسالة عامة"></textarea>
+        <button onclick="sendBroadcast()">ارسال للكل 📢</button>
+        <hr style="margin:10px 0;border-color:#333">
+        <label>لون الموقع:</label>
+        <input type="color" id="mainColor" value="#ff006e" onchange="changeMainColor()">
+        <label>الشريط المتحرك:</label>
+        <input type="text" id="marqueeInput" placeholder="نص الشريط">
+        <button onclick="updateMarquee()">تحديث الشريط</button>
+        <hr style="margin:10px 0;border-color:#333">
+        <input type="text" id="newCountry" placeholder="اسم دولة جديدة">
+        <button onclick="addCountry()">إضافة دولة</button>
+        <input type="text" id="newRoom" placeholder="اسم غرفة جديدة">
+        <button onclick="addRoom()">إضافة غرفة للشهر</button>
+        <hr style="margin:10px 0;border-color:#333">
+        <h4>إضافة اسم ملكي محمي:</h4>
+        <input type="text" id="royalName" placeholder="الاسم الملكي">
+        <textarea id="royalBio" rows="2" placeholder="النبذة التعريفية"></textarea>
+        <button onclick="addRoyalName()">إضافة اسم ملكي 👑</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, push, onChildAdded, set, onValue, remove, update, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        const firebaseConfig = { databaseURL: "https://hashed-cht-default-rtdb.firebaseio.com/" };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let currentUser = null;
+        let currentRoom = null;
+        let isOwner = false;
+        let selectedIcon = '😊';
+        const OWNER_NAME = 'الدعم الفني';
+        const OWNER_PASS = '19952005';
+        const ONE_MONTH = 30 * 24 * 60 * 60 * 1000;
+
+        const countriesRef = ref(db, 'countries');
+        const settingsRef = ref(db, 'settings');
+        const royalNamesRef = ref(db, 'royalNames');
+        const broadcastRef = ref(db, 'broadcast');
+
+        function showToast(msg) {
+            const toast = document.createElement('div');
+            toast.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);background:rgba(40,167,69,0.95);color:#fff;padding:12px 20px;border-radius:8px;z-index:9999;font-size:15px;box-shadow:0 4px 10px rgba(0,0,0,0.5)';
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2500);
+        }
+
+        onValue(settingsRef, (snap) => {
+            const data = snap.val();
+            if (data) {
+                if (data.mainColor) document.documentElement.style.setProperty('--main-color', data.mainColor);
+                if (data.marqueeText) document.getElementById('marqueeText').textContent = data.marqueeText;
+            }
+        });
+
+        onValue(broadcastRef, (snap) => {
+            const msg = snap.val();
+            if (msg && Date.now() - msg.time < 10000) {
+                document.getElementById('broadcast').textContent = `📢 رسالة من الإدارة: ${msg.text}`;
+                document.getElementById('broadcast').classList.remove('hidden');
+                setTimeout(() => document.getElementById('broadcast').classList.add('hidden'), 8000);
+            }
+        });
+
+        onValue(countriesRef, (snap) => renderSidebar(snap.val() || {}));
+
+        function renderSidebar(countries) {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.innerHTML = '';
+            const now = Date.now();
+
+            Object.entries(countries).forEach(([countryId, country]) => {
+                const div = document.createElement('div');
+                div.className = 'country';
+                let html = `<div class="country-name">${country.name}`;
+                if (isOwner) html += ` <button class="btn-small btn-danger" onclick="deleteCountry('${countryId}')">حذف</button>`;
+                html += `</div>`;
+                div.innerHTML = html;
+
+                Object.entries(country.rooms || {}).forEach(([roomId, room]) => {
+                    const expired = room.expires < now;
+                    const roomDiv = document.createElement('div');
+                    roomDiv.className = 'room' + (expired? ' room-expired' : '');
+                    let roomHTML = `<span>${room.name}</span><div>`;
+                    if (!expired) {
+                        const daysLeft = Math.ceil((room.expires - now) / (24*60*60*1000));
+                        roomHTML += `<span class="expiry">${daysLeft}ي</span>`;
+                    } else roomHTML += `<span class="expiry">منتهية</span>`;
+                    if (isOwner) {
+                        if (expired) roomHTML += ` <button class="btn-small btn-success" onclick="renewRoom('${countryId}','${roomId}')">تجديد</button>`;
+                        roomHTML += ` <button class="btn-small btn-danger" onclick="deleteRoom('${countryId}','${roomId}')">حذف</button>`;
+                    }
+                    roomHTML += `</div>`;
+                    roomDiv.innerHTML = roomHTML;
+                    if (!expired || isOwner) {
+                        roomDiv.onclick = (e) => { if(e.target.tagName!== 'BUTTON') selectRoom(`${countryId}-${roomId}`, room.name); };
+                        if (`${countryId}-${roomId}` === currentRoom) roomDiv.classList.add('active');
+                        div.appendChild(roomDiv);
+                    }
+                });
+                sidebar.appendChild(div);
+            });
+        }
+
+        function selectRoom(roomId, roomName) {
+            currentRoom = roomId;
+            document.getElementById('roomTitle').textContent = roomName;
+            document.getElementById('messages').innerHTML = '';
+            document.querySelectorAll('.room').forEach(r => r.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            loadMessages();
+        }
+
+        function loadMessages() {
+            if (!currentRoom) return;
+            onChildAdded(ref(db, `rooms/${currentRoom}/messages`), (snap) => {
+                const msg = snap.val();
+                const msgDiv = document.createElement('div');
+                msgDiv.className = 'msg';
+                let nameClass = 'msg-name';
+                let tag = '';
+                if (msg.rank === 'owner') {
+                    nameClass += ' owner';
+                    tag = '<span class="tag">👑 الدعم الفني</span>';
+                } else if (msg.rank === 'royal') {
+                    nameClass += ' royal';
+                    tag = '<span class="tag">👑 ملكي</span>';
+                }
+                const icon = msg.icon || '';
+                msgDiv.innerHTML = `<div class="${nameClass}" onclick="showUserInfo('${msg.name}')"><span class="user-icon">${icon}</span>${tag}${msg.name}</div><div class="text">${msg.text}</div>`;
+                document.getElementById('messages').appendChild(msgDiv);
+                document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+            });
+        }
+
+        window.toggleLoginFields = () => {
+            const type = document.getElementById('userType').value;
+            document.getElementById('usernameInput').classList.toggle('hidden', type === 'guest');
+            document.getElementById('iconSelector').classList.toggle('hidden', type === 'guest');
+            document.getElementById('passwordInput').classList.toggle('hidden', type!== 'owner');
+        }
+
+        window.selectIcon = (icon) => {
+            selectedIcon = icon;
+            document.querySelectorAll('.icon-option').forEach(el => el.classList.remove('selected'));
+            event.target.classList.add('selected');
+        }
+
+        window.addEmoji = (emoji) => {
+            document.getElementById('messageInput').value += emoji;
+            document.getElementById('messageInput').focus();
+        }
+
+        window.login = async () => {
+            const type = document.getElementById('userType').value;
+            const name = document.getElementById('usernameInput').value.trim();
+            const pass = document.getElementById('passwordInput').value;
+
+            if (type === 'owner') {
+                if (name!== OWNER_NAME) return alert('اسم المالك غلط');
+                if (pass!== OWNER_PASS) return alert('رمز المالك غلط');
+                isOwner = true;
+                currentUser = { name, rank: 'owner', type: 'owner', icon: '👑' };
+                document.getElementById('adminBtn').classList.remove('hidden');
+                showToast('تم تسجيل دخول المالك');
+            } else if (type === 'member') {
+                if (!name) return alert('اكتب اسمك');
+                const royalSnap = await get(royalNamesRef);
+                const royals = royalSnap.val() || {};
+                if (Object.keys(royals).includes(name)) return alert('هذا اسم ملكي محمي');
+                if (name === OWNER_NAME) return alert('هذا اسم محمي');
+                currentUser = { name, rank: 'member', type: 'member', icon: selectedIcon };
+                showToast(`أهلاً ${name}`);
+            } else {
+                currentUser = { name: 'زائر' + Math.floor(Math.random()*1000), rank: 'guest', type: 'guest', icon: '👤' };
+                showToast('دخلت كزائر');
+            }
+
+            document.getElementById('loginModal').style.display = 'none';
+            localStorage.setItem('chatUser', JSON.stringify(currentUser));
+        }
+
+        window.sendMessage = () => {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+            if (!text ||!currentUser ||!currentRoom) return;
+            push(ref(db, `rooms/${currentRoom}/messages`), {
+                name: currentUser.name,
+                text: text,
+                rank: currentUser.rank,
+                icon: currentUser.icon,
+                timestamp: Date.now()
+            });
+            input.value = '';
+        }
+
+        window.showUserInfo = async (name) => {
+            const royalSnap = await get(ref(db, `royalNames/${name}`));
+            if (royalSnap.exists()) {
+                const data = royalSnap.val();
+                document.getElementById('infoName').textContent = name + ' 👑';
+                document.getElementById('infoBio').textContent = data.bio || 'لا توجد نبذة';
+                document.getElementById('userInfo').style.display = 'block';
+            }
+        }
+
+        window.closeUserInfo = () => document.getElementById('userInfo').style.display = 'none';
+        window.toggleAdminPanel = () => {
+            const panel = document.getElementById('adminPanel');
+            panel.style.display = panel.style.display === 'none'? 'block' : 'none';
+        }
+
+        window.sendBroadcast = () => {
+            if (!isOwner) return;
+            const text = document.getElementById('broadcastMsg').value.trim();
+            if (!text) return;
+            set(broadcastRef, { text, time: Date.now(), from: OWNER_NAME });
+            document.getElementById('broadcastMsg').value = '';
+            showToast('تم الارسال لكل الغرف');
+        }
+
+        window.changeMainColor = () => {
+            if (!isOwner) return;
+            set(ref(db, 'settings/mainColor'), document.getElementById('mainColor').value);
+            showToast('تم تغيير لون الموقع');
+        }
+
+        window.updateMarquee = () => {
+            if (!isOwner) return;
+            const text = document.getElementById('marqueeInput').value;
+            if (text) {
+                set(ref(db, 'settings/marqueeText'), text);
+                showToast('تم تحديث الشريط');
+            }
+        }
+
+        window.addCountry = () => {
+            if (!isOwner) return;
+            const name = document.getElementById('newCountry').value.trim();
+            if (!name) return;
+            set(ref(db, `countries/${Date.now()}`), { name, createdBy: OWNER_NAME, rooms: {} });
+            document.getElementById('newCountry').value = '';
+            showToast(`تم اضافة ${name}`);
+        }
+
+        window.addRoom = () => {
+            if (!isOwner ||!currentRoom) return alert('اختار دولة أول');
+            const name = document.getElementById('newRoom').value.trim();
+            if (!name) return;
+            const [countryId] = currentRoom.split('-');
+            set(ref(db, `countries/${countryId}/rooms/${Date.now()}`), {
+                name, createdBy: OWNER_NAME, expires: Date.now() + ONE_MONTH
+            });
+            document.getElementById('newRoom').value = '';
+            showToast(`غرفة ${name} - شهر`);
+        }
+
+        window.addRoyalName = () => {
+            if (!isOwner) return;
+            const name = document.getElementById('royalName').value.trim();
+            const bio = document.getElementById('royalBio').value.trim();
+            if (!name) return;
+            set(ref(db, `royalNames/${name}`), { bio, addedBy: OWNER_NAME, time: Date.now() });
+            document.getElementById('royalName').value = '';
+            document.getElementById('royalBio').value = '';
+            showToast(`تم اضافة ${name} كاسم ملكي`);
+        }
+
+        window.deleteCountry = (id) => {
+            if (!isOwner) return;
+            if (confirm('حذف الدولة وكل غرفها؟')) {
+                remove(ref(db, `countries/${id}`));
+                showToast('تم حذف الدولة');
+            }
+        }
+
+        window.deleteRoom = (countryId, roomId) => {
+            if (!isOwner) return;
+            if (confirm('حذف الغرفة؟')) {
+                remove(ref(db, `countries/${countryId}/rooms/${roomId}`));
+                showToast('تم حذف الغرفة');
+            }
+        }
+
+        window.renewRoom = (countryId, roomId) => {
+            if (!isOwner) return;
+            update(ref(db, `countries/${countryId}/rooms/${roomId}`), { expires: Date.now() + ONE_MONTH });
+            showToast('تم تجديد الغرفة لشهر');
+        }
+
+        const saved = localStorage.getItem('chatUser');
+        if (saved) {
+            currentUser = JSON.parse(saved);
+            isOwner = currentUser.rank === 'owner';
+            if (isOwner) document.getElementById('adminBtn').classList.remove('hidden');
+            document.getElementById('loginModal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
