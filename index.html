@@ -1,54 +1,5 @@
 
-<!-- Member Login Modal -->
-<div id="memberModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-    <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl shadow-2xl w-full max-w-md border border-blue-500/30">
-        <div class="bg-gradient-to-r from-blue-600 to-cyan-600 p-6 text-center rounded-t-3xl">
-            <h2 class="text-3xl font-black">تسجيل عضو</h2>
-        </div>
-        <div class="p-6 space-y-4">
-            <input id="memberName" type="text" placeholder="اسم المستخدم" class="w-full bg-slate-700 text-white text-xl px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-blue-500 outline-none" maxlength="20">
-            <input id="memberPass" type="password" placeholder="كلمة المرور" class="w-full bg-slate-700 text-white text-xl px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-blue-500 outline-none">
-            <div class="flex gap-3">
-                <button onclick="loginMember()" class="ripple flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">دخول</button>
-                <button onclick="closeMemberModal()" class="ripple flex-1 bg-slate-700 hover:bg-slate-600 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">إلغاء</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Owner Login Modal -->
-<div id="ownerModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-    <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl shadow-2xl w-full max-w-md border-amber-500/30">
-        <div class="bg-gradient-to-r from-amber-600 to-orange-600 p-6 text-center rounded-t-3xl">
-            <h2 class="text-3xl font-black">دخول المالك</h2>
-        </div>
-        <div class="p-6 space-y-4">
-            <input id="ownerName" type="text" placeholder="اسم المالك" class="w-full bg-slate-700 text-white text-xl px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-amber-500 outline-none">
-            <input id="ownerPass" type="password" placeholder="كلمة المرور" class="w-full bg-slate-700 text-white text-xl px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-amber-500 outline-none">
-            <div class="flex gap-3">
-                <button onclick="loginOwner()" class="ripple flex-1 bg-amber-600 hover:bg-amber-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">دخول</button>
-                <button onclick="closeOwnerModal()" class="ripple flex-1 bg-slate-700 hover:bg-slate-600 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">إلغاء</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Admin Panel -->
-<div id="adminPanel" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl shadow-2xl w-full max-w-3xl border border-purple-500/30 my-4">
-        <div class="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-center rounded-t-3xl">
-            <h2 class="text-3xl font-black">لوحة التحكم 👑</h2>
-        </div>
-        <div class="p-6 space-y-6 max-h-[70vh] overflow-y-auto hide-scrollbar">
-            <div class="bg-slate-800/50 rounded-2xl p-5 border border-purple-500/20">
-                <h3 class="text-xl font-bold mb-4 text-purple-300">إضافة دولة وغرف</h3>
-                <input id="newCountryInput" type="text" placeholder="اسم الدولة الجديدة" class="w-full bg-slate-700 text-white text-xl px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-purple-500 outline-none mb-3">
-                <input id="newRoomInput" type="text" placeholder="اسماء الغرف - افصل بفاصلة (مثال: عام, شباب, بنات)" class="w-full bg-slate-700 text-white text-lg px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-purple-500 outline-none mb-3">
-                <input id="expiryDateInput" type="date" class="w-full bg-slate-700 text-white text-lg px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-purple-500 outline-none mb-3">
-                <button onclick="addCountryWithRooms()" class="ripple w-full bg-green-600 hover:bg-green-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">إضافة دولة ➕</button>
-            </div>
-            <div class="bg-slate-800/50 rounded-2xl p-5 border border-yellow-500/20">
-                <h3 class="text-xl font-bold mb-4 text-yellow-300">إعلان عام لجميع الغرف 📢</h3>
+<!-- Member Login">إعلان عام لجميع الغرف 📢</h3>
                 <input id="announcementInput" type="text" placeholder="اكتب الإعلان هنا..." class="w-full bg-slate-700 text-white text-lg px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-yellow-500 outline-none mb-3" maxlength="300">
                 <button onclick="sendGlobalAnnouncement()" class="ripple w-full bg-yellow-600 hover:bg-yellow-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">إرسال الإعلان</button>
             </div>
