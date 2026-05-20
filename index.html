@@ -7,91 +7,22 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;900&display=swap');
-    * {
-        font-family: 'Cairo', sans-serif;
-        -webkit-tap-highlight-color: transparent;
-    }
-    html, body {
-        overscroll-behavior: none;
-        touch-action: pan-y;
-        height: 100dvh;
-    }
-   .marquee {
-        white-space: nowrap;
-        overflow: hidden;
-    }
-   .marquee-content {
-        display: inline-block;
-        padding-left: 100%;
-        animation: marquee 20s linear infinite;
-    }
-    @keyframes marquee {
-        0% { transform: translate3d(-100%, 0, 0); }
-        100% { transform: translate3d(0, 0, 0); }
-    }
-   .scroll-smooth {
-        scroll-behavior: smooth;
-    }
-   .hide-scrollbar::-webkit-scrollbar {
-        display: none;
-    }
-   .hide-scrollbar {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-    }
-   .message-appear {
-        animation: slideIn 0.2s ease-out;
-    }
-    @keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-   .ripple {
-        position: relative;
-        overflow: hidden;
-    }
-   .ripple:after {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 0;
-        height: 0;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.5);
-        transform: translate(-50%, -50%);
-        transition: width 0.6s, height 0.6s;
-    }
-   .ripple:active:after {
-        width: 300px;
-        height: 300px;
-    }
-   .pinned-msg {
-        border-right: 4px solid #eab308;
-    }
-   .safe-area-bottom {
-        padding-bottom: env(safe-area-inset-bottom);
-    }
-    :root {
-        --room-grad: linear-gradient(135deg, #9333ea 0%, #ec4899 100%);
-    }
-   .owner-name-gold { color: #FFD700!important; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
-   .owner-name-blue { color: #3b82f6!important; text-shadow: 0 0 10px rgba(59,130,246,0.5); }
-   .owner-name-green { color: #22c55e!important; text-shadow: 0 0 10px rgba(34,197,94,0.5); }
-   .owner-name-red { color: #ef4444!important; text-shadow: 0 0 10px rgba(239,68,68,0.5); }
-   .owner-name-purple { color: #a855f7!important; text-shadow: 0 0 10px rgba(168,85,247,0.5); }
-   .owner-badge { background: linear-gradient(135deg, #FFD700, #FFA500); color: #000; padding: 2px 8px; border-radius: 8px; font-size: 10px; font-weight: 900; }
-   .superadmin-badge { background: linear-gradient(135deg, #3b82f6, #06b6d4); color: #fff; padding: 2px 8px; border-radius: 8px; font-size: 10px; font-weight: 900; }
-   .mod-badge { background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; padding: 2px 8px; border-radius: 8px; font-size: 10px; font-weight: 900; }
-   .msg-image { max-width: 100%; max-height: 300px; border-radius: 1rem; margin-top: 8px; cursor: pointer; }
-   .delete-btn { opacity: 0; transition: opacity 0.2s; }
-   .message-wrapper:hover.delete-btn { opacity: 1; }
+    * { font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; }
+    html, body { overscroll-behavior: none; touch-action: pan-y; height: 100dvh; }
+  .marquee { white-space: nowrap; overflow: hidden; }
+  .marquee-content { display: inline-block; padding-left: 100%; animation: marquee 20s linear infinite; }
+    @keyframes marquee { 0% { transform: translate3d(-100%, 0, 0); } 100% { transform: translate3d(0, 0, 0); } }
+  .scroll-smooth { scroll-behavior: smooth; }
+  .hide-scrollbar::-webkit-scrollbar { display: none; }
+  .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .message-appear { animation: slideIn 0.2s ease-out; }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .ripple { position: relative; overflow: hidden; }
+  .ripple:after { content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0; border-radius: 50%; background: rgba(255,255,255,0.5); transform: translate(-50%, -50%); transition: width 0.6s, height 0.6s; }
+  .ripple:active:after { width: 300px; height: 300px; }
+  .pinned-msg { border-right: 4px solid #eab308; }
+  .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
+    :root { --room-grad: linear-gradient(135deg, #9333ea 0%, #ec4899 100%); }
 </style>
 </head>
 <body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white h-[100dvh] overflow-hidden">
@@ -150,221 +81,10 @@
     </div>
 </div>
 
-<!-- Admin Panel -->
-<div id="adminPanel" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl shadow-2xl w-full max-w-3xl border border-purple-500/30 my-4">
-        <div class="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-center rounded-t-3xl">
-            <h2 class="text-3xl font-black">لوحة التحكم 👑</h2>
-        </div>
-        <div class="p-6 space-y-6 max-h-[70vh] overflow-y-auto hide-scrollbar">
-            <!-- Add Country Section -->
-            <div class="bg-slate-800/50 rounded-2xl p-5 border border-purple-500/20">
-                <h3 class="text-xl font-bold mb-4 text-purple-300">إضافة دولة وغرف</h3>
-                <input id="newCountryInput" type="text" placeholder="اسم الدولة الجديدة" class="w-full bg-slate-700 text-white text-xl px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-purple-500 outline-none mb-3">
-                <input id="newRoomInput" type="text" placeholder="اسماء الغرف - افصل بفاصلة (مثال: عام, شباب, بنات)" class="w-full bg-slate-700 text-white text-lg px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-purple-500 outline-none mb-3">
-                <input id="expiryDateInput" type="date" class="w-full bg-slate-700 text-white text-lg px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-purple-500 outline-none mb-3">
-                <button onclick="addCountryWithRooms()" class="ripple w-full bg-green-600 hover:bg-green-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">إضافة دولة ➕</button>
-            </div>
-
-            <!-- Add Rooms to All Countries -->
-            <div class="bg-slate-800/50 rounded-2xl p-5 border border-green-500/20">
-                <h3 class="text-xl font-bold mb-4 text-green-300">إضافة غرف لجميع الدول 🌍</h3>
-                <input id="globalRoomInput" type="text" placeholder="اسماء الغرف - افصل بفاصلة" class="w-full bg-slate-700 text-white text-lg px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-green-500 outline-none mb-3">
-                <button onclick="addRoomsToAllCountries()" class="ripple w-full bg-green-600 hover:bg-green-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">إضافة للكل</button>
-            </div>
-
-            <!-- Global Announcement -->
-            <div class="bg-slate-800/50 rounded-2xl p-5 border border-yellow-500/20">
-                <h3 class="text-xl font-bold mb-4 text-yellow-300">إعلان عام لجميع الغرف 📢</h3>
-                <input id="announcementInput" type="text" placeholder="اكتب الإعلان هنا..." class="w-full bg-slate-700 text-white text-lg px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-yellow-500 outline-none mb-3" maxlength="300">
-                <button onclick="sendGlobalAnnouncement()" class="ripple w-full bg-yellow-600 hover:bg-yellow-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">إرسال الإعلان</button>
-            </div>
-
-            <!-- Room Moderator Assignment -->
-            <div id="roomModSection" class="bg-slate-800/50 rounded-2xl p-5 border border-cyan-500/20">
-                <h3 class="text-xl font-bold mb-4 text-cyan-300">تعيين مشرف للغرفة 🛡️</h3>
-                <select id="modCountrySelect" class="w-full bg-slate-700 text-white text-lg px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-cyan-500 outline-none mb-3">
-                    <option value="">اختر الدولة</option>
-                </select>
-                <select id="modRoomSelect" class="w-full bg-slate-700 text-white text-lg px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-cyan-500 outline-none mb-3">
-                    <option value="">اختر الغرفة</option>
-                </select>
-                <input id="modUsernameInput" type="text" placeholder="اسم المستخدم" class="w-full bg-slate-700 text-white text-lg px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-cyan-500 outline-none mb-3">
-                <div class="flex gap-3">
-                    <button onclick="assignRoomModerator()" class="ripple flex-1 bg-cyan-600 hover:bg-cyan-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">تعيين مشرف</button>
-                    <button onclick="removeRoomModerator()" class="ripple flex-1 bg-red-600 hover:bg-red-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">إلغاء إشراف</button>
-                </div>
-            </div>
-
-            <!-- Protected Names -->
-            <div class="bg-slate-800/50 rounded-2xl p-5 border border-red-500/20">
-                <h3 class="text-xl font-bold mb-4 text-red-300">الأسماء المحمية والملكية 🛡️</h3>
-                <input id="protectedNameInput" type="text" placeholder="الاسم المحمي" class="w-full bg-slate-700 text-white text-lg px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-red-500 outline-none mb-3">
-                <select id="protectedTypeSelect" class="w-full bg-slate-700 text-white text-lg px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-red-500 outline-none mb-3">
-                    <option value="royal">ملكي 👑</option>
-                    <option value="protected">محمي 🛡️</option>
-                    <option value="reserved">محجوز ⛔</option>
-                </select>
-                <button onclick="addProtectedName()" class="ripple w-full bg-red-600 hover:bg-red-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95 mb-3">إضافة</button>
-                <div id="protectedNamesList" class="space-y-2 max-h-40 overflow-y-auto"></div>
-            </div>
-
-            <!-- Owner Name Color -->
-            <div class="bg-slate-800/50 rounded-2xl p-5 border border-amber-500/20">
-                <h3 class="text-xl font-bold mb-4 text-amber-300">لون اسم المالك 👑</h3>
-                <div class="grid grid-cols-5 gap-2">
-                    <button onclick="setOwnerNameColor('gold')" class="h-14 rounded-xl bg-yellow-500 active:scale-95"></button>
-                    <button onclick="setOwnerNameColor('blue')" class="h-14 rounded-xl bg-blue-500 active:scale-95"></button>
-                    <button onclick="setOwnerNameColor('green')" class="h-14 rounded-xl bg-green-500 active:scale-95"></button>
-                    <button onclick="setOwnerNameColor('red')" class="h-14 rounded-xl bg-red-500 active:scale-95"></button>
-                    <button onclick="setOwnerNameColor('purple')" class="h-14 rounded-xl bg-purple-500 active:scale-95"></button>
-                </div>
-            </div>
-
-            <!-- Manage Countries Section -->
-            <div class="bg-slate-800/50 rounded-2xl p-5 border border-purple-500/20">
-                <h3 class="text-xl font-bold mb-4 text-purple-300">إدارة الدول الحالية</h3>
-                <div id="adminCountriesList" class="space-y-3"></div>
-            </div>
-
-            <!-- Manage Members Section -->
-            <div class="bg-slate-800/50 rounded-2xl p-5 border border-cyan-500/20">
-                <h3 class="text-xl font-bold mb-4 text-cyan-300">إدارة الأعضاء</h3>
-                <div id="adminMembersList" class="space-y-3"></div>
-            </div>
-
-            <button onclick="closeAdminPanel()" class="ripple w-full bg-slate-700 hover:bg-slate-600 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">إغلاق</button>
-        </div>
-    </div>
-</div>
-
-<!-- Edit Room Modal -->
-<div id="editRoomModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-    <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl shadow-2xl w-full max-w-md border border-purple-500/30">
-        <div class="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-center rounded-t-3xl">
-            <h2 class="text-2xl font-black">إعدادات الغرفة</h2>
-            <p class="text-sm text-purple-100 mt-1" id="editRoomTitle"></p>
-        </div>
-        <div class="p-6 space-y-4">
-            <input id="editRoomWelcome" type="text" placeholder="رسالة ترحيب الغرفة" class="w-full bg-slate-700 text-white text-lg px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-purple-500 outline-none" maxlength="200">
-            <div>
-                <label class="block text-sm text-purple-300 mb-2">لون ثيم الغرفة</label>
-                <div class="grid grid-cols-5 gap-2">
-                    <button onclick="selectRoomColor('#9333ea,#ec4899')" class="h-14 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 active:scale-95"></button>
-                    <button onclick="selectRoomColor('#2563eb,#06b6d4')" class="h-14 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500 active:scale-95"></button>
-                    <button onclick="selectRoomColor('#16a34a,#22c55e')" class="h-14 rounded-xl bg-gradient-to-br from-green-600 to-green-400 active:scale-95"></button>
-                    <button onclick="selectRoomColor('#dc2626,#f97316')" class="h-14 rounded-xl bg-gradient-to-br from-red-600 to-orange-500 active:scale-95"></button>
-                    <button onclick="selectRoomColor('#d97706,#eab308')" class="h-14 rounded-xl bg-gradient-to-br from-amber-600 to-yellow-500 active:scale-95"></button>
-                </div>
-            </div>
-            <div class="flex gap-3">
-                <button onclick="saveRoomSettings()" class="ripple flex-1 bg-purple-600 hover:bg-purple-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">حفظ</button>
-                <button onclick="closeEditRoomModal()" class="ripple flex-1 bg-slate-700 hover:bg-slate-600 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">إلغاء</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Edit Country Modal -->
-<div id="editCountryModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-    <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl shadow-2xl w-full max-w-md border border-blue-500/30">
-        <div class="bg-gradient-to-r from-blue-600 to-cyan-600 p-6 text-center rounded-t-3xl">
-            <h2 class="text-2xl font-black">تعديل الدولة</h2>
-        </div>
-        <div class="p-6 space-y-4">
-            <input id="editCountryName" type="text" class="w-full bg-slate-700 text-white text-xl px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-blue-500 outline-none">
-            <div class="flex gap-3">
-                <button onclick="saveCountryEdit()" class="ripple flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">حفظ</button>
-                <button onclick="closeEditCountryModal()" class="ripple flex-1 bg-slate-700 hover:bg-slate-600 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">إلغاء</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Mute User Modal -->
-<div id="muteModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-    <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl shadow-2xl w-full max-w-md border border-red-500/30">
-        <div class="bg-gradient-to-r from-red-600 to-orange-600 p-6 text-center rounded-t-3xl">
-            <h2 class="text-2xl font-black">كتم المستخدم 🔇</h2>
-            <p class="text-sm text-red-100 mt-2" id="muteUserName"></p>
-        </div>
-        <div class="p-6 space-y-4">
-            <input id="muteDuration" type="number" placeholder="المدة بالدقائق" min="1" max="10080" class="w-full bg-slate-700 text-white text-xl px-6 py-4 rounded-2xl border-2 border-slate-600 focus:border-red-500 outline-none">
-            <div class="flex gap-3">
-                <button onclick="confirmMute()" class="ripple flex-1 bg-red-600 hover:bg-red-700 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">كتم</button>
-                <button onclick="closeMuteModal()" class="ripple flex-1 bg-slate-700 hover:bg-slate-600 text-white text-xl font-bold py-4 rounded-2xl active:scale-95">إلغاء</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Image Preview Modal -->
-<div id="imageModal" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 hidden items-center justify-center p-4" onclick="closeImageModal()">
-    <img id="previewImage" class="max-w-full max-h-full rounded-2xl" onclick="event.stopPropagation()">
-</div>
-
 <!-- Main App -->
 <div id="app" class="hidden h-[100dvh] flex flex-col">
 <header class="bg-gradient-to-r from-purple-900 via-pink-900 to-purple-900 shadow-xl">
 <div class="marquee bg-black/30 py-2"><div class="marquee-content text-yellow-300 text-lg font-bold" id="globalMarquee">🌟 مرحباً بكم في شات الدول العربية 🌟 دردشة ممتعة للجميع 🌟 احترم الآخرين 🌟 </div></div>
 <div class="flex items-center justify-between px-4 py-3">
 <button onclick="toggleSidebar()" class="ripple bg-white/10 hover:bg-white/20 p-3 rounded-2xl active:scale-95"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
-<div class="text-center flex-1"><h1 class="text-xl font-black"><span id="breadcrumb">الدول</span></h1><div class="flex items-center justify-center gap-3 text-sm"><p class="text-purple-200" id="onlineCount">متصل: 0</p><span class="text-purple-400">•</span><p class="text-purple-200" id="msgCount">الرسائل: 0</p></div><p class="text-xs text-yellow-300 hidden" id="expiryInfo"></p></div>
-<button onclick="showUserMenu()" class="ripple bg-white/10 hover:bg-white/20 p-3 rounded-2xl active:scale-95"><div class="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center text-xl font-bold" id="userAvatar">👤</div></button>
-</div></header>
-
-<div class="flex flex-1 overflow-hidden">
-<aside id="sidebar" class="w-full md:w-80 bg-slate-900/95 backdrop-blur-lg border-l border-purple-500/30 fixed md:relative inset-0 z-40 transform translate-x-full md:translate-x-0 transition-transform duration-300 flex flex-col">
-<div class="p-4 bg-gradient-to-r from-purple-900/50 to-pink-900/50 border-b border-purple-500/30 flex items-center justify-between"><h2 class="text-2xl font-black" id="sidebarTitle">الدول المتاحة</h2><button onclick="toggleSidebar()" class="md:hidden ripple bg-white/10 p-2 rounded-xl active:scale-95"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button></div>
-<div id="sidebarWrapper" class="flex-1 overflow-y-auto hide-scrollbar p-3 space-y-2">
-<button id="backToCountries" onclick="backToCountries()" class="hidden ripple w-full bg-slate-800 hover:bg-slate-700 text-white text-lg font-bold py-4 rounded-2xl mb-3 active:scale-95">← رجوع للدول</button>
-<div id="countriesList" class="space-y-2"></div>
-<div id="roomsList" class="hidden space-y-2"></div>
-<button id="adminBtn" onclick="openAdminPanel()" class="hidden ripple w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white text-xl font-bold py-5 rounded-2xl mt-4 active:scale-95">لوحة التحكم 👑</button>
-</div>
-<div class="p-4 bg-black/30 border-t border-purple-500/30"><div class="text-center"><p class="text-lg font-bold" id="currentUserName">زائر</p><p class="text-sm text-purple-300" id="currentUserRole">غير مسجل</p></div></div>
-</aside>
-
-<main class="flex-1 flex flex-col bg-gradient-to-br from-slate-900/50 to-purple-900/30">
-<div id="welcomeScreen" class="flex-1 flex items-center justify-center p-8 text-center"><div><div class="text-8xl mb-6">💬</div><h2 class="text-4xl font-black mb-4 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">اختر دولة للبدء</h2><p class="text-xl text-purple-200">اضغط على أيقونة القائمة لاختيار الدولة ثم الغرفة</p></div></div>
-
-<div id="chatScreen" class="hidden flex-1 flex flex-col">
-<div id="roomHeaderBar" class="bg-gradient-to-r sticky top-0 z-10" style="background:var(--room-grad)">
-<div id="roomWelcome" class="px-4 py-3 text-center text-white text-lg font-bold hidden"></div>
-<div id="roomModsList" class="bg-black/20 px-4 py-2 text-center text-sm hidden"><span class="text-yellow-300">المشرفون: </span><span id="roomModsText" class="text-white"></span></div>
-</div>
-
-<div id="pinnedMessageContainer" class="hidden bg-yellow-600/20 border-b-2 border-yellow-500 px-4 py-3">
-<div class="flex items-center justify-between gap-2">
-<div class="flex items-center gap-2 flex-1"><span class="text-yellow-400 text-2xl">📌</span><div class="flex-1"><p class="text-sm text-yellow-300 font-bold">رسالة مثبتة</p><p class="text-white text-lg" id="pinnedMessageText"></p></div></div>
-<button onclick="unpinMessage()" class="bg-red-600/50 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm active:scale-95 hidden" id="unpinBtn">إلغاء</button>
-</div></div>
-<div id="messagesContainer" class="flex-1 overflow-y-auto hide-scrollbar p-4 space-y-3 scroll-smooth"></div>
-
-<div class="bg-slate-900/90 backdrop-blur-lg border-t-2 border-purple-500/30 p-3 safe-area-bottom">
-<div class="flex gap-2 items-center">
-<button onclick="document.getElementById('imageInput').click()" id="imageBtn" class="hidden ripple bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-5 rounded-2xl font-bold text-xl active:scale-95 shadow-lg">🖼️</button>
-<input type="file" id="imageInput" accept="image/*" class="hidden" onchange="handleImageUpload(this)">
-<input id="messageInput" type="text" placeholder="اكتب رسالتك هنا..." class="flex-1 bg-slate-800 text-white text-xl px-6 py-5 rounded-2xl border-2 border-slate-700 focus:border-purple-500 outline-none" maxlength="500" onkeypress="if(event.key==='Enter') sendMessage()">
-<button onclick="sendMessage()" class="ripple bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-5 rounded-2xl font-bold text-xl active:scale-95 shadow-lg">إرسال</button>
-</div></div></div></main></div></div>
-<script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
-import { getDatabase, ref, push, onValue, set, remove, off, onDisconnect, serverTimestamp, update, get } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
-const firebaseConfig={databaseURL:"https://hashed-cht-default-rtdb.firebaseio.com/"};
-const app=initializeApp(firebaseConfig);
-const db=getDatabase(app);
-const royalIcons=['🌸','❤️','☕','💀','😊'];
-const royalUsers={'أميرة':'🌸','ملكة':'👑','سلطان':'👑','أمير':'👑','شيخة':'🌸'};
-const PROTECTED_OWNERS=['الدعم الفني','Admin','Owner'];
-const PROTECTED_SUPER=['Royal Master'];
-const RESERVED_ROLE_NAMES=['المالك','سوبر أدمن','مشرف','ادمن','moderator','admin','owner'];
-let currentUser=null,currentCountry=null,currentRoom=null,messagesRef=null,onlineRef=null,countriesRef=null,editingCountry=null,muteTargetUser=null,userMuteStatus=null,selectedRoomColor='#9333ea,#ec4899',currentRoomMods=[],msgCountRef=null,ownerNameColor='gold',protectedNamesList=[],editRoomCountry=null,editRoomName=null;
-
-window.onload=()=>{countriesRef=ref(db,'countries');loadCountries();loadGlobalAnnouncement();loadProtectedNames();checkBannedStatus();};
-
-window.loginAsGuest=()=>{const guestNum=Math.floor(Math.random()*9000)+1000;currentUser={name:`زائر${guestNum}`,role:'guest',icon:'👤'};startApp();};
-window.showMemberLogin=()=>{document.getElementById('memberModal').classList.remove('hidden');document.getElementById('memberModal').classList.add('flex');};
-window.closeMemberModal=()=>{document.getElementById('memberModal').classList.add('hidden');document.getElementById('memberModal').classList.remove('flex');};
-window.loginMember=async()=>{const name=document.getElementById('memberName').value.trim();const pass=document.getElementById('memberPass').value;if(name.length<3){alert('الاسم يجب أن يكون 3 أحرف على الأقل');return;}if(pass.length<4){alert('كلمة المرور يجب أن تكون 4 أحرف على الأقل');return;}const protectedSnap=await get(ref(db,'protectedNames'));const protectedData=protectedSnap.val()||{};const allProtected=[...PROTECTED_OWNERS,...PROTECTED_SUPER,...RESERVED_ROLE_NAMES];Object.values(protectedData).forEach(p=>{if(p.name)allProtected.push(p.name);});if(allProtected.includes(name)||allProtected.some(p=>name.includes(p))){alert('هذا الاسم محمي أو محجوز ولا يمكن استخدامه');return;}const memberSnap=await get(ref(db,`members/${name}`));let userRole='member',userIcon=royalUsers[name]||royalIcons[Math.floor(Math.random()*royalIcons.length)],userTag='';if(memberSnap.exists()){const data=memberSnap.val();if(data.password&&data.password!==pass){alert('كلمة المرور غير صحيحة');return;}userRole=data.role||'member';if(data.icon)userIcon=data.icon;if(userRole==='banned'){alert('تم حظر حسابك من الدردشة');return;}}currentUser={name:name,role:userRole,icon:userIcon,tag:userTag};await update(ref(db,`members/${name}`),{name:name,password:pass,role:userRole,icon:userIcon,lastLogin:serverTimestamp()});closeMemberModal();startApp();};
-window.showOwnerLogin=
+<div class="text-center flex-1"><h1 class="text-xl font-black"><span id="breadcrumb">الدول</span></h1><div class="flex items-center justify-center gap-3 text-sm"><p class="text-purple-200" id="onlineCount">متصل: 0</p><span class="text-purple-400">•</span><p class="text-purple-200" id="msgCount">الرسائل: 0</p></div>
