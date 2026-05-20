@@ -3,11 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RoomRom Pro v6.0</title>
+    <title>RoomRom Pro v6.1 - النظام الذهبي</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --primary: #7c3aed; --gold: #fbbf24; --gold-dark: #d97706; --dark-bg: #0f172a; --card-bg: #1e293b; --text: #f1f5f9; --text-muted: #94a3b8; --border: #334155; --success: #10b981; --danger: #ef4444; --owner: #dc2626; --warning: #f59e0b; }
+        :root {
+            --primary: #7c3aed; --gold: #fbbf24; --gold-dark: #d97706; --dark-bg: #0f172a;
+            --card-bg: #1e293b; --text: #f1f5f9; --text-muted: #94a3b8; --border: #334155;
+            --success: #10b981; --danger: #ef4444; --owner: #dc2626; --warning: #f59e0b;
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
         body { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); color: var(--text); min-height: 100vh; padding: 15px; }
      .container { max-width: 1600px; margin: 0 auto; }
@@ -27,6 +31,7 @@
      .tab-btn.gold { background: linear-gradient(135deg, var(--gold-dark), var(--gold)); color: #000; }
      .tab-btn.owner { background: linear-gradient(135deg, #dc2626, #f87171); color: #fff; }
      .tab-btn.visitor { background: linear-gradient(135deg, #10b981, #34d399); color: #fff; }
+     .login-box { max-width: 400px; margin: 20px auto; background: #0f172a; padding: 20px; border-radius: 12px; border: 2px solid var(--primary); }
      .countries-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-top: 20px; }
      .country-card { background: #334155; border-radius: 12px; padding: 18px 12px; text-align: center; cursor: pointer; transition: all 0.3s; border: 2px solid transparent; position: relative; }
      .country-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
@@ -46,7 +51,6 @@
      .admin-btn.owner { background: var(--owner); }
      .admin-btn.success { background: var(--success); }
      .admin-btn.warning { background: var(--warning); color: #000; }
-     .login-form { max-width: 400px; margin: 0 auto; }
         input, select, textarea { width: 100%; padding: 11px; margin: 8px 0; background: #0f172a; border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'Tajawal', sans-serif; font-size: 0.95rem; }
         textarea { min-height: 90px; resize: vertical; }
         input[type="datetime-local"] { color-scheme: dark; }
@@ -76,7 +80,7 @@
     </style>
 </head>
 <body>
-    <div class="golden-crown" onclick="alert('RoomRom Pro v6.0\nالمالك: 19952005\nالماستر: admin2026')">
+    <div class="golden-crown" onclick="alert('RoomRom Pro v6.1\nالمالك: 19952005\nالماستر: admin2026')">
         <i class="fas fa-crown"></i>
     </div>
 
@@ -90,7 +94,7 @@
         <div id="loginSection" class="panel active">
             <div class="header">
                 <h1>RoomRom System Pro</h1>
-                <p>النظام الذهبي الاحترافي v6.0</p>
+                <p>النظام الذهبي الاحترافي v6.1</p>
             </div>
 
             <div class="login-tabs">
@@ -105,13 +109,11 @@
                 </button>
             </div>
 
-            <div id="loginBox" style="display: none;">
-                <div class="login-form">
-                    <h3 id="loginTitle" style="margin-bottom: 15px; text-align: center;"></h3>
-                    <input type="password" id="loginPass" placeholder="ادخل كلمة السر">
-                    <button class="admin-btn" onclick="checkLogin()">دخول</button>
-                    <button class="admin-btn danger" onclick="hideLogin()">الغاء</button>
-                </div>
+            <div id="loginBox" class="login-box" style="display: none;">
+                <h3 id="loginTitle" style="margin-bottom: 15px; text-align: center;"></h3>
+                <input type="password" id="loginPass" placeholder="ادخل كلمة السر">
+                <button class="admin-btn" onclick="checkLogin()">دخول</button>
+                <button class="admin-btn danger" onclick="hideLogin()">الغاء</button>
             </div>
 
             <div class="countries-grid" id="countriesGrid"></div>
@@ -138,366 +140,4 @@
                     <input type="text" id="newCountryFlag" placeholder="العلم 🇮🇶">
                     <button class="admin-btn owner" onclick="addCountry()">إضافة دولة</button>
                     <select id="deleteCountrySelect"></select>
-                    <button class="admin-btn danger" onclick="deleteCountry()">حذف الدولة المحددة</button>
-                </div>
-                <div class="admin-card">
-                    <h3><i class="fas fa-database"></i> النسخ الاحتياطي</h3>
-                    <button class="admin-btn success" onclick="exportData()">تصدير كل البيانات</button>
-                    <button class="admin-btn owner" onclick="document.getElementById('importFile').click()">استيراد البيانات</button>
-                    <input type="file" id="importFile" style="display: none;" accept=".json" onchange="importData(event)">
-                    <button class="admin-btn warning" onclick="clearExpiredRoomsAll()">حذف الغرف المنتهية من الكل</button>
-                </div>
-                <div class="admin-card">
-                    <h3><i class="fas fa-chart-line"></i> احصائيات شاملة</h3>
-                    <div class="stats">
-                        <div class="stat-box"><div class="stat-num" id="totalCountries">0</div><div class="stat-label">دولة</div></div>
-                        <div class="stat-box"><div class="stat-num" id="totalRooms">0</div><div class="stat-label">غرفة</div></div>
-                        <div class="stat-box"><div class="stat-num" id="activeRooms">0</div><div class="stat-label">نشطة</div></div>
-                        <div class="stat-box"><div class="stat-num" id="expiredRooms">0</div><div class="stat-label">منتهية</div></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="adminPanel" class="panel">
-            <div class="panel-header">
-                <h2 class="panel-title admin"><i class="fas fa-crown"></i> لوحة الماستر <span class="badge badge-admin">ADMIN</span></h2>
-                <button class="logout-btn" onclick="logout()">تسجيل خروج</button>
-            </div>
-            <div class="admin-grid">
-                <div class="admin-card">
-                    <h3 style="color: var(--gold)"><i class="fas fa-door-open"></i> إضافة غرف - بكيفك</h3>
-                    <select id="countrySelect"></select>
-                    <input type="text" id="roomName" placeholder="اسم الغرفة - لو وحدة">
-                    <textarea id="roomsTextarea" placeholder="او الصق اسماء الغرف هنا، كل غرفة بسطر:&#10;غرفة بغداد 1&#10;غرفة بغداد VIP&#10;غرفة بغداد كبار"></textarea>
-                    <input type="datetime-local" id="roomExpiry">
-                    <input type="number" id="roomMaxUsers" placeholder="الحد الاقصى للاعضاء">
-                    <input type="password" id="roomPassword" placeholder="كلمة سر الغرفة">
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="roomVIP">
-                        <label for="roomVIP">غرفة VIP ⭐ مميزة</label>
-                    </div>
-                    <button class="admin-btn success" onclick="addMultipleRooms()">
-                        <i class="fas fa-plus-circle"></i> إضافة كل الغرف المكتوبة
-                    </button>
-                    <button class="admin-btn warning" onclick="addSingleRoom()">إضافة غرفة واحدة فقط</button>
-                </div>
-                <div class="admin-card">
-                    <h3 style="color: var(--gold)"><i class="fas fa-list"></i> إدارة الغرف</h3>
-                    <div class="stats">
-                        <div class="stat-box"><div class="stat-num" id="currentRoomCount">0</div><div class="stat-label">غرفة</div></div>
-                        <div class="stat-box"><div class="stat-num" id="currentActiveCount">0</div><div class="stat-label">نشطة</div></div>
-                    </div>
-                    <button class="admin-btn danger" onclick="clearAllRooms()">حذف كل الغرف</button>
-                    <button class="admin-btn warning" onclick="clearExpiredRooms()">حذف المنتهية فقط</button>
-                    <button class="admin-btn" onclick="renewAllRooms()">تجديد الكل 30 يوم</button>
-                    <div class="room-list" id="roomList"></div>
-                </div>
-                <div class="admin-card">
-                    <h3 style="color: var(--gold)"><i class="fas fa-users"></i> إدارة الأعضاء</h3>
-                    <input type="text" id="banUserName" placeholder="اسم العضو للحظر">
-                    <button class="admin-btn danger" onclick="banUser()">حظر عضو</button>
-                    <button class="admin-btn success" onclick="unbanUser()">فك حظر عضو</button>
-                    <button class="admin-btn warning" onclick="kickAll()">طرد الكل من غرفة</button>
-                </div>
-                <div class="admin-card">
-                    <h3 style="color: var(--gold)"><i class="fas fa-bullhorn"></i> رسائل جماعية</h3>
-                    <textarea id="broadcastMsg" placeholder="اكتب الرسالة..."></textarea>
-                    <button class="admin-btn" onclick="sendBroadcast()">ارسال للكل</button>
-                    <button class="admin-btn warning" onclick="sendToCountry()">ارسال لدولة محددة</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="visitorPanel" class="panel">
-            <div class="panel-header">
-                <h2 class="panel-title"><i class="fas fa-user"></i> مرحباً بك زائر <span class="badge badge-active">VISITOR</span></h2>
-                <button class="logout-btn" onclick="logout()">خروج</button>
-            </div>
-            <div class="admin-card">
-                <h3><i class="fas fa-eye"></i> تصفح الدول والغرف النشطة</h3>
-                <div class="countries-grid" id="guestCountriesGrid"></div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        const PASSWORDS = { owner: '19952005', admin: 'admin2026' };
-        let currentRole = '';
-
-        let countries = JSON.parse(localStorage.getItem('countries')) || [
-            { name: 'السعودية', flag: '🇸🇦', users: 12450, rooms: [
-                { name: 'الرياض VIP', expiry: '2026-12-31T23:59', maxUsers: 100, password: '', vip: true, created: Date.now() },
-                { name: 'جدة العامة', expiry: null, maxUsers: 50, password: '', vip: false, created: Date.now() }
-            ]},
-            { name: 'العراق', flag: '🇮🇶', users: 8920, rooms: [
-                { name: 'بغداد 1', expiry: '2026-06-01T00:00', maxUsers: 200, password: '123', vip: false, created: Date.now() },
-                { name: 'البصرة', expiry: null, maxUsers: 50, password: '', vip: false, created: Date.now() }
-            ]},
-            { name: 'مصر', flag: '🇪🇬', users: 15300, rooms: [] },
-            { name: 'الإمارات', flag: '🇦🇪', users: 6780, rooms: [] }
-        ];
-
-        function saveData() {
-            localStorage.setItem('countries', JSON.stringify(countries));
-            renderCountries();
-            updateStats();
-        }
-
-        function updateStats() {
-            const totalRooms = countries.reduce((sum, c) => sum + c.rooms.length, 0);
-            const activeRooms = countries.reduce((sum, c) => sum + c.rooms.filter(r =>!isExpired(r)).length, 0);
-            const expiredRooms = totalRooms - activeRooms;
-
-            document.getElementById('totalCountries').textContent = countries.length;
-            document.getElementById('totalRooms').textContent = totalRooms;
-            document.getElementById('activeRooms').textContent = activeRooms;
-            document.getElementById('expiredRooms').textContent = expiredRooms;
-        }
-
-        function isExpired(room) {
-            if (!room.expiry) return false;
-            return new Date(room.expiry) < new Date();
-        }
-
-        function formatExpiry(expiry) {
-            if (!expiry) return '<span style="color:var(--success)">دائم</span>';
-            const date = new Date(expiry);
-            const now = new Date();
-            const diff = date - now;
-            if (diff < 0) return '<span style="color:var(--danger)">منتهي ❌</span>';
-            const days = Math.floor(diff / (1000 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            if (days > 7) return `<span style="color:var(--success)">${days} يوم</span>`;
-            if (days > 0) return `<span style="color:var(--warning)">${days} يوم</span>`;
-            return `<span style="color:var(--danger)">${hours} ساعة</span>`;
-        }
-
-        function showLogin(role) {
-            currentRole = role;
-            const titles = { owner: 'دخول المالك الرئيسي', admin: 'دخول الماستر' };
-            document.getElementById('loginTitle').textContent = titles[role];
-            document.getElementById('loginBox').style.display = 'block';
-        }
-
-        function hideLogin() {
-            document.getElementById('loginBox').style.display = 'none';
-            document.getElementById('loginPass').value = '';
-        }
-
-        function checkLogin() {
-            const pass = document.getElementById('loginPass').value;
-            if (pass === PASSWORDS[currentRole]) {
-                document.getElementById('loginSection').classList.remove('active');
-                document.getElementById('loginBox').style.display = 'none';
-                if (currentRole === 'owner') {
-                    document.getElementById('ownerPanel').classList.add('active');
-                    updateStats();
-                    loadDeleteCountrySelect();
-                } else {
-                    document.getElementById('adminPanel').classList.add('active');
-                    loadCountrySelect();
-                }
-                localStorage.setItem('role', currentRole);
-                document.getElementById('loginPass').value = '';
-            } else {
-                alert('❌ كلمة السر غلط');
-            }
-        }
-
-        function visitorLogin() {
-            document.getElementById('loginSection').classList.remove('active');
-            document.getElementById('guestPanel').classList.add('active');
-            renderGuestCountries();
-            localStorage.setItem('role', 'visitor');
-        }
-
-        function logout() {
-            localStorage.removeItem('role');
-            location.reload();
-        }
-
-        function renderCountries() {
-            const grid = document.getElementById('countriesGrid');
-            grid.innerHTML = countries.map(c => {
-                const activeRooms = c.rooms.filter(r =>!isExpired(r)).length;
-                return `
-                <div class="country-card">
-                    <div class="room-count">${c.rooms.length} غرف</div>
-                    <div class="active-count">${activeRooms} نشطة</div>
-                    <div style="font-size: 2.5rem">${c.flag}</div>
-                    <div style="font-weight: 700; margin: 10px 0">${c.name}</div>
-                    <div style="color: var(--text-muted); font-size: 0.85rem">${c.users.toLocaleString()} عضو</div>
-                </div>
-            `}).join('');
-        }
-
-        function renderGuestCountries() {
-            const grid = document.getElementById('guestCountriesGrid');
-            grid.innerHTML = countries.map(c => {
-                const activeRooms = c.rooms.filter(r =>!isExpired(r));
-                return `
-                <div class="country-card">
-                    <div class="active-count">${activeRooms.length} نشطة</div>
-                    <div style="font-size: 2.5rem">${c.flag}</div>
-                    <div style="font-weight: 700; margin: 10px 0">${c.name}</div>
-                    <div style="color: var(--text-muted); font-size: 0.85rem">${c.users.toLocaleString()} عضو</div>
-                </div>
-            `}).join('');
-        }
-
-        function loadCountrySelect() {
-            const select = document.getElementById('countrySelect');
-            select.innerHTML = countries.map(c => `<option value="${c.name}">${c.flag} ${c.name}</option>`).join('');
-            showRooms();
-        }
-
-        function loadDeleteCountrySelect() {
-            const select = document.getElementById('deleteCountrySelect');
-            select.innerHTML = countries.map(c => `<option value="${c.name}">${c.flag} ${c.name}</option>`).join('');
-        }
-
-        function addSingleRoom() {
-            const countryName = document.getElementById('countrySelect').value;
-            const roomName = document.getElementById('roomName').value.trim();
-            if (!roomName) return alert('اكتب اسم الغرفة');
-
-            const country = countries.find(c => c.name === countryName);
-            if (country.rooms.find(r => r.name === roomName)) return alert('الغرفة موجودة مسبقاً');
-
-            const room = {
-                name: roomName,
-                expiry: document.getElementById('roomExpiry').value || null,
-                maxUsers: parseInt(document.getElementById('roomMaxUsers').value) || 0,
-                password: document.getElementById('roomPassword').value || '',
-                vip: document.getElementById('roomVIP').checked,
-                created: Date.now()
-            };
-
-            country.rooms.push(room);
-            clearRoomForm();
-            saveData();
-            showRooms();
-            alert('✅ تم اضافة الغرفة: ' + roomName);
-        }
-
-        function addMultipleRooms() {
-            const countryName = document.getElementById('countrySelect').value;
-            const roomsText = document.getElementById('roomsTextarea').value.trim();
-
-            if (!roomsText) return alert('اكتب اسماء الغرف اولاً');
-
-            const roomNames = roomsText.split('\n').map(r => r.trim()).filter(r => r);
-            if (roomNames.length === 0) return alert('ما لكيت اسماء غرف');
-
-            const country = countries.find(c => c.name === countryName);
-            const expiry = document.getElementById('roomExpiry').value || null;
-            const maxUsers = parseInt(document.getElementById('roomMaxUsers').value) || 0;
-            const password = document.getElementById('roomPassword').value || '';
-            const vip = document.getElementById('roomVIP').checked;
-
-            const added = [];
-            const duplicates = [];
-
-            roomNames.forEach(name => {
-                if (!country.rooms.find(r => r.name === name)) {
-                    country.rooms.push({
-                        name: name,
-                        expiry: expiry,
-                        maxUsers: maxUsers,
-                        password: password,
-                        vip: vip,
-                        created: Date.now()
-                    });
-                    added.push(name);
-                } else {
-                    duplicates.push(name);
-                }
-            });
-
-            clearRoomForm();
-            saveData();
-            showRooms();
-
-            let msg = `✅ تم اضافة ${added.length} غرفة`;
-            if (duplicates.length > 0) msg += `\n⚠️ ${duplicates.length} غرفة مكررة تم تجاهلها`;
-            alert(msg);
-        }
-
-        function clearRoomForm() {
-            document.getElementById('roomName').value = '';
-            document.getElementById('roomsTextarea').value = '';
-            document.getElementById('roomExpiry').value = '';
-            document.getElementById('roomMaxUsers').value = '';
-            document.getElementById('roomPassword').value = '';
-            document.getElementById('roomVIP').checked = false;
-        }
-
-        function showRooms() {
-            const countryName = document.getElementById('countrySelect').value;
-            const country = countries.find(c => c.name === countryName);
-            const list = document.getElementById('roomList');
-            const activeCount = country.rooms.filter(r =>!isExpired(r)).length;
-
-            document.getElementById('currentRoomCount').textContent = country.rooms.length;
-            document.getElementById('currentActiveCount').textContent = activeCount;
-
-            list.innerHTML = country.rooms.map((r, i) => {
-                const expired = isExpired(r);
-                const statusClass = expired? 'expired' : r.vip? 'vip' : '';
-                const statusBadge = expired? '<span class="badge badge-expired">منتهية</span>' :
-                                   r.vip? '<span class="badge badge-vip">VIP</span>' :
-                                   '<span class="badge badge-active">نشطة</span>';
-
-                return `
-                <div class="room-item ${statusClass}">
-                    <div>
-                        <div class="room-header">
-                            <span class="room-title"><i class="fas fa-door-open"></i> ${r.name} ${statusBadge}</span>
-                            <div class="room-actions">
-                                <button class="admin-btn warning" onclick="renewRoom('${countryName}', ${i})">تجديد</button>
-                                <button class="admin-btn danger" onclick="deleteRoom('${countryName}', ${i})">حذف</button>
-                            </div>
-                        </div>
-                        <div class="room-info">
-                            <span><i class="fas fa-clock"></i> ${formatExpiry(r.expiry)}</span>
-                            ${r.maxUsers? `<span><i class="fas fa-users"></i> ${r.maxUsers} عضو</span>` : ''}
-                            ${r.password? `<span><i class="fas fa-lock"></i> محمية</span>` : ''}
-                        </div>
-                    </div>
-                </div>
-            `}).join('') || '<p style="color:var(--text-muted);text-align:center;padding:20px">لا توجد غرف</p>';
-        }
-
-        function renewRoom(countryName, index) {
-            const days = prompt('تجديد كم يوم؟', '30');
-            if (!days || isNaN(days)) return;
-            const country = countries.find(c => c.name === countryName);
-            const room = country.rooms[index];
-            const newDate = new Date();
-            newDate.setDate(newDate.getDate() + parseInt(days));
-            room.expiry = newDate.toISOString().slice(0, 16);
-            saveData();
-            showRooms();
-            alert('✅ تم تجديد الغرفة');
-        }
-
-        function deleteRoom(countryName, index) {
-            const country = countries.find(c => c.name === countryName);
-            const roomName = country.rooms[index].name;
-            if(confirm('حذف غرفة ' + roomName + '؟')) {
-                country.rooms.splice(index, 1);
-                saveData();
-                showRooms();
-            }
-        }
-
-        function clearAllRooms() {
-            const countryName = document.getElementById('countrySelect').value;
-            if(confirm(`حذف كل غرف ${countryName}؟ لا يمكن التراجع!`)) {
-                const country = countries.find(c => c.name === countryName);
-                country.rooms = [];
-                saveData();
-                showRooms();
-                alert('✅ تم حذف كل الغرف');
-           
+                    <button class
