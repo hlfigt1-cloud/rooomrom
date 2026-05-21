@@ -11,75 +11,34 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
     * { font-family: 'Cairo', sans-serif; }
-  html, body {
-    height: 100%;
-    overflow: hidden;
-    position: fixed;
-    width: 100%;
-  }
-  #app {
-    height: 100dvh;
-    height: 100vh;
-  }
+  html, body { height: 100%; overflow: hidden; position: fixed; width: 100%; }
+  #app { height: 100dvh; height: 100vh; }
   ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-track { background: #1e293b; }
   ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
-  ::-webkit-scrollbar-thumb:hover { background: #64748b; }
-
-  @keyframes slideIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
  .msg-enter { animation: slideIn 0.2s ease-out; }
-
-  @keyframes pulse-ring {
-    0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
-    70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
-    100% { box-shadow: 0 0 rgba(34, 197, 94, 0); }
-  }
+  @keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 rgba(34, 197, 94, 0); } }
  .online-dot { animation: pulse-ring 2s infinite; }
-
   @keyframes owner-glow {
-    0%, 100% {
-      box-shadow: 0 0 20px rgba(251, 191, 36, 0.6), 0 0 40px rgba(251, 191, 36, 0.3);
-      transform: scale(1);
-    }
-    50% {
-      box-shadow: 0 0 30px rgba(251, 191, 36, 0.9), 0 0 60px rgba(251, 191, 36, 0.5);
-      transform: scale(1.05);
-    }
+    0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.6), 0 0 40px rgba(251, 191, 36, 0.3); transform: scale(1); }
+    50% { box-shadow: 0 0 30px rgba(251, 191, 36, 0.9), 0 0 60px rgba(251, 191, 36, 0.5); transform: scale(1.05); }
   }
- .owner-badge {
-    animation: owner-glow 2s infinite;
-    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-  }
-
- .gradient-text {
-    background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
+ .owner-badge { animation: owner-glow 2s infinite; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); }
+ .gradient-text { background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
  .rank-owner { color: #fbbf24; text-shadow: 0 0 10px rgba(251, 191, 36, 0.5); }
  .rank-master { color: #f87171; }
  .rank-superadmin { color: #c084fc; }
  .rank-admin { color: #60a5fa; }
  .rank-member { color: #34d399; }
  .rank-guest { color: #94a3b8; }
-
  .modal-backdrop { backdrop-filter: blur(8px); }
   #messageInput { font-size: 16px; }
  .chat-input-container { padding-bottom: env(safe-area-inset-bottom); }
-
- .premium-room {
-    background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%);
-    border: 1px solid rgba(251, 191, 36, 0.3);
-  }
-
- .context-menu {
-    min-width: 200px;
-  }
+ .premium-room { background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%); border: 1px solid rgba(251, 191, 36, 0.3); }
+ .context-menu { min-width: 200px; }
+ .expired-room { opacity: 0.5; pointer-events: none; }
+ .muted-msg { opacity: 0.4; }
 </style>
 </head>
 <body class="bg-[#0f172a] text-slate-100">
@@ -217,7 +176,6 @@
                 <i class="fa-solid fa-plus text-sm"></i>
               </button>
             </div>
-          </div>
           <div id="roomsList" class="space-y-1"></div>
 
           <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mt-6 mb-3">المتصلون</h2>
@@ -251,6 +209,9 @@
               <i class="fa-solid fa-paper-plane"></i>
             </button>
           </form>
+          <div id="muteNotice" class="hidden mt-2 text-xs text-red-400 text-center">
+            <i class="fa-solid fa-microphone-slash ml-1"></i>تم إيقافك عن الكلام
+          </div>
         </div>
 
       </main>
@@ -327,7 +288,7 @@
 </div>
 
 <div id="manageRanksModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop bg-black/50">
-  <div class="bg-slate-800 rounded-2xl shadow-2xl border border-amber-500/30 w-full max-w-lg mx-4 p-6 max-h-[80vh] overflow-y-auto">
+  <div class="bg-slate-800 rounded-2xl shadow-2xl border border-amber-500/30 w-full max-w-lg mx-4 p-6 max-h-96 overflow-y-auto">
     <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
       <i class="fa-solid fa-crown text-amber-400"></i>
       إدارة الرتب والرموز
@@ -367,6 +328,10 @@
       <i class="fa-solid fa-microphone-slash text-yellow-400"></i>
       <span>إيقاف عن الكلام</span>
     </button>
+    <button class="user-action-btn w-full px-4 py-2 text-right hover:bg-slate-700 transition-colors flex items-center gap-3" data-action="unmute">
+      <i class="fa-solid fa-microphone text-green-400"></i>
+      <span>إلغاء الإيقاف</span>
+    </button>
     <button class="user-action-btn w-full px-4 py-2 text-right hover:bg-slate-700 transition-colors flex items-center gap-3" data-action="ban">
       <i class="fa-solid fa-ban text-red-400"></i>
       <span>حظر من الدردشة</span>
@@ -379,6 +344,10 @@
     <button class="user-action-btn w-full px-4 py-2 text-right hover:bg-slate-700 transition-colors flex items-center gap-3" data-action="grant-superadmin">
       <i class="fa-solid fa-shield-halved text-purple-400"></i>
       <span>منح رتبة سوبر أدمن</span>
+    </button>
+    <button class="user-action-btn w-full px-4 py-2 text-right hover:bg-slate-700 transition-colors flex items-center gap-3" data-action="remove-rank">
+      <i class="fa-solid fa-user-minus text-slate-400"></i>
+      <span>إزالة الرتبة</span>
     </button>
   </div>
 </div>
@@ -415,23 +384,12 @@ const db = getDatabase(app);
 // Constants
 const OWNER_CODE = "19952005";
 const COUNTRIES = {
-  'Iraq': { name: 'العراق', flag: '🇮🇶' },
-  'Saudi': { name: 'السعودية', flag: '🇸🇦' },
-  'Egypt': { name: 'مصر', flag: '🇪🇬' },
-  'UAE': { name: 'الإمارات', flag: '🇦🇪' },
-  'Jordan': { name: 'الأردن', flag: '🇯🇴' },
-  'Morocco': { name: 'المغرب', flag: '🇲🇦' },
-  'Palestine': { name: 'فلسطين', flag: '🇵🇸' },
-  'Lebanon': { name: 'لبنان', flag: '🇱🇧' },
-  'Kuwait': { name: 'الكويت', flag: '🇰🇼' },
-  'Qatar': { name: 'قطر', flag: '🇶🇦' },
-  'Oman': { name: 'عمان', flag: '🇴🇲' },
-  'Bahrain': { name: 'البحرين', flag: '🇧🇭' },
-  'Syria': { name: 'سوريا', flag: '🇸🇾' },
-  'Yemen': { name: 'اليمن', flag: '🇾🇪' },
-  'Algeria': { name: 'الجزائر', flag: '🇩🇿' },
-  'Tunisia': { name: 'تونس', flag: '🇹🇳' },
-  'Libya': { name: 'ليبيا', flag: '🇱🇾' }
+  'Iraq': { name: 'العراق', flag: '🇮🇶' }, 'Saudi': { name: 'السعودية', flag: '🇸🇦' }, 'Egypt': { name: 'مصر', flag: '🇪🇬' },
+  'UAE': { name: 'الإمارات', flag: '🇦🇪' }, 'Jordan': { name: 'الأردن', flag: '🇯🇴' }, 'Morocco': { name: 'المغرب', flag: '🇲🇦' },
+  'Palestine': { name: 'فلسطين', flag: '🇵🇸' }, 'Lebanon': { name: 'لبنان', flag: '🇱🇧' }, 'Kuwait': { name: 'الكويت', flag: '🇰🇼' },
+  'Qatar': { name: 'قطر', flag: '🇶🇦' }, 'Oman': { name: 'عمان', flag: '🇴🇲' }, 'Bahrain': { name: 'البحرين', flag: '🇧🇭' },
+  'Syria': { name: 'سوريا', flag: '🇸🇾' }, 'Yemen': { name: 'اليمن', flag: '🇾🇪' }, 'Algeria': { name: 'الجزائر', flag: '🇩🇿' },
+  'Tunisia': { name: 'تونس', flag: '🇹🇳' }, 'Libya': { name: 'ليبيا', flag: '🇱🇾' }
 };
 
 const RANKS = {
@@ -453,19 +411,33 @@ let unsubscribeRooms = null;
 let rankCodes = { master: '', superadmin: '' };
 let selectedUserForAction = null;
 
-// Populate countries
-const countrySelect = document.getElementById('countrySelect');
-Object.entries(COUNTRIES).forEach(([code, data]) => {
-  const option = document.createElement('option');
-  option.value = code;
-  option.textContent = `${data.flag} ${data.name}`;
-  countrySelect.appendChild(option);
+// Populate countries - Fixed
+document.addEventListener('DOMContentLoaded', () => {
+  const countrySelect = document.getElementById('countrySelect');
+  if (countrySelect) {
+    Object.entries(COUNTRIES).forEach(([code, data]) => {
+      const option = document.createElement('option');
+      option.value = code;
+      option.textContent = `${data.flag} ${data.name}`;
+      countrySelect.appendChild(option);
+    });
+  }
 });
 
 // Load rank codes
 onValue(ref(db, 'settings/rankCodes'), (snap) => {
   rankCodes = snap.val() || { master: '', superadmin: '' };
+  updateRankCodesDisplay();
 });
+
+function updateRankCodesDisplay() {
+  const container = document.getElementById('currentRankCodes');
+  if (!container) return;
+  container.innerHTML = `
+    <div class="flex justify-between"><span class="text-red-400">ماستر:</span><span class="text-slate-300">${rankCodes.master || 'غير محدد'}</span></div>
+    <div class="flex justify-between"><span class="text-purple-400">سوبر أدمن:</span><span class="text-slate-300">${rankCodes.superadmin || 'غير محدد'}</span></div>
+  `;
+}
 
 // Auth State
 onAuthStateChanged(auth, async (user) => {
@@ -473,7 +445,6 @@ onAuthStateChanged(auth, async (user) => {
     const userSnap = await get(ref(db, `users/${user.uid}`));
     if (userSnap.exists()) {
       const userData = userSnap.val();
-      // Check if banned
       if (userData.banned) {
         alert('تم حظرك من الدردشة');
         await signOut(auth);
@@ -518,19 +489,14 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     }
 
     const userData = {
-      username,
-      country,
-      rank,
-      online: true,
-      banned: false,
-      muted: false,
+      username, country, rank,
+      online: true, banned: false, muted: false,
       lastSeen: serverTimestamp(),
       joinedAt: serverTimestamp()
     };
 
     await set(ref(db, `users/${user.uid}`), userData);
 
-    // Set disconnect handler
     const userStatusRef = ref(db, `users/${user.uid}/online`);
     onDisconnect(userStatusRef).set(false);
     onDisconnect(ref(db, `users/${user.uid}/lastSeen`)).set(serverTimestamp());
@@ -558,59 +524,4 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
 });
 
 // Show/Hide Screens
-function showLoginScreen() {
-  document.getElementById('loginScreen').classList.remove('hidden');
-  document.getElementById('mainApp').classList.add('hidden');
-  if (unsubscribeMessages) unsubscribeMessages();
-  if (unsubscribeUsers) unsubscribeUsers();
-  if (unsubscribeRooms) unsubscribeRooms();
-}
-
-function showMainApp() {
-  document.getElementById('loginScreen').classList.add('hidden');
-  document.getElementById('mainApp').classList.remove('hidden');
-  updateUserProfile();
-  initDefaultRoom();
-}
-
-// Update User Profile
-function updateUserProfile() {
-  if (!currentUser) return;
-
-  const avatarEl = document.getElementById('userAvatar');
-  avatarEl.textContent = currentUser.username.charAt(0).toUpperCase();
-
-  // Owner special badge
-  if (currentUser.rank === 'owner') {
-    avatarEl.classList.add('owner-badge');
-  } else {
-    avatarEl.classList.remove('owner-badge');
-  }
-
-  document.getElementById('userDisplayName').textContent = currentUser.username;
-  document.getElementById('userFlag').textContent = COUNTRIES[currentUser.country]?.flag || '';
-
-  const rankInfo = RANKS[currentUser.rank] || RANKS.guest;
-  document.getElementById('userRankIcon').className = `fa-solid ${rankInfo.icon} text-xs ${rankInfo.color}`;
-  document.getElementById('userRankText').textContent = rankInfo.name;
-  document.getElementById('userRankText').className = `text-xs ${rankInfo.color}`;
-
-  // Show owner controls
-  if (currentUser.rank === 'owner') {
-    document.getElementById('createRoomBtn').classList.remove('hidden');
-    document.getElementById('createPremiumRoomBtn').classList.remove('hidden');
-    document.getElementById('editWelcomeBtn').classList.remove('hidden');
-    document.getElementById('manageRanksBtn').classList.remove('hidden');
-  } else if (currentUser.rank === 'master' || currentUser.rank === 'superadmin') {
-    document.getElementById('createRoomBtn').classList.remove('hidden');
-  }
-}
-
-// Initialize Default Room
-async function initDefaultRoom() {
-  const generalRoomRef = ref(db, 'rooms/general');
-  const snap = await get(generalRoomRef);
-  if (!snap.exists()) {
-    await set(generalRoomRef, {
-      name: 'الغرفة العامة',
-      welcome: 'مرحباً بكم في الغرفة العامة
+function showLogin
