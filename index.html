@@ -1,1228 +1,1100 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<!-- Playables SDK -->
-<script>// Playables SDK v1.0.0
-// Game lifecycle bridge: rAF-based game-ready detection + event communication
-(function() {
-  'use strict';
-
-  // Idempotency: skip if already initialized (e.g., server-side injection
-  // followed by client-side inject-javascript via the Bloks webview component).
-  if (window.playablesSDK) return;
-
-  var HANDLER_NAME = 'playablesGameEventHandler';
-  var ANDROID_BRIDGE_NAME = '_MetaPlayablesBridge';
-  var RAF_FRAME_THRESHOLD = 3;
-
-  var gameReadySent = false;
-  var firstInteractionSent = false;
-  var errorSent = false;
-  var frameCount = 0;
-  var originalRAF = window.requestAnimationFrame;
-
-  // --- Transport Layer ---
-
-  function hasIOSBridge() {
-    return !!(window.webkit &&
-              window.webkit.messageHandlers &&
-              window.webkit.messageHandlers[HANDLER_NAME]);
-  }
-
-  function hasAndroidBridge() {
-    return !!(window[ANDROID_BRIDGE_NAME] &&
-              typeof window[ANDROID_BRIDGE_NAME].postEvent === 'function');
-  }
-
-  function isInIframe() {
-    return !!(window.parent && window.parent !== window);
-  }
-
-  function sendEvent(eventName, payload) {
-    var message = {
-      type: eventName,
-      payload: payload || {},
-      timestamp: Date.now()
-    };
-
-    if (hasIOSBridge()) {
-      try {
-        window.webkit.messageHandlers[HANDLER_NAME].postMessage(message);
-      } catch (e) { /* ignore */ }
-      return;
-    }
-
-    if (hasAndroidBridge()) {
-    try {
-      var p = payload || {};
-      p.__secureToken = window.__fbAndroidBridgeAuthToken || '';
-      p.timestamp = message.timestamp;
-      window[ANDROID_BRIDGE_NAME].postEvent(
-        eventName,
-        JSON.stringify(p)
-      );
-    } catch (e) { /* ignore */ }
-    return;
-  }
-
-    if (isInIframe()) {
-      try {
-        window.parent.postMessage(message, '*');
-      } catch (e) { /* ignore */ }
-      return;
-    }
-  }
-
-  // --- rAF Game-Ready Detection ---
-
-  function onFrame() {
-    if (gameReadySent) return;
-
-    frameCount++;
-    if (frameCount >= RAF_FRAME_THRESHOLD) {
-      gameReadySent = true;
-      sendEvent('game_ready', {
-        frame_count: frameCount,
-        detected_at: Date.now()
-      });
-      return;
-    }
-
-    originalRAF.call(window, onFrame);
-  }
-
-  if (originalRAF) {
-    window.requestAnimationFrame = function(callback) {
-      if (!gameReadySent) {
-        return originalRAF.call(window, function(timestamp) {
-          frameCount++;
-          if (frameCount >= RAF_FRAME_THRESHOLD && !gameReadySent) {
-            gameReadySent = true;
-            sendEvent('game_ready', {
-              frame_count: frameCount,
-              detected_at: Date.now()
-            });
-          }
-          callback(timestamp);
-        });
-      }
-      return originalRAF.call(window, callback);
-    };
-  }
-
-  // --- First User Interaction Detection ---
-
-  function setupFirstInteractionDetection() {
-    var events = ['touchstart', 'mousedown', 'keydown'];
-
-    function onFirstInteraction() {
-      if (firstInteractionSent) return;
-      firstInteractionSent = true;
-      sendEvent('user_interaction_start', null);
-
-      for (var i = 0; i < events.length; i++) {
-        document.removeEventListener(events[i], onFirstInteraction, true);
-      }
-    }
-
-    for (var i = 0; i < events.length; i++) {
-      document.addEventListener(events[i], onFirstInteraction, true);
-    }
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setupFirstInteractionDetection);
-  } else {
-    setupFirstInteractionDetection();
-  }
-
-  // --- Auto Error Capture ---
-
-  window.addEventListener('error', function(event) {
-    if (errorSent) return;
-    errorSent = true;
-    sendEvent('error', {
-      message: event.message || 'Unknown error',
-      source: event.filename || '',
-      lineno: event.lineno || 0,
-      colno: event.colno || 0,
-      auto_captured: true
-    });
-  });
-
-  window.addEventListener('unhandledrejection', function(event) {
-    if (errorSent) return;
-    errorSent = true;
-    var reason = event.reason;
-    sendEvent('error', {
-      message: (reason instanceof Error) ? reason.message : String(reason),
-      type: 'unhandled_promise_rejection',
-      auto_captured: true
-    });
-  });
-
-  // --- Public API ---
-
-  window.playablesSDK = {
-    complete: function(score) {
-      sendEvent('game_ended', {
-        score: score,
-        completed: true
-      });
-    },
-
-    error: function(message) {
-      if (errorSent) return;
-      errorSent = true;
-      sendEvent('error', {
-        message: message || 'Unknown error',
-        auto_captured: false
-      });
-    },
-
-    sendEvent: function(eventName, payload) {
-      if (!eventName || typeof eventName !== 'string') return;
-      sendEvent(eventName, payload);
-    }
-  };
-
-  // Kick off rAF detection in case no game code calls rAF immediately
-  if (originalRAF) {
-    originalRAF.call(window, onFrame);
-  }
-})();</script>
-<!-- PLAYABLE_TOUCH_PATCH_V1 --><script>
-(function() {
-  if (window.__playableTouchPatchInstalled) return;
-  window.__playableTouchPatchInstalled = true;
-  var origAdd = EventTarget.prototype.addEventListener;
-  var blockedTypes = { touchstart: 1, touchmove: 1, wheel: 1 };
-  EventTarget.prototype.addEventListener = function(type, listener, options) {
-    if (blockedTypes[type]) {
-      if (options === undefined || options === null) {
-        options = { passive: true };
-      } else if (typeof options === 'boolean') {
-        options = { capture: options, passive: true };
-      } else {
-        options = Object.assign({}, options, { passive: true });
-      }
-    }
-    return origAdd.call(this, type, listener, options);
-  };
-})();
-</script><script>window.Intl=window.Intl||{};Intl.t=function(s){return(Intl._locale&&Intl._locale[s])||s;};</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>شات عربي | دردشة عربية مجانية</title>
+<title>شات عربي</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<script type="importmap">
+{
+  "imports": {
+    "firebase/app": "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js",
+    "firebase/database": "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js",
+    "firebase/auth": "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js"
+  }
+}
+</script>
+
 <style>
-    * {
-        font-family: 'Cairo', sans-serif;
+  * {
+    font-family: 'Cairo', sans-serif;
+  }
+  
+  .dark {
+    color-scheme: dark;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+  }
+  .dark .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: #555;
+  }
+
+  /* Login Background Animation */
+  .login-bg {
+    background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+  }
+  
+  @keyframes gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  /* VIP Frames - 8 Levels */
+  .vip-frame {
+    position: relative;
+    padding: 2px;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .vip-frame::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    z-index: -1;
+    border-radius: 12px;
+    animation: rotate 3s linear infinite;
+  }
+
+  @keyframes rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  /* VIP 1 - أحمر ناري */
+  .vip-1::before {
+    background: conic-gradient(from 0deg, #ff0000, #ff6b00, #ff0000, #ff6b00, #ff0000);
+  }
+  
+  /* VIP 2 - وردي */
+  .vip-2::before {
+    background: conic-gradient(from 0deg, #ff1493, #ff69b4, #ff1493, #ff69b4, #ff1493);
+  }
+  
+  /* VIP 3 - أسود ذهبي */
+  .vip-3::before {
+    background: conic-gradient(from 0deg, #000000, #ffd700, #000000, #ffd700, #000000);
+  }
+  
+  /* VIP 4 - أحمر غامق */
+  .vip-4::before {
+    background: conic-gradient(from 0deg, #8b0000, #dc143c, #8b0000, #dc143c, #8b0000);
+  }
+  
+  /* VIP 5 - أزرق */
+  .vip-5::before {
+    background: conic-gradient(from 0deg, #0000ff, #00bfff, #0000ff, #00bfff, #0000ff);
+  }
+  
+  /* VIP 6 - أحمر بني */
+  .vip-6::before {
+    background: conic-gradient(from 0deg, #8b4513, #cd5c5c, #8b4513, #cd5c5c, #8b4513);
+  }
+  
+  /* VIP 7 - برتقالي */
+  .vip-7::before {
+    background: conic-gradient(from 0deg, #ff8c00, #ffa500, #ff8c00, #ffa500, #ff8c00);
+  }
+  
+  /* VIP 8 - أسود */
+  .vip-8::before {
+    background: conic-gradient(from 0deg, #000000, #2c2c2c, #000000, #4a4a4a, #000000);
+  }
+
+  /* Owner Frame - أحمر متحرك */
+  .owner-frame {
+    position: relative;
+    padding: 2px;
+    border-radius: 12px;
+  }
+  
+  .owner-frame::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    padding: 2px;
+    background: linear-gradient(45deg, #ff0000, #ff6b00, #ff0000, #ff6b00);
+    background-size: 300% 300%;
+    animation: ownerGlow 2s ease infinite;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+
+  @keyframes ownerGlow {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  /* Name Effects */
+  .name-glow-gold {
+    background: linear-gradient(90deg, #ffd700, #ffed4e, #ffd700);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shine 2s linear infinite;
+    font-weight: 700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  }
+
+  .name-rainbow {
+    background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shine 3s linear infinite;
+    font-weight: 700;
+  }
+
+  .name-stars {
+    position: relative;
+    font-weight: 700;
+  }
+
+  .name-stars::after {
+    content: '✨';
+    position: absolute;
+    animation: stars 2s ease-in-out infinite;
+  }
+
+  @keyframes shine {
+    to { background-position: 200% center; }
+  }
+
+  @keyframes stars {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.2); }
+  }
+
+  .message-bubble {
+    animation: slideIn 0.3s ease-out;
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
     }
-    body {
-        scroll-behavior: smooth;
+    to {
+      opacity: 1;
+      transform: translateY(0);
     }
-    .scrollbar-hide::-webkit-scrollbar {
-        display: none;
-    }
-    .scrollbar-hide {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-    }
-    .custom-scrollbar::-webkit-scrollbar {
-        width: 6px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-track {
-        background: transparent;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: #888;
-        border-radius: 10px;
-    }
-    .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: #555;
-    }
-    .message-enter {
-        animation: slideIn 0.3s ease-out;
-    }
-    @keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    .pulse-dot {
-        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
-    @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: .5; }
-    }
-    .owner-badge {
-        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-        animation: glow 2s ease-in-out infinite alternate;
-    }
-    @keyframes glow {
-        from { box-shadow: 0 0 5px #ef4444; }
-        to { box-shadow: 0 0 20px #ef4444, 0 0 30px #dc2626; }
-    }
-    .gradient-bg {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-    .dark .gradient-bg {
-        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-    }
-    .emoji-grid button:hover {
-        transform: scale(1.2);
-        transition: transform 0.1s;
-    }
+  }
+
+  .emoji-btn {
+    transition: transform 0.2s;
+  }
+  .emoji-btn:hover {
+    transform: scale(1.3);
+  }
+
+  .admin-panel {
+    backdrop-filter: blur(10px);
+  }
 </style>
 </head>
-<body class="bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
 
-<!-- Login Page -->
-<div id="loginPage" class="min-h-screen flex items-center justify-center p-4 gradient-bg">
-    <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl p-8 w-full max-w-md">
-        <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full mb-4">
-                <i class="fa-solid fa-comments text-white text-3xl"></i>
-            </div>
-            <h1 class="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">شات عربي</h1>
-            <p class="text-gray-500 dark:text-gray-400 text-sm">دردشة عربية مجانية - متواجدون 24/7</p>
-            <div class="flex items-center justify-center gap-2 mt-3">
-                <span class="relative flex h-3 w-3">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                </span>
-                <span class="text-sm text-green-600 dark:text-green-400 font-semibold" id="onlineStatus">متصل الآن</span>
-            </div>
-        </div>
-        
-        <form id="loginForm" class="space-y-4">
-            <div>
-                <label class="block text-sm font-semibold mb-2">اسم المستخدم</label>
-                <input type="text" id="username" placeholder="اكتب اسمك هنا..." 
-                    class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-slate-600 dark:bg-slate-700 focus:border-purple-500 focus:outline-none transition"
-                    required maxlength="20">
-            </div>
-            
-            <div>
-                <label class="block text-sm font-semibold mb-2">كلمة المرور <span class="text-gray-400 text-xs">(اختياري)</span></label>
-                <input type="password" id="password" placeholder="للعضوية فقط" 
-                    class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-slate-600 dark:bg-slate-700 focus:border-purple-500 focus:outline-none transition">
-            </div>
-            
-            <div class="flex items-center gap-2 p-3 bg-blue-50 dark:bg-slate-700 rounded-xl">
-                <input type="checkbox" id="guestLogin" class="w-4 h-4 text-purple-600 rounded">
-                <label for="guestLogin" class="text-sm">الدخول كزائر بدون عضوية</label>
-            </div>
-            
-            <button type="submit" 
-                class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg">
-                <i class="fa-solid fa-right-to-bracket ml-2"></i>
-                دخول سريع
-            </button>
-        </form>
-        
-        <div class="mt-6 text-center text-xs text-gray-400">
-            <p>بالدخول أنت توافق على قوانين الدردشة</p>
-        </div>
+<!-- Login Screen -->
+<div id="loginScreen" class="min-h-screen flex items-center justify-center login-bg p-4">
+  <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 w-full max-w-md transform transition-all">
+    <div class="text-center mb-8">
+      <div class="inline-block p-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4 shadow-lg">
+        <i class="fas fa-comments text-white text-4xl"></i>
+      </div>
+      <h1 class="text-4xl font-bold text-gray-800 dark:text-white mb-2">شات عربي</h1>
+      <p class="text-gray-500 dark:text-gray-400">دردشة عربية مجانية للجميع</p>
     </div>
+
+    <form id="loginForm" class="space-y-4">
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+          <i class="fas fa-user ml-2"></i>اسم المستخدم
+        </label>
+        <input type="text" id="username" required minlength="3" maxlength="20"
+          class="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:border-blue-500 dark:bg-gray-700 dark:text-white transition"
+          placeholder="أدخل اسمك">
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+          <i class="fas fa-lock ml-2"></i>كلمة المرور <span class="text-xs text-gray-400">(اختيارية)</span>
+        </label>
+        <input type="password" id="password"
+          class="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:border-blue-500 dark:bg-gray-700 dark:text-white transition"
+          placeholder="••••••••">
+      </div>
+
+      <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all">
+        <i class="fas fa-sign-in-alt ml-2"></i>دخول
+      </button>
+
+      <div class="flex gap-3">
+        <button type="button" id="guestBtn" class="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white font-bold py-3 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+          <i class="fas fa-user-secret ml-2"></i>دخول كزائر
+        </button>
+        <button type="button" id="quickBtn" class="flex-1 bg-green-500 text-white font-bold py-3 rounded-xl hover:bg-green-600 transition">
+          <i class="fas fa-bolt ml-2"></i>دخول سريع
+        </button>
+      </div>
+    </form>
+
+    <div class="mt-6 text-center text-xs text-gray-500 dark:text-gray-400">
+      <p>للحصول على صلاحيات المالك: الدعم الفني / 19951995</p>
+    </div>
+  </div>
 </div>
 
-<!-- Main Chat App -->
-<div id="chatApp" class="hidden h-screen flex flex-col">
-    <!-- Header -->
-    <header class="bg-white dark:bg-slate-800 border-b-2 border-gray-200 dark:border-slate-700 shadow-sm">
-        <div class="container mx-auto px-4 py-3">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="flex items-center gap-2">
-                        <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-                            <i class="fa-solid fa-comments text-white"></i>
-                        </div>
-                        <div>
-                            <h1 class="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">شات عربي</h1>
-                            <div class="flex items-center gap-1 text-xs">
-                                <span class="relative flex h-2 w-2">
-                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                                </span>
-                                <span class="text-gray-500 dark:text-gray-400">
-                                    <span id="onlineCount">0</span> متصل - متاح 24/7
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="flex items-center gap-2">
-                    <button id="darkModeToggle" class="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition">
-                        <i class="fa-solid fa-moon text-xl"></i>
-                    </button>
-                    <button id="adminPanelBtn" class="hidden p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition text-red-500">
-                        <i class="fa-solid fa-shield-halved text-xl"></i>
-                    </button>
-                    <button id="logoutBtn" class="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition text-red-500">
-                        <i class="fa-solid fa-right-from-bracket text-xl"></i>
-                    </button>
-                </div>
-            </div>
+<!-- Main Chat -->
+<div id="chatScreen" class="hidden h-screen flex flex-col">
+  <!-- Header -->
+  <header class="bg-white dark:bg-gray-800 shadow-md">
+    <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="bg-gradient-to-br from-blue-500 to-purple-600 p-2 rounded-xl">
+          <i class="fas fa-comments text-white text-xl"></i>
         </div>
-    </header>
+        <div>
+          <h1 class="text-xl font-bold text-gray-800 dark:text-white">شات عربي</h1>
+          <p id="onlineCount" class="text-xs text-gray-500 dark:text-gray-400">
+            <i class="fas fa-circle text-green-500 text-xs ml-1"></i>0 متواجد
+          </p>
+        </div>
+      </div>
 
-    <!-- Room Tabs -->
-    <div class="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 px-2 py-2 overflow-x-auto scrollbar-hide">
-        <div class="container mx-auto flex gap-2" id="roomTabs">
-            <button data-room="عامة" class="room-tab active px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap transition bg-purple-600 text-white">
-                <i class="fa-solid fa-earth-asia ml-1"></i> العامة
-            </button>
-            <button data-room="السعودية" class="room-tab px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap transition bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600">
-                <i class="fa-solid fa-flag ml-1"></i> السعودية
-            </button>
-            <button data-room="مصر" class="room-tab px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap transition bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600">
-                <i class="fa-solid fa-flag ml-1"></i> مصر
-            </button>
-            <button data-room="العراق" class="room-tab px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap transition bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600">
-                <i class="fa-solid fa-flag ml-1"></i> العراق
-            </button>
-            <button data-room="فلسطين" class="room-tab px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap transition bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600">
-                <i class="fa-solid fa-flag ml-1"></i> فلسطين
-            </button>
-        </div>
+      <div class="flex items-center gap-2">
+        <button id="adminPanelBtn" class="hidden px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">
+          <i class="fas fa-crown ml-1"></i>لوحة التحكم
+        </button>
+        <button id="themeToggle" class="p-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+          <i class="fas fa-moon text-gray-700 dark:text-yellow-400"></i>
+        </button>
+        <button id="logoutBtn" class="p-2 bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-800 transition">
+          <i class="fas fa-sign-out-alt"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Rooms Tabs -->
+    <div class="border-t dark:border-gray-700 overflow-x-auto scrollbar-thin">
+      <div class="container mx-auto px-4 flex gap-2 py-2">
+        <button class="room-tab active px-4 py-2 bg-blue-500 text-white rounded-lg whitespace-nowrap transition" data-room="عامة">
+          <i class="fas fa-users ml-1"></i>العامة
+        </button>
+        <button class="room-tab px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg whitespace-nowrap hover:bg-gray-300 dark:hover:bg-gray-600 transition" data-room="السعودية">
+          🇸🇦 السعودية
+        </button>
+        <button class="room-tab px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg whitespace-nowrap hover:bg-gray-300 dark:hover:bg-gray-600 transition" data-room="مصر">
+          🇪🇬 مصر
+        </button>
+        <button class="room-tab px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg whitespace-nowrap hover:bg-gray-300 dark:hover:bg-gray-600 transition" data-room="العراق">
+          🇮🇶 العراق
+        </button>
+        <button class="room-tab px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg whitespace-nowrap hover:bg-gray-300 dark:hover:bg-gray-600 transition" data-room="فلسطين">
+          🇵🇸 فلسطين
+        </button>
+      </div>
     </div>
 
     <!-- Announcement Bar -->
-    <div id="announcementBar" class="hidden bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-4 py-2 text-center text-sm font-semibold">
-        <i class="fa-solid fa-bullhorn ml-2"></i>
-        <span id="announcementText"></span>
-        <button id="closeAnnouncement" class="mr-4 hover:bg-white/20 rounded px-2">
-            <i class="fa-solid fa-xmark"></i>
-        </button>
+    <div id="announcementBar" class="hidden bg-yellow-400 dark:bg-yellow-600 text-gray-900 dark:text-white px-4 py-2 text-center text-sm font-semibold">
+      <i class="fas fa-bullhorn ml-2"></i><span id="announcementText"></span>
     </div>
+  </header>
 
-    <div class="flex-1 flex overflow-hidden">
-        <!-- Users Sidebar -->
-        <aside id="usersSidebar" class="hidden lg:block w-64 bg-white dark:bg-slate-800 border-l border-gray-200 dark:border-slate-700 overflow-y-auto custom-scrollbar">
-            <div class="p-4">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="font-bold text-lg">
-                        <i class="fa-solid fa-users ml-1 text-purple-600"></i>
-                        المتواجدون
-                    </h2>
-                    <span id="userCount" class="bg-purple-100 dark:bg-slate-700 text-purple-600 dark:text-purple-400 px-2 py-1 rounded-full text-xs font-bold">0</span>
-                </div>
-                <div id="usersList" class="space-y-2"></div>
-            </div>
-        </aside>
+  <!-- Chat Area -->
+  <div class="flex-1 flex overflow-hidden">
+    <!-- Users Sidebar -->
+    <aside class="w-64 bg-white dark:bg-gray-800 border-l dark:border-gray-700 hidden lg:block overflow-y-auto scrollbar-thin">
+      <div class="p-4">
+        <h3 class="font-bold text-gray-800 dark:text-white mb-3 flex items-center">
+          <i class="fas fa-users ml-2"></i>المتواجدون
+        </h3>
+        <div id="onlineUsers" class="space-y-2"></div>
+      </div>
+    </aside>
 
-        <!-- Chat Area -->
-        <main class="flex-1 flex flex-col bg-gray-50 dark:bg-slate-900">
-            <!-- Messages Container -->
-            <div id="messagesContainer" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
-                <div class="text-center text-gray-400 text-sm py-8">
-                    <i class="fa-solid fa-comment-dots text-4xl mb-2"></i>
-                    <p>ابدأ المحادثة الآن!</p>
-                </div>
-            </div>
+    <!-- Messages -->
+    <main class="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900">
+      <div id="messagesContainer" class="flex-1 overflow-y-auto scrollbar-thin p-4 space-y-3"></div>
 
-            <!-- Input Area -->
-            <div class="bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700 p-3">
-                <!-- Formatting Toolbar -->
-                <div id="formatToolbar" class="hidden mb-2 flex items-center gap-2 p-2 bg-gray-50 dark:bg-slate-700 rounded-lg">
-                    <button id="textColorBtn" class="px-3 py-1 rounded hover:bg-gray-200 dark:hover:bg-slate-600 text-sm" title="لون النص">
-                        <i class="fa-solid fa-palette"></i>
-                    </button>
-                    <select id="textSizeSelect" class="px-2 py-1 rounded bg-white dark:bg-slate-600 text-sm border-0 focus:outline-none">
-                        <option value="14">صغير</option>
-                        <option value="16" selected>عادي</option>
-                        <option value="18">كبير</option>
-                        <option value="20">كبير جداً</option>
-                    </select>
-                    <input type="color" id="colorPicker" class="hidden" value="#000000">
-                </div>
-
-                <div class="flex items-end gap-2">
-                    <div class="flex gap-1">
-                        <button id="toggleFormatBtn" class="p-3 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition" title="تنسيق النص">
-                            <i class="fa-solid fa-font"></i>
-                        </button>
-                        <button id="emojiBtn" class="p-3 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition" title="إيموجي">
-                            <i class="fa-regular fa-face-smile"></i>
-                        </button>
-                        <button id="imageUploadBtn" class="p-3 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition" title="صورة">
-                            <i class="fa-solid fa-image"></i>
-                        </button>
-                        <button id="voiceBtn" class="p-3 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition" title="تسجيل صوتي">
-                            <i class="fa-solid fa-microphone"></i>
-                        </button>
-                    </div>
-                    
-                    <div class="flex-1">
-                        <textarea id="messageInput" rows="1" placeholder="اكتب رسالتك..." 
-                            class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-slate-600 dark:bg-slate-700 focus:border-purple-500 focus:outline-none transition resize-none max-h-32"
-                            style="font-size: 16px;"></textarea>
-                    </div>
-                    
-                    <button id="sendBtn" class="p-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl transition shadow-lg">
-                        <i class="fa-solid fa-paper-plane"></i>
-                    </button>
-                </div>
-                <input type="file" id="imageInput" class="hidden" accept="image/*">
-                
-                <!-- Mobile Users Toggle -->
-                <button id="mobileUsersBtn" class="lg:hidden mt-2 w-full py-2 bg-gray-100 dark:bg-slate-700 rounded-lg text-sm font-semibold">
-                    <i class="fa-solid fa-users ml-1"></i>
-                    عرض المتواجدين (<span id="mobileUserCount">0</span>)
-                </button>
-            </div>
-        </main>
-    </div>
-</div>
-
-<!-- Mobile Users Drawer -->
-<div id="mobileUsersDrawer" class="hidden fixed inset-0 bg-black/50 z-50 lg:hidden">
-    <div class="absolute left-0 top-0 bottom-0 w-72 bg-white dark:bg-slate-800 shadow-xl overflow-y-auto">
-        <div class="p-4">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="font-bold text-lg">المتواجدون</h2>
-                <button id="closeMobileUsers" class="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-            <div id="mobileUsersList" class="space-y-2"></div>
+      <!-- Message Input -->
+      <div class="bg-white dark:bg-gray-800 border-t dark:border-gray-700 p-4">
+        <div id="mutedAlert" class="hidden mb-3 p-3 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded-lg text-center">
+          <i class="fas fa-ban ml-2"></i>تم كتمك من المحادثة
         </div>
-    </div>
-</div>
 
-<!-- Emoji Picker -->
-<div id="emojiPicker" class="hidden fixed bottom-24 right-4 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-4 w-80 z-50">
-    <div class="emoji-grid grid grid-cols-8 gap-2 max-h-64 overflow-y-auto custom-scrollbar">
-        <button class="text-2xl p-1">😀</button>
-        <button class="text-2xl p-1">😂</button>
-        <button class="text-2xl p-1">😍</button>
-        <button class="text-2xl p-1">🤔</button>
-        <button class="text-2xl p-1">😢</button>
-        <button class="text-2xl p-1">😡</button>
-        <button class="text-2xl p-1">👍</button>
-        <button class="text-2xl p-1">👏</button>
-        <button class="text-2xl p-1">❤️</button>
-        <button class="text-2xl p-1">🔥</button>
-        <button class="text-2xl p-1">✨</button>
-        <button class="text-2xl p-1">🎉</button>
-        <button class="text-2xl p-1">💯</button>
-        <button class="text-2xl p-1">🙏</button>
-        <button class="text-2xl p-1">😎</button>
-        <button class="text-2xl p-1">🤗</button>
-        <button class="text-2xl p-1">🥰</button>
-        <button class="text-2xl p-1">😊</button>
-        <button class="text-2xl p-1">😇</button>
-        <button class="text-2xl p-1">🤣</button>
-        <button class="text-2xl p-1">😭</button>
-        <button class="text-2xl p-1">🥺</button>
-        <button class="text-2xl p-1">😘</button>
-        <button class="text-2xl p-1">😋</button>
-    </div>
+        <div class="flex items-center gap-2 mb-2">
+          <div class="flex gap-2">
+            <button id="emojiBtn" class="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+              <i class="fas fa-smile text-xl"></i>
+            </button>
+            <button id="imageBtn" class="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+              <i class="fas fa-image text-xl"></i>
+            </button>
+            <select id="fontSizeSelect" class="px-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm dark:text-white">
+              <option value="14">صغير</option>
+              <option value="16" selected>عادي</option>
+              <option value="18">كبير</option>
+              <option value="20">كبير جداً</option>
+            </select>
+            <input type="color" id="textColor" value="#000000" class="w-10 h-10 rounded-lg cursor-pointer">
+          </div>
+          <input type="file" id="imageInput" accept="image/*" class="hidden">
+        </div>
+
+        <!-- Emoji Picker -->
+        <div id="emojiPicker" class="hidden mb-2 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
+          <div class="grid grid-cols-8 gap-2 text-2xl">
+            <button class="emoji-btn">😀</button><button class="emoji-btn">😂</button><button class="emoji-btn">😍</button><button class="emoji-btn">😎</button>
+            <button class="emoji-btn">😭</button><button class="emoji-btn">😡</button><button class="emoji-btn">👍</button><button class="emoji-btn">❤️</button>
+            <button class="emoji-btn">🔥</button><button class="emoji-btn">💯</button><button class="emoji-btn">🎉</button><button class="emoji-btn">✨</button>
+            <button class="emoji-btn">🌹</button><button class="emoji-btn">⭐</button><button class="emoji-btn">🚀</button><button class="emoji-btn">💎</button>
+          </div>
+        </div>
+
+        <div class="flex gap-2">
+          <input type="text" id="messageInput" maxlength="500"
+            class="flex-1 px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:border-blue-500 dark:bg-gray-700 dark:text-white transition"
+            placeholder="اكتب رسالتك هنا...">
+          <button id="sendBtn" class="px-6 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:shadow-lg transition">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
 </div>
 
 <!-- Admin Panel Modal -->
-<div id="adminModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <div class="sticky top-0 bg-gradient-to-r from-red-600 to-pink-600 text-white p-4 rounded-t-2xl">
-            <div class="flex items-center justify-between">
-                <h2 class="text-xl font-bold">
-                    <i class="fa-solid fa-shield-halved ml-2"></i>
-                    لوحة التحكم
-                </h2>
-                <button id="closeAdminModal" class="hover:bg-white/20 rounded-lg p-2">
-                    <i class="fa-solid fa-xmark text-xl"></i>
-                </button>
-            </div>
-        </div>
-        
-        <div class="p-6 space-y-4">
-            <div class="bg-red-50 dark:bg-slate-700 p-4 rounded-xl">
-                <h3 class="font-bold mb-2 text-red-600 dark:text-red-400">
-                    <i class="fa-solid fa-crown ml-1"></i>
-                    صلاحيات المالك
-                </h3>
-                <p class="text-sm text-gray-600 dark:text-gray-400">لديك صلاحيات كاملة للتحكم في الدردشة</p>
-            </div>
-
-            <div class="space-y-3">
-                <button id="kickUserBtn" class="w-full flex items-center gap-3 p-3 bg-orange-50 dark:bg-slate-700 hover:bg-orange-100 dark:hover:bg-slate-600 rounded-xl transition">
-                    <i class="fa-solid fa-user-slash text-orange-600 text-xl"></i>
-                    <div class="text-right">
-                        <div class="font-bold">طرد مستخدم</div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400">إخراج مستخدم من الدردشة</div>
-                    </div>
-                </button>
-
-                <button id="banUserBtn" class="w-full flex items-center gap-3 p-3 bg-red-50 dark:bg-slate-700 hover:bg-red-100 dark:hover:bg-slate-600 rounded-xl transition">
-                    <i class="fa-solid fa-ban text-red-600 text-xl"></i>
-                    <div class="text-right">
-                        <div class="font-bold">حظر مستخدم</div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400">منع مستخدم من الدخول نهائياً</div>
-                    </div>
-                </button>
-
-                <button id="muteUserBtn" class="w-full flex items-center gap-3 p-3 bg-yellow-50 dark:bg-slate-700 hover:bg-yellow-100 dark:hover:bg-slate-600 rounded-xl transition">
-                    <i class="fa-solid fa-volume-xmark text-yellow-600 text-xl"></i>
-                    <div class="text-right">
-                        <div class="font-bold">كتم مستخدم</div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400">منع المستخدم من الكتابة</div>
-                    </div>
-                </button>
-
-                <button id="announcementBtn" class="w-full flex items-center gap-3 p-3 bg-blue-50 dark:bg-slate-700 hover:bg-blue-100 dark:hover:bg-slate-600 rounded-xl transition">
-                    <i class="fa-solid fa-bullhorn text-blue-600 text-xl"></i>
-                    <div class="text-right">
-                        <div class="font-bold">إعلان عام</div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400">تثبيت إعلان في أعلى الدردشة</div>
-                    </div>
-                </button>
-
-                <button id="renameRoomBtn" class="w-full flex items-center gap-3 p-3 bg-purple-50 dark:bg-slate-700 hover:bg-purple-100 dark:hover:bg-slate-600 rounded-xl transition">
-                    <i class="fa-solid fa-pen-to-square text-purple-600 text-xl"></i>
-                    <div class="text-right">
-                        <div class="font-bold">تغيير اسم الغرفة</div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400">تعديل اسم الغرفة الحالية</div>
-                    </div>
-                </button>
-
-                <button id="invisibleModeBtn" class="w-full flex items-center gap-3 p-3 bg-gray-50 dark:bg-slate-700 hover:bg-gray-100 dark:hover:bg-slate-600 rounded-xl transition">
-                    <i class="fa-solid fa-ghost text-gray-600 dark:text-gray-400 text-xl"></i>
-                    <div class="text-right">
-                        <div class="font-bold">الوضع الخفي</div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400">إخفاء ظهورك للمستخدمين</div>
-                    </div>
-                </button>
-            </div>
-        </div>
+<div id="adminPanel" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl">
+    <div class="bg-gradient-to-r from-red-500 to-orange-600 p-4 flex items-center justify-between">
+      <h2 class="text-2xl font-bold text-white"><i class="fas fa-crown ml-2"></i>لوحة تحكم المالك</h2>
+      <button id="closeAdminBtn" class="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition">
+        <i class="fas fa-times text-xl"></i>
+      </button>
     </div>
+
+    <div class="p-6 overflow-y-auto scrollbar-thin" style="max-height: calc(90vh - 80px);">
+      <!-- Tabs -->
+      <div class="flex gap-2 mb-6 border-b dark:border-gray-700">
+        <button class="admin-tab active px-4 py-2 font-semibold border-b-2 border-red-500 text-red-500" data-tab="members">الأعضاء</button>
+        <button class="admin-tab px-4 py-2 font-semibold text-gray-600 dark:text-gray-400" data-tab="announcement">الإعلانات</button>
+        <button class="admin-tab px-4 py-2 font-semibold text-gray-600 dark:text-gray-400" data-tab="private">مراقبة الخاص</button>
+        <button class="admin-tab px-4 py-2 font-semibold text-gray-600 dark:text-gray-400" data-tab="vip">نظام VIP</button>
+      </div>
+
+      <!-- Members Tab -->
+      <div id="membersTab" class="admin-tab-content">
+        <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">إدارة الأعضاء</h3>
+        <div id="adminUsersList" class="space-y-2"></div>
+      </div>
+
+      <!-- Announcement Tab -->
+      <div id="announcementTab" class="admin-tab-content hidden">
+        <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">تثبيت إعلان</h3>
+        <div class="space-y-4">
+          <input type="text" id="announcementInput" class="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white" placeholder="نص الإعلان...">
+          <div class="flex gap-2">
+            <button id="setAnnouncementBtn" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
+              <i class="fas fa-bullhorn ml-2"></i>تثبيت
+            </button>
+            <button id="deleteAnnouncementBtn" class="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">
+              <i class="fas fa-trash ml-2"></i>حذف
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Private Messages Tab -->
+      <div id="privateTab" class="admin-tab-content hidden">
+        <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">مراقبة الرسائل الخاصة</h3>
+        <div id="privateMessagesList" class="space-y-3"></div>
+      </div>
+
+      <!-- VIP Tab -->
+      <div id="vipTab" class="admin-tab-content hidden">
+        <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">منح VIP</h3>
+        <div class="space-y-4">
+          <select id="vipUserSelect" class="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white">
+            <option value="">اختر العضو</option>
+          </select>
+          <select id="vipLevelSelect" class="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white">
+            <option value="0">بدون VIP</option>
+            <option value="1">VIP 1 - أحمر ناري</option>
+            <option value="2">VIP 2 - وردي</option>
+            <option value="3">VIP 3 - أسود ذهبي</option>
+            <option value="4">VIP 4 - أحمر غامق</option>
+            <option value="5">VIP 5 - أزرق</option>
+            <option value="6">VIP 6 - أحمر بني</option>
+            <option value="7">VIP 7 - برتقالي</option>
+            <option value="8">VIP 8 - أسود</option>
+          </select>
+          <input type="text" id="vipName" class="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white" placeholder="اسم مزخرف">
+          <select id="vipEffect" class="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white">
+            <option value="">بدون تأثير</option>
+            <option value="name-glow-gold">ذهبي لامع</option>
+            <option value="name-rainbow">قوس قزح</option>
+            <option value="name-stars">نجوم</option>
+          </select>
+          <input type="number" id="vipNumber" min="1" max="999" class="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white" placeholder="رقم الشارة">
+          <button id="grantVipBtn" class="w-full px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg hover:shadow-lg transition font-bold">
+            <i class="fas fa-crown ml-2"></i>منح VIP
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
-<script>
-    // State Management
-    const state = {
-        currentUser: null,
-        currentRoom: 'عامة',
-        isOwner: false,
-        isInvisible: false,
-        users: [],
-        messages: {},
-        bannedUsers: [],
-        mutedUsers: [],
-        announcement: '',
-        textColor: '#000000',
-        textSize: '16',
-        darkMode: false
+<!-- Private Chat Modal -->
+<div id="privateModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-2xl h-[80vh] flex flex-col shadow-2xl">
+    <div class="bg-gradient-to-r from-purple-500 to-pink-600 p-4 flex items-center justify-between rounded-t-2xl">
+      <h3 class="text-xl font-bold text-white"><i class="fas fa-user ml-2"></i><span id="privateChatName"></span></h3>
+      <button id="closePrivateBtn" class="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition">
+        <i class="fas fa-times text-xl"></i>
+      </button>
+    </div>
+    <div id="privateMessages" class="flex-1 overflow-y-auto scrollbar-thin p-4 space-y-3 bg-gray-50 dark:bg-gray-900"></div>
+    <div class="p-4 border-t dark:border-gray-700">
+      <div class="flex gap-2">
+        <input type="text" id="privateInput" class="flex-1 px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white" placeholder="رسالة خاصة...">
+        <button id="sendPrivateBtn" class="px-6 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-xl hover:shadow-lg transition">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from 'firebase/app';
+  import { getDatabase, ref, push, onChildAdded, set, onDisconnect, onValue, remove, update, serverTimestamp } from 'firebase/database';
+  import { getAuth, signInAnonymously } from 'firebase/auth';
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAGpES78mV7-jgEQzi63R0TONGKfUQHFHc",
+    authDomain: "hashed-cht.firebaseapp.com",
+    databaseURL: "https://hashed-cht-default-rtdb.firebaseio.com",
+    projectId: "hashed-cht",
+    storageBucket: "hashed-cht.firebasestorage.app",
+    messagingSenderId: "442699332645",
+    appId: "1:442699332645:web:08d332758ac215a07453cc"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const auth = getAuth(app);
+
+  // State
+  let currentUser = null;
+  let currentRoom = 'عامة';
+  let isOwner = false;
+  let isMuted = false;
+  let currentPrivateChat = null;
+  let messageListeners = {};
+  let privateListeners = {};
+
+  // Elements
+  const loginScreen = document.getElementById('loginScreen');
+  const chatScreen = document.getElementById('chatScreen');
+  const loginForm = document.getElementById('loginForm');
+  const usernameInput = document.getElementById('username');
+  const passwordInput = document.getElementById('password');
+  const guestBtn = document.getElementById('guestBtn');
+  const quickBtn = document.getElementById('quickBtn');
+  const messagesContainer = document.getElementById('messagesContainer');
+  const messageInput = document.getElementById('messageInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const themeToggle = document.getElementById('themeToggle');
+  const onlineUsers = document.getElementById('onlineUsers');
+  const onlineCount = document.getElementById('onlineCount');
+  const adminPanelBtn = document.getElementById('adminPanelBtn');
+  const adminPanel = document.getElementById('adminPanel');
+  const closeAdminBtn = document.getElementById('closeAdminBtn');
+  const emojiBtn = document.getElementById('emojiBtn');
+  const emojiPicker = document.getElementById('emojiPicker');
+  const imageBtn = document.getElementById('imageBtn');
+  const imageInput = document.getElementById('imageInput');
+  const mutedAlert = document.getElementById('mutedAlert');
+  const announcementBar = document.getElementById('announcementBar');
+  const announcementText = document.getElementById('announcementText');
+
+  // Theme
+  const initTheme = () => {
+    if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    }
+  };
+  initTheme();
+
+  themeToggle.addEventListener('click', () => {
+    document.documentElement.classList.toggle('dark');
+    localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+  });
+
+  // Login
+  const login = async (username, password = '') => {
+    if (!username || username.length < 3) {
+      alert('اسم المستخدم يجب أن يكون 3 أحرف على الأقل');
+      return;
+    }
+
+    try {
+      const userCredential = await signInAnonymously(auth);
+      const uid = userCredential.user.uid;
+      
+      // Check if owner
+      if (username === 'الدعم الفني' && password === '19951995') {
+        isOwner = true;
+        await set(ref(db, `admins/${uid}`), { username, isOwner: true, timestamp: serverTimestamp() });
+      } else {
+        // Check if banned
+        const bannedSnap = await new Promise(resolve => {
+          onValue(ref(db, `banned/${username}`), resolve, { onlyOnce: true });
+        });
+        if (bannedSnap.exists()) {
+          alert('تم حظرك من الدردشة');
+          return;
+        }
+      }
+
+      currentUser = { uid, username, isOwner };
+
+      // Save user data
+      await set(ref(db, `users/${username}`), {
+        uid,
+        username,
+        lastActive: serverTimestamp()
+      });
+
+      // Set online status
+      await set(ref(db, `online/${uid}`), {
+        username,
+        isOwner,
+        room: currentRoom,
+        timestamp: serverTimestamp()
+      });
+      onDisconnect(ref(db, `online/${uid}`)).remove();
+
+      // Check if muted
+      onValue(ref(db, `muted/${username}`), (snap) => {
+        isMuted = snap.exists();
+        mutedAlert.classList.toggle('hidden', !isMuted);
+        messageInput.disabled = isMuted;
+        sendBtn.disabled = isMuted;
+      });
+
+      loginScreen.classList.add('hidden');
+      chatScreen.classList.remove('hidden');
+
+      if (isOwner) {
+        adminPanelBtn.classList.remove('hidden');
+      }
+
+      initChat();
+    } catch (error) {
+      console.error('Login error:', error);
+      alert('حدث خطأ في تسجيل الدخول');
+    }
+  };
+
+  loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    login(usernameInput.value.trim(), passwordInput.value);
+  });
+
+  guestBtn.addEventListener('click', () => {
+    const guestName = `زائر_${Math.floor(Math.random() * 9999)}`;
+    login(guestName);
+  });
+
+  quickBtn.addEventListener('click', () => {
+    const quickName = `عضو_${Math.floor(Math.random() * 9999)}`;
+    login(quickName);
+  });
+
+  // Init Chat
+  const initChat = () => {
+    loadMessages(currentRoom);
+    loadOnlineUsers();
+    loadAnnouncement();
+    if (isOwner) {
+      loadAdminPanel();
+    }
+  };
+
+  // Rooms
+  document.querySelectorAll('.room-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.room-tab').forEach(t => {
+        t.classList.remove('active', 'bg-blue-500', 'text-white');
+        t.classList.add('bg-gray-200', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
+      });
+      tab.classList.add('active', 'bg-blue-500', 'text-white');
+      tab.classList.remove('bg-gray-200', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
+      
+      currentRoom = tab.dataset.room;
+      messagesContainer.innerHTML = '';
+      loadMessages(currentRoom);
+      
+      if (currentUser) {
+        update(ref(db, `online/${currentUser.uid}`), { room: currentRoom });
+      }
+    });
+  });
+
+  // Load Messages
+  const loadMessages = (room) => {
+    if (messageListeners[room]) return;
+    
+    const roomRef = ref(db, `rooms/${room}/messages`);
+    messageListeners[room] = onChildAdded(roomRef, (snapshot) => {
+      const msg = snapshot.val();
+      const msgId = snapshot.key;
+      displayMessage(msg, msgId, false);
+    });
+  };
+
+  // Display Message
+  const displayMessage = async (msg, msgId, isPrivate = false) => {
+    const container = isPrivate ? document.getElementById('privateMessages') : messagesContainer;
+    
+    // Get VIP data
+    const vipSnap = await new Promise(resolve => {
+      onValue(ref(db, `users/${msg.username}/vip`), resolve, { onlyOnce: true });
+    });
+    const vip = vipSnap.val();
+    
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'message-bubble';
+    msgDiv.dataset.msgId = msgId;
+    
+    const isCurrentUser = msg.username === currentUser.username;
+    const isOwnerMsg = msg.isOwner;
+    
+    let frameClass = '';
+    if (isOwnerMsg) {
+      frameClass = 'owner-frame';
+    } else if (vip && vip.level > 0) {
+      frameClass = `vip-frame vip-${vip.level}`;
+    }
+    
+    const nameClass = vip?.effect || '';
+    const displayName = vip?.displayName || msg.username;
+    
+    msgDiv.innerHTML = `
+      <div class="flex ${isCurrentUser ? 'justify-end' : 'justify-start'}">
+        <div class="max-w-md ${frameClass}">
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-3 ${isCurrentUser ? 'bg-blue-50 dark:bg-blue-900' : ''}">
+            <div class="flex items-center justify-between mb-1">
+              <span class="font-bold text-sm ${nameClass}">
+                ${isOwnerMsg ? '<i class="fas fa-crown text-yellow-500"></i> ' : ''}
+                ${vip?.level > 0 ? '<i class="fas fa-gem text-purple-500"></i> ' : ''}
+                ${displayName}
+                ${vip?.number ? `<span class="text-xs bg-yellow-400 text-black px-1 rounded">${vip.number}</span>` : ''}
+                ${isOwnerMsg ? ' <span class="text-xs bg-red-500 text-white px-2 py-0.5 rounded-full">المالك</span>' : ''}
+              </span>
+              <span class="text-xs text-gray-500 dark:text-gray-400">${new Date(msg.timestamp).toLocaleTimeString('ar-SA', {hour: '2-digit', minute: '2-digit'})}</span>
+            </div>
+            <div class="text-gray-800 dark:text-gray-200" style="font-size: ${msg.fontSize || 16}px; color: ${msg.color || 'inherit'}">
+              ${msg.image ? `<img src="${msg.image}" class="rounded-lg mb-2 max-w-full max-h-64 object-cover">` : ''}
+              ${escapeHtml(msg.text)}
+            </div>
+            ${isOwner ? `
+              <button class="delete-msg-btn text-xs text-red-500 hover:text-red-700 mt-2" data-room="${currentRoom}" data-msgid="${msgId}">
+                <i class="fas fa-trash"></i> حذف
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      </div>
+    `;
+    
+    container.appendChild(msgDiv);
+    container.scrollTop = container.scrollHeight;
+    
+    // Delete button
+    if (isOwner) {
+      msgDiv.querySelector('.delete-msg-btn')?.addEventListener('click', (e) => {
+        const room = e.target.closest('button').dataset.room;
+        const msgId = e.target.closest('button').dataset.msgid;
+        if (confirm('هل تريد حذف هذه الرسالة؟')) {
+          remove(ref(db, `rooms/${room}/messages/${msgId}`));
+          msgDiv.remove();
+        }
+      });
+    }
+  };
+
+  // Send Message
+  const sendMessage = async (privateTo = null) => {
+    const input = privateTo ? document.getElementById('privateInput') : messageInput;
+    const text = input.value.trim();
+    
+    if (!text || isMuted) return;
+    
+    const msgData = {
+      username: currentUser.username,
+      text,
+      isOwner,
+      timestamp: serverTimestamp(),
+      fontSize: document.getElementById('fontSizeSelect').value,
+      color: document.getElementById('textColor').value
     };
-
-    // Initialize from localStorage
-    function initStorage() {
-        const saved = localStorage.getItem('arabicChatData');
-        if (saved) {
-            const data = JSON.parse(saved);
-            state.bannedUsers = data.bannedUsers || [];
-            state.mutedUsers = data.mutedUsers || [];
-            state.announcement = data.announcement || '';
-            state.darkMode = data.darkMode || false;
-        }
-        if (state.darkMode) {
-            document.documentElement.classList.add('dark');
-        }
+    
+    if (privateTo) {
+      const chatId = [currentUser.username, privateTo].sort().join('_');
+      await push(ref(db, `private/${chatId}`), msgData);
+      input.value = '';
+    } else {
+      await push(ref(db, `rooms/${currentRoom}/messages`), msgData);
+      input.value = '';
     }
+  };
 
-    function saveStorage() {
-        localStorage.setItem('arabicChatData', JSON.stringify({
-            bannedUsers: state.bannedUsers,
-            mutedUsers: state.mutedUsers,
-            announcement: state.announcement,
-            darkMode: state.darkMode
-        }));
-    }
+  sendBtn.addEventListener('click', () => sendMessage());
+  messageInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendMessage();
+  });
 
-    // DOM Elements
-    const loginPage = document.getElementById('loginPage');
-    const chatApp = document.getElementById('chatApp');
-    const loginForm = document.getElementById('loginForm');
-    const usernameInput = document.getElementById('username');
-    const passwordInput = document.getElementById('password');
-    const guestLoginCheckbox = document.getElementById('guestLogin');
-    const messageInput = document.getElementById('messageInput');
-    const sendBtn = document.getElementById('sendBtn');
-    const messagesContainer = document.getElementById('messagesContainer');
-    const usersList = document.getElementById('usersList');
-    const mobileUsersList = document.getElementById('mobileUsersList');
-    const onlineCount = document.getElementById('onlineCount');
-    const userCount = document.getElementById('userCount');
-    const mobileUserCount = document.getElementById('mobileUserCount');
-    const adminPanelBtn = document.getElementById('adminPanelBtn');
-    const adminModal = document.getElementById('adminModal');
-    const closeAdminModal = document.getElementById('closeAdminModal');
-    const darkModeToggle = document.getElementById('darkModeToggle');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const emojiBtn = document.getElementById('emojiBtn');
-    const emojiPicker = document.getElementById('emojiPicker');
-    const imageUploadBtn = document.getElementById('imageUploadBtn');
-    const imageInput = document.getElementById('imageInput');
-    const voiceBtn = document.getElementById('voiceBtn');
-    const toggleFormatBtn = document.getElementById('toggleFormatBtn');
-    const formatToolbar = document.getElementById('formatToolbar');
-    const textColorBtn = document.getElementById('textColorBtn');
-    const colorPicker = document.getElementById('colorPicker');
-    const textSizeSelect = document.getElementById('textSizeSelect');
-    const announcementBar = document.getElementById('announcementBar');
-    const announcementText = document.getElementById('announcementText');
-    const closeAnnouncement = document.getElementById('closeAnnouncement');
-    const mobileUsersBtn = document.getElementById('mobileUsersBtn');
-    const mobileUsersDrawer = document.getElementById('mobileUsersDrawer');
-    const closeMobileUsers = document.getElementById('closeMobileUsers');
+  // Image Upload
+  imageBtn.addEventListener('click', () => imageInput.click());
+  imageInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const base64 = event.target.result;
+      await push(ref(db, `rooms/${currentRoom}/messages`), {
+        username: currentUser.username,
+        text: '',
+        image: base64,
+        isOwner,
+        timestamp: serverTimestamp()
+      });
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  });
 
-    // Login Handler
-    loginForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const username = usernameInput.value.trim();
-        const password = passwordInput.value;
-        const isGuest = guestLoginCheckbox.checked;
+  // Emoji Picker
+  emojiBtn.addEventListener('click', () => {
+    emojiPicker.classList.toggle('hidden');
+  });
 
-        if (!username) {
-            alert('الرجاء إدخال اسم المستخدم');
-            return;
-        }
-
-        if (state.bannedUsers.includes(username)) {
-            alert('تم حظرك من الدردشة');
-            return;
-        }
-
-        // Check owner credentials
-        if (username === 'الدعم الفني' && password === '19951995') {
-            state.isOwner = true;
-            adminPanelBtn.classList.remove('hidden');
-        }
-
-        state.currentUser = {
-            username: username,
-            isGuest: isGuest,
-            joinTime: Date.now(),
-            isOwner: state.isOwner
-        };
-
-        // Initialize room messages
-        if (!state.messages[state.currentRoom]) {
-            state.messages[state.currentRoom] = [];
-        }
-
-        // Add user to users list
-        if (!state.isInvisible) {
-            state.users.push(state.currentUser);
-            updateUsersList();
-        }
-
-        loginPage.classList.add('hidden');
-        chatApp.classList.remove('hidden');
-        messageInput.focus();
-
-        // Show announcement if exists
-        if (state.announcement) {
-            showAnnouncement(state.announcement);
-        }
-
-        // Add welcome message
-        addSystemMessage(`مرحباً ${username}، أهلاً بك في شات عربي!`);
+  document.querySelectorAll('.emoji-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      messageInput.value += btn.textContent;
+      emojiPicker.classList.add('hidden');
+      messageInput.focus();
     });
+  });
 
-    // Room Switching
-    document.querySelectorAll('.room-tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-            const room = tab.dataset.room;
-            switchRoom(room);
+  // Online Users
+  const loadOnlineUsers = () => {
+    onValue(ref(db, 'online'), async (snapshot) => {
+      onlineUsers.innerHTML = '';
+      let count = 0;
+      
+      const users = [];
+      snapshot.forEach((child) => {
+        users.push({ uid: child.key, ...child.val() });
+        count++;
+      });
+      
+      onlineCount.innerHTML = `<i class="fas fa-circle text-green-500 text-xs ml-1"></i>${count} متواجد`;
+      
+      for (const user of users) {
+        const vipSnap = await new Promise(resolve => {
+          onValue(ref(db, `users/${user.username}/vip`), resolve, { onlyOnce: true });
         });
-    });
-
-    function switchRoom(roomName) {
-        state.currentRoom = roomName;
+        const vip = vipSnap.val();
         
-        // Update UI
-        document.querySelectorAll('.room-tab').forEach(tab => {
-            if (tab.dataset.room === roomName) {
-                tab.classList.add('active', 'bg-purple-600', 'text-white');
-                tab.classList.remove('bg-gray-100', 'dark:bg-slate-700');
-            } else {
-                tab.classList.remove('active', 'bg-purple-600', 'text-white');
-                tab.classList.add('bg-gray-100', 'dark:bg-slate-700');
-            }
-        });
-
-        // Clear and reload messages
-        messagesContainer.innerHTML = '';
-        if (!state.messages[roomName]) {
-            state.messages[roomName] = [];
-        }
-        state.messages[roomName].forEach(msg => renderMessage(msg));
+        const userDiv = document.createElement('div');
+        const frameClass = user.isOwner ? 'owner-frame' : (vip?.level > 0 ? `vip-frame vip-${vip.level}` : '');
+        const nameClass = vip?.effect || '';
+        const displayName = vip?.displayName || user.username;
         
-        if (state.messages[roomName].length === 0) {
-            messagesContainer.innerHTML = '<div class="text-center text-gray-400 text-sm py-8"><i class="fa-solid fa-comment-dots text-4xl mb-2"></i><p>ابدأ المحادثة الآن!</p></div>';
-        }
-    }
-
-    // Send Message
-    function sendMessage() {
-        const text = messageInput.value.trim();
-        if (!text) return;
-
-        if (state.mutedUsers.includes(state.currentUser.username)) {
-            alert('تم كتمك ولا يمكنك إرسال رسائل');
-            return;
-        }
-
-        const message = {
-            id: Date.now(),
-            username: state.currentUser.username,
-            text: text,
-            timestamp: new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }),
-            isOwner: state.isOwner,
-            color: state.textColor,
-            size: state.textSize,
-            type: 'text'
-        };
-
-        if (!state.messages[state.currentRoom]) {
-            state.messages[state.currentRoom] = [];
-        }
-        state.messages[state.currentRoom].push(message);
-        renderMessage(message);
+        userDiv.className = `p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition ${frameClass}`;
+        userDiv.innerHTML = `
+          <div class="bg-white dark:bg-gray-800 rounded-lg p-2">
+            <div class="flex items-center gap-2">
+              <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span class="text-sm font-semibold ${nameClass}">
+                ${user.isOwner ? '<i class="fas fa-crown text-yellow-500 text-xs"></i> ' : ''}
+                ${displayName}
+              </span>
+            </div>
+            <div class="text-xs text-gray-500 dark:text-gray-400 mr-4">${user.room}</div>
+          </div>
+        `;
         
-        messageInput.value = '';
-        messageInput.style.height = 'auto';
-        messageInput.focus();
-    }
-
-    sendBtn.addEventListener('click', sendMessage);
-    messageInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
-        }
-    });
-
-    // Auto-resize textarea
-    messageInput.addEventListener('input', function() {
-        this.style.height = 'auto';
-        this.style.height = Math.min(this.scrollHeight, 128) + 'px';
-    });
-
-    // Render Message
-    function renderMessage(msg) {
-        if (msg.type === 'system') {
-            const div = document.createElement('div');
-            div.className = 'text-center text-xs text-gray-500 dark:text-gray-400 py-2';
-            div.innerHTML = `<i class="fa-solid fa-circle-info ml-1"></i>${msg.text}`;
-            messagesContainer.appendChild(div);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            return;
-        }
-
-        const isOwn = msg.username === state.currentUser?.username;
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message-enter flex gap-3 ${isOwn ? 'flex-row-reverse' : ''}`;
-        messageDiv.dataset.messageId = msg.id;
-
-        const avatar = document.createElement('div');
-        avatar.className = `w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0 ${msg.isOwner ? 'bg-gradient-to-br from-red-500 to-red-700' : 'bg-gradient-to-br from-purple-500 to-pink-500'}`;
-        avatar.textContent = msg.username.charAt(0);
-
-        const content = document.createElement('div');
-        content.className = `flex-1 max-w-md ${isOwn ? 'text-left' : ''}`;
-
-        const header = document.createElement('div');
-        header.className = `flex items-center gap-2 mb-1 ${isOwn ? 'justify-end' : ''}`;
-        
-        const username = document.createElement('span');
-        username.className = `font-bold text-sm ${msg.isOwner ? 'text-red-600 dark:text-red-400' : 'text-purple-600 dark:text-purple-400'}`;
-        username.textContent = msg.username;
-        
-        if (msg.isOwner) {
-            const badge = document.createElement('span');
-            badge.className = 'owner-badge text-white text-xs px-2 py-0.5 rounded-full font-bold';
-            badge.innerHTML = '<i class="fa-solid fa-crown ml-1"></i>المالك';
-            header.appendChild(badge);
+        if (user.username !== currentUser.username) {
+          userDiv.addEventListener('click', () => openPrivateChat(user.username));
         }
         
-        header.appendChild(username);
-
-        const time = document.createElement('span');
-        time.className = 'text-xs text-gray-400';
-        time.textContent = msg.timestamp;
-        header.appendChild(time);
-
-        if (state.isOwner && !isOwn) {
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'text-red-500 hover:text-red-700 text-xs p-1';
-            deleteBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
-            deleteBtn.onclick = () => deleteMessage(msg.id);
-            header.appendChild(deleteBtn);
-        }
-
-        const bubble = document.createElement('div');
-        bubble.className = `rounded-2xl px-4 py-2 ${isOwn ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : 'bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700'}`;
-        bubble.style.fontSize = msg.size + 'px';
-        bubble.style.color = isOwn ? 'white' : msg.color;
-
-        if (msg.type === 'image') {
-            const img = document.createElement('img');
-            img.src = msg.imageUrl;
-            img.className = 'max-w-full rounded-lg cursor-pointer';
-            img.onclick = () => window.open(msg.imageUrl, '_blank');
-            bubble.appendChild(img);
-        } else if (msg.type === 'voice') {
-            bubble.innerHTML = `<i class="fa-solid fa-microphone ml-2"></i>رسالة صوتية (${msg.duration}s)`;
-        } else {
-            bubble.textContent = msg.text;
-        }
-
-        content.appendChild(header);
-        content.appendChild(bubble);
-        messageDiv.appendChild(avatar);
-        messageDiv.appendChild(content);
-        messagesContainer.appendChild(messageDiv);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }
-
-    function addSystemMessage(text) {
-        const msg = { type: 'system', text: text };
-        if (!state.messages[state.currentRoom]) {
-            state.messages[state.currentRoom] = [];
-        }
-        renderMessage(msg);
-    }
-
-    function deleteMessage(messageId) {
-        if (!state.isOwner) return;
-        state.messages[state.currentRoom] = state.messages[state.currentRoom].filter(m => m.id !== messageId);
-        const msgEl = document.querySelector(`[data-message-id="${messageId}"]`);
-        if (msgEl) msgEl.remove();
-    }
-
-    // Update Users List
-    function updateUsersList() {
-        const visibleUsers = state.users.filter(u => !state.isInvisible || u.username === state.currentUser?.username);
-        const count = visibleUsers.length;
-        
-        onlineCount.textContent = count;
-        userCount.textContent = count;
-        mobileUserCount.textContent = count;
-
-        const renderUser = (user) => {
-            const isCurrentUser = user.username === state.currentUser?.username;
-            const div = document.createElement('div');
-            div.className = 'flex items-center gap-3 p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition';
-            
-            const avatar = document.createElement('div');
-            avatar.className = `w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${user.isOwner ? 'bg-gradient-to-br from-red-500 to-red-700' : 'bg-gradient-to-br from-purple-500 to-pink-500'}`;
-            avatar.textContent = user.username.charAt(0);
-            
-            const info = document.createElement('div');
-            info.className = 'flex-1';
-            const name = document.createElement('div');
-            name.className = `font-semibold text-sm ${user.isOwner ? 'text-red-600 dark:text-red-400' : ''}`;
-            name.innerHTML = user.username + (user.isOwner ? ' <i class="fa-solid fa-crown text-xs text-yellow-500"></i>' : '') + (isCurrentUser ? ' <span class="text-xs text-gray-400">(أنت)</span>' : '');
-            info.appendChild(name);
-            
-            div.appendChild(avatar);
-            div.appendChild(info);
-            
-            if (state.isOwner && !isCurrentUser && !user.isOwner) {
-                const actions = document.createElement('div');
-                actions.className = 'flex gap-1';
-                
-                const kickBtn = document.createElement('button');
-                kickBtn.className = 'text-orange-500 hover:text-orange-700 p-1';
-                kickBtn.innerHTML = '<i class="fa-solid fa-user-slash text-xs"></i>';
-                kickBtn.title = 'طرد';
-                kickBtn.onclick = () => kickUser(user.username);
-                actions.appendChild(kickBtn);
-                
-                div.appendChild(actions);
-            }
-            
-            return div;
-        };
-
-        usersList.innerHTML = '';
-        mobileUsersList.innerHTML = '';
-        visibleUsers.forEach(user => {
-            usersList.appendChild(renderUser(user));
-            mobileUsersList.appendChild(renderUser(user).cloneNode(true));
-        });
-    }
-
-    // Emoji Picker
-    emojiBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        emojiPicker.classList.toggle('hidden');
+        onlineUsers.appendChild(userDiv);
+      }
     });
+  };
 
-    emojiPicker.querySelectorAll('button').forEach(btn => {
-        btn.addEventListener('click', () => {
-            messageInput.value += btn.textContent;
-            emojiPicker.classList.add('hidden');
-            messageInput.focus();
-        });
+  // Private Chat
+  const openPrivateChat = (username) => {
+    currentPrivateChat = username;
+    document.getElementById('privateChatName').textContent = username;
+    document.getElementById('privateModal').classList.remove('hidden');
+    
+    const chatId = [currentUser.username, username].sort().join('_');
+    const privateMessages = document.getElementById('privateMessages');
+    privateMessages.innerHTML = '';
+    
+    if (privateListeners[chatId]) return;
+    
+    privateListeners[chatId] = onChildAdded(ref(db, `private/${chatId}`), (snapshot) => {
+      displayMessage(snapshot.val(), snapshot.key, true);
     });
+  };
 
-    document.addEventListener('click', () => {
-        emojiPicker.classList.add('hidden');
-    });
+  document.getElementById('closePrivateBtn').addEventListener('click', () => {
+    document.getElementById('privateModal').classList.add('hidden');
+    currentPrivateChat = null;
+  });
 
-    // Image Upload
-    imageUploadBtn.addEventListener('click', () => {
-        imageInput.click();
-    });
+  document.getElementById('sendPrivateBtn').addEventListener('click', () => {
+    if (currentPrivateChat) sendMessage(currentPrivateChat);
+  });
 
-    imageInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+  document.getElementById('privateInput').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && currentPrivateChat) sendMessage(currentPrivateChat);
+  });
 
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const message = {
-                id: Date.now(),
-                username: state.currentUser.username,
-                imageUrl: event.target.result,
-                timestamp: new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }),
-                isOwner: state.isOwner,
-                type: 'image'
-            };
-
-            if (!state.messages[state.currentRoom]) {
-                state.messages[state.currentRoom] = [];
-            }
-            state.messages[state.currentRoom].push(message);
-            renderMessage(message);
-        };
-        reader.readAsDataURL(file);
-        imageInput.value = '';
-    });
-
-    // Voice Button (Mock)
-    voiceBtn.addEventListener('click', () => {
-        alert('ميزة التسجيل الصوتي قيد التطوير');
-    });
-
-    // Format Toolbar
-    toggleFormatBtn.addEventListener('click', () => {
-        formatToolbar.classList.toggle('hidden');
-    });
-
-    textColorBtn.addEventListener('click', () => {
-        colorPicker.click();
-    });
-
-    colorPicker.addEventListener('change', (e) => {
-        state.textColor = e.target.value;
-        textColorBtn.style.color = e.target.value;
-    });
-
-    textSizeSelect.addEventListener('change', (e) => {
-        state.textSize = e.target.value;
-        messageInput.style.fontSize = e.target.value + 'px';
-    });
-
-    // Dark Mode
-    darkModeToggle.addEventListener('click', () => {
-        state.darkMode = !state.darkMode;
-        document.documentElement.classList.toggle('dark');
-        saveStorage();
-        const icon = darkModeToggle.querySelector('i');
-        icon.className = state.darkMode ? 'fa-solid fa-sun text-xl' : 'fa-solid fa-moon text-xl';
-    });
-
-    if (state.darkMode) {
-        darkModeToggle.querySelector('i').className = 'fa-solid fa-sun text-xl';
-    }
-
-    // Mobile Users Drawer
-    mobileUsersBtn.addEventListener('click', () => {
-        mobileUsersDrawer.classList.remove('hidden');
-    });
-
-    closeMobileUsers.addEventListener('click', () => {
-        mobileUsersDrawer.classList.add('hidden');
-    });
-
-    mobileUsersDrawer.addEventListener('click', (e) => {
-        if (e.target === mobileUsersDrawer) {
-            mobileUsersDrawer.classList.add('hidden');
-        }
-    });
-
-    // Admin Panel
-    adminPanelBtn.addEventListener('click', () => {
-        adminModal.classList.remove('hidden');
-    });
-
-    closeAdminModal.addEventListener('click', () => {
-        adminModal.classList.add('hidden');
-    });
-
-    adminModal.addEventListener('click', (e) => {
-        if (e.target === adminModal) {
-            adminModal.classList.add('hidden');
-        }
-    });
-
-    // Admin Actions
-    document.getElementById('kickUserBtn').addEventListener('click', () => {
-        const username = prompt('أدخل اسم المستخدم للطرد:');
-        if (username) kickUser(username);
-        adminModal.classList.add('hidden');
-    });
-
-    document.getElementById('banUserBtn').addEventListener('click', () => {
-        const username = prompt('أدخل اسم المستخدم للحظر:');
-        if (username) banUser(username);
-        adminModal.classList.add('hidden');
-    });
-
-    document.getElementById('muteUserBtn').addEventListener('click', () => {
-        const username = prompt('أدخل اسم المستخدم للكتم:');
-        if (username) muteUser(username);
-        adminModal.classList.add('hidden');
-    });
-
-    document.getElementById('announcementBtn').addEventListener('click', () => {
-        const text = prompt('أدخل نص الإعلان:');
-        if (text) {
-            state.announcement = text;
-            showAnnouncement(text);
-            saveStorage();
-            addSystemMessage(`إعلان من الإدارة: ${text}`);
-        }
-        adminModal.classList.add('hidden');
-    });
-
-    document.getElementById('renameRoomBtn').addEventListener('click', () => {
-        const newName = prompt('أدخل الاسم الجديد للغرفة:', state.currentRoom);
-        if (newName && newName.trim()) {
-            const oldName = state.currentRoom;
-            const tab = document.querySelector(`[data-room="${oldName}"]`);
-            if (tab) {
-                tab.innerHTML = `<i class="fa-solid fa-flag ml-1"></i> ${newName}`;
-                tab.dataset.room = newName;
-            }
-            state.messages[newName] = state.messages[oldName] || [];
-            delete state.messages[oldName];
-            state.currentRoom = newName;
-            addSystemMessage(`تم تغيير اسم الغرفة إلى: ${newName}`);
-        }
-        adminModal.classList.add('hidden');
-    });
-
-    document.getElementById('invisibleModeBtn').addEventListener('click', () => {
-        state.isInvisible = !state.isInvisible;
-        if (state.isInvisible) {
-            state.users = state.users.filter(u => u.username !== state.currentUser.username);
-            alert('تم تفعيل الوضع الخفي');
-        } else {
-            state.users.push(state.currentUser);
-            alert('تم إلغاء الوضع الخفي');
-        }
-        updateUsersList();
-        adminModal.classList.add('hidden');
-    });
-
-    function kickUser(username) {
-        if (!state.isOwner) return;
-        state.users = state.users.filter(u => u.username !== username);
-        updateUsersList();
-        addSystemMessage(`تم طرد ${username} من الدردشة`);
-    }
-
-    function banUser(username) {
-        if (!state.isOwner) return;
-        if (!state.bannedUsers.includes(username)) {
-            state.bannedUsers.push(username);
-            saveStorage();
-            kickUser(username);
-            addSystemMessage(`تم حظر ${username} من الدردشة`);
-        }
-    }
-
-    function muteUser(username) {
-        if (!state.isOwner) return;
-        if (!state.mutedUsers.includes(username)) {
-            state.mutedUsers.push(username);
-            saveStorage();
-            addSystemMessage(`تم كتم ${username}`);
-        }
-    }
-
-    function showAnnouncement(text) {
-        announcementText.textContent = text;
+  // Announcement
+  const loadAnnouncement = () => {
+    onValue(ref(db, 'announcement'), (snapshot) => {
+      if (snapshot.exists()) {
+        announcementText.textContent = snapshot.val().text;
         announcementBar.classList.remove('hidden');
+      } else {
+        announcementBar.classList.add('hidden');
+      }
+    });
+  };
+
+  // Admin Panel
+  adminPanelBtn.addEventListener('click', () => {
+    adminPanel.classList.remove('hidden');
+  });
+
+  closeAdminBtn.addEventListener('click', () => {
+    adminPanel.classList.add('hidden');
+  });
+
+  document.querySelectorAll('.admin-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.admin-tab').forEach(t => {
+        t.classList.remove('active', 'border-red-500', 'text-red-500');
+        t.classList.add('text-gray-600', 'dark:text-gray-400');
+      });
+      document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.add('hidden'));
+      
+      tab.classList.add('active', 'border-red-500', 'text-red-500');
+      document.getElementById(`${tab.dataset.tab}Tab`).classList.remove('hidden');
+    });
+  });
+
+  const loadAdminPanel = () => {
+    // Load users for management
+    onValue(ref(db, 'online'), (snapshot) => {
+      const adminUsersList = document.getElementById('adminUsersList');
+      const vipUserSelect = document.getElementById('vipUserSelect');
+      adminUsersList.innerHTML = '';
+      vipUserSelect.innerHTML = '<option value="">اختر العضو</option>';
+      
+      snapshot.forEach((child) => {
+        const user = child.val();
+        if (user.username === currentUser.username) return;
+        
+        const userDiv = document.createElement('div');
+        userDiv.className = 'flex items-center justify-between p-3 bg-gray-100 dark:bg-gray-700 rounded-lg';
+        userDiv.innerHTML = `
+          <div class="flex items-center gap-3">
+            <span class="font-semibold dark:text-white">${user.username}</span>
+            ${user.isOwner ? '<span class="text-xs bg-red-500 text-white px-2 py-1 rounded">مالك</span>' : ''}
+          </div>
+          <div class="flex gap-2">
+            <button class="kick-btn px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm" data-username="${user.username}">طرد</button>
+            <button class="ban-btn px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm" data-username="${user.username}">حظر</button>
+            <button class="mute-btn px-3 py-1 bg-orange-500 text-white rounded hover:bg-orange-600 text-sm" data-username="${user.username}">كتم</button>
+          </div>
+        `;
+        adminUsersList.appendChild(userDiv);
+        
+        const option = document.createElement('option');
+        option.value = user.username;
+        option.textContent = user.username;
+        vipUserSelect.appendChild(option);
+      });
+      
+      // Add event listeners
+      document.querySelectorAll('.kick-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const username = btn.dataset.username;
+          if (confirm(`طرد ${username}؟`)) {
+            const onlineSnap = await new Promise(resolve => {
+              onValue(ref(db, 'online'), resolve, { onlyOnce: true });
+            });
+            onlineSnap.forEach(child => {
+              if (child.val().username === username) {
+                remove(ref(db, `online/${child.key}`));
+              }
+            });
+            alert('تم الطرد');
+          }
+        });
+      });
+      
+      document.querySelectorAll('.ban-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const username = btn.dataset.username;
+          if (confirm(`حظر ${username}؟`)) {
+            await set(ref(db, `banned/${username}`), { timestamp: serverTimestamp() });
+            alert('تم الحظر');
+          }
+        });
+      });
+      
+      document.querySelectorAll('.mute-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const username = btn.dataset.username;
+          const mutedSnap = await new Promise(resolve => {
+            onValue(ref(db, `muted/${username}`), resolve, { onlyOnce: true });
+          });
+          if (mutedSnap.exists()) {
+            await remove(ref(db, `muted/${username}`));
+            alert('تم إلغاء الكتم');
+          } else {
+            await set(ref(db, `muted/${username}`), { timestamp: serverTimestamp() });
+            alert('تم الكتم');
+          }
+        });
+      });
+    });
+    
+    // Announcement management
+    document.getElementById('setAnnouncementBtn').addEventListener('click', async () => {
+      const text = document.getElementById('announcementInput').value.trim();
+      if (text) {
+        await set(ref(db, 'announcement'), { text, timestamp: serverTimestamp() });
+        alert('تم تثبيت الإعلان');
+        document.getElementById('announcementInput').value = '';
+      }
+    });
+    
+    document.getElementById('deleteAnnouncementBtn').addEventListener('click', async () => {
+      if (confirm('حذف الإعلان؟')) {
+        await remove(ref(db, 'announcement'));
+        alert('تم حذف الإعلان');
+      }
+    });
+    
+    // VIP Management
+    document.getElementById('grantVipBtn').addEventListener('click', async () => {
+      const username = document.getElementById('vipUserSelect').value;
+      const level = parseInt(document.getElementById('vipLevelSelect').value);
+      const displayName = document.getElementById('vipName').value.trim();
+      const effect = document.getElementById('vipEffect').value;
+      const number = parseInt(document.getElementById('vipNumber').value);
+      
+      if (!username) {
+        alert('اختر عضو');
+        return;
+      }
+      
+      await set(ref(db, `users/${username}/vip`), {
+        level,
+        displayName: displayName || username,
+        effect,
+        number: number || null,
+        grantedBy: currentUser.username,
+        timestamp: serverTimestamp()
+      });
+      
+      alert('تم منح VIP بنجاح');
+    });
+    
+    // Private Messages Monitoring
+    loadPrivateMessagesMonitor();
+  };
+
+  const loadPrivateMessagesMonitor = () => {
+    onValue(ref(db, 'private'), (snapshot) => {
+      const container = document.getElementById('privateMessagesList');
+      container.innerHTML = '';
+      
+      snapshot.forEach((chatSnap) => {
+        const chatId = chatSnap.key;
+        const chatDiv = document.createElement('div');
+        chatDiv.className = 'bg-gray-100 dark:bg-gray-700 rounded-lg p-4';
+        
+        let messagesHtml = `<h4 class="font-bold mb-2 dark:text-white">محادثة: ${chatId.replace('_', ' ↔ ')}</h4><div class="space-y-2 max-h-64 overflow-y-auto scrollbar-thin">`;
+        
+        chatSnap.forEach((msgSnap) => {
+          const msg = msgSnap.val();
+          messagesHtml += `
+            <div class="bg-white dark:bg-gray-800 p-2 rounded text-sm">
+              <span class="font-semibold text-blue-600 dark:text-blue-400">${msg.username}:</span>
+              <span class="dark:text-gray-300">${escapeHtml(msg.text)}</span>
+            </div>
+          `;
+        });
+        
+        messagesHtml += '</div>';
+        chatDiv.innerHTML = messagesHtml;
+        container.appendChild(chatDiv);
+      });
+    });
+  };
+
+  // Logout
+  logoutBtn.addEventListener('click', async () => {
+    if (confirm('هل تريد تسجيل الخروج؟')) {
+      if (currentUser) {
+        await remove(ref(db, `online/${currentUser.uid}`));
+      }
+      location.reload();
     }
+  });
 
-    closeAnnouncement.addEventListener('click', () => {
-        if (state.isOwner) {
-            announcementBar.classList.add('hidden');
-            state.announcement = '';
-            saveStorage();
-        }
-    });
-
-    // Logout
-    logoutBtn.addEventListener('click', () => {
-        if (confirm('هل تريد تسجيل الخروج؟')) {
-            state.users = state.users.filter(u => u.username !== state.currentUser.username);
-            state.currentUser = null;
-            state.isOwner = false;
-            adminPanelBtn.classList.add('hidden');
-            chatApp.classList.add('hidden');
-            loginPage.classList.remove('hidden');
-            usernameInput.value = '';
-            passwordInput.value = '';
-            messagesContainer.innerHTML = '';
-        }
-    });
-
-    // Initialize
-    initStorage();
-    
-    // Simulate online users
-    const demoUsers = [
-        { username: 'محمد', isOwner: false, joinTime: Date.now() },
-        { username: 'أحمد', isOwner: false, joinTime: Date.now() },
-        { username: 'فاطمة', isOwner: false, joinTime: Date.now() }
-    ];
-    
-    setInterval(() => {
-        if (state.currentUser && !state.isInvisible) {
-            const randomOnline = 15 + Math.floor(Math.random() * 10);
-            onlineCount.textContent = randomOnline + demoUsers.length;
-        }
-    }, 5000);
-
-    // Welcome demo messages
-    setTimeout(() => {
-        if (state.messages['عامة'] && state.messages['عامة'].length === 0) {
-            const demoMsgs = [
-                { id: 1, username: 'محمد', text: 'السلام عليكم ورحمة الله', timestamp: '10:30', isOwner: false, color: '#000', size: '16', type: 'text' },
-                { id: 2, username: 'أحمد', text: 'وعليكم السلام، أهلاً وسهلاً', timestamp: '10:31', isOwner: false, color: '#000', size: '16', type: 'text' },
-            ];
-            if (state.currentRoom === 'عامة') {
-                demoMsgs.forEach(m => renderMessage(m));
-            }
-        }
-    }, 1000);
+  // Utils
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
 </script>
 
 </body>
