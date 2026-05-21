@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>دردشة عربية | Chat Arab</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -10,45 +10,81 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
-  * { font-family: 'Cairo', sans-serif; }
+    * { font-family: 'Cairo', sans-serif; }
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+  }
+  #app {
+    height: 100dvh;
+    height: 100vh;
+  }
   ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-track { background: #1e293b; }
   ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
   ::-webkit-scrollbar-thumb:hover { background: #64748b; }
-  
+
   @keyframes slideIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
   }
-  .msg-enter { animation: slideIn 0.2s ease-out; }
-  
+ .msg-enter { animation: slideIn 0.2s ease-out; }
+
   @keyframes pulse-ring {
     0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
     70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
     100% { box-shadow: 0 0 rgba(34, 197, 94, 0); }
   }
-  .online-dot { animation: pulse-ring 2s infinite; }
-  
-  .gradient-text {
+ .online-dot { animation: pulse-ring 2s infinite; }
+
+  @keyframes owner-glow {
+    0%, 100% {
+      box-shadow: 0 0 20px rgba(251, 191, 36, 0.6), 0 0 40px rgba(251, 191, 36, 0.3);
+      transform: scale(1);
+    }
+    50% {
+      box-shadow: 0 0 30px rgba(251, 191, 36, 0.9), 0 0 60px rgba(251, 191, 36, 0.5);
+      transform: scale(1.05);
+    }
+  }
+ .owner-badge {
+    animation: owner-glow 2s infinite;
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  }
+
+ .gradient-text {
     background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
-  
-  .rank-owner { color: #fbbf24; }
-  .rank-master { color: #f87171; }
-  .rank-superadmin { color: #c084fc; }
-  .rank-admin { color: #60a5fa; }
-  .rank-member { color: #34d399; }
-  .rank-guest { color: #94a3b8; }
-  
-  .modal-backdrop { backdrop-filter: blur(8px); }
+
+ .rank-owner { color: #fbbf24; text-shadow: 0 0 10px rgba(251, 191, 36, 0.5); }
+ .rank-master { color: #f87171; }
+ .rank-superadmin { color: #c084fc; }
+ .rank-admin { color: #60a5fa; }
+ .rank-member { color: #34d399; }
+ .rank-guest { color: #94a3b8; }
+
+ .modal-backdrop { backdrop-filter: blur(8px); }
+  #messageInput { font-size: 16px; }
+ .chat-input-container { padding-bottom: env(safe-area-inset-bottom); }
+
+ .premium-room {
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+  }
+
+ .context-menu {
+    min-width: 200px;
+  }
 </style>
 </head>
-<body class="bg-[#0f172a] text-slate-100 overflow-hidden h-screen">
-<div id="app" class="h-screen flex flex-col">
-  
+<body class="bg-[#0f172a] text-slate-100">
+<div id="app" class="flex flex-col">
+
   <!-- Login Screen -->
   <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
     <div class="w-full max-w-md mx-4">
@@ -60,7 +96,7 @@
           <h1 class="text-3xl font-bold gradient-text mb-2">دردشة عربية</h1>
           <p class="text-slate-400 text-sm">تواصل مع أصدقائك في جميع أنحاء الوطن العربي</p>
         </div>
-        
+
         <form id="loginForm" class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-slate-300 mb-2">الاسم المستعار</label>
@@ -68,7 +104,7 @@
               class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
               placeholder="أدخل اسمك">
           </div>
-          
+
           <div>
             <label class="block text-sm font-medium text-slate-300 mb-2">الدولة</label>
             <select id="countrySelect" required
@@ -76,14 +112,14 @@
               <option value="">اختر دولتك</option>
             </select>
           </div>
-          
+
           <div>
-            <label class="block text-sm font-medium text-slate-300 mb-2">كود الدخول <span class="text-slate-500 text-xs">(اختياري للمدير)</span></label>
-            <input id="ownerCodeInput" type="password"
+            <label class="block text-sm font-medium text-slate-300 mb-2">كود الدخول <span class="text-slate-500 text-xs">(اختياري للرتب)</span></label>
+            <input id="rankCodeInput" type="password"
               class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
-              placeholder="كود المشرف">
+              placeholder="كود المالك/الماستر/السوبر">
           </div>
-          
+
           <button type="submit" id="loginBtn"
             class="w-full py-3 bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-600 hover:to-indigo-600 text-white font-semibold rounded-xl shadow-lg shadow-sky-500/30 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]">
             <i class="fa-solid fa-right-to-bracket ml-2"></i>
@@ -95,10 +131,10 @@
   </div>
 
   <!-- Main App -->
-  <div id="mainApp" class="hidden h-screen flex flex-col">
-    
+  <div id="mainApp" class="hidden flex flex-col" style="height: 100dvh;">
+
     <!-- Welcome Bar -->
-    <div id="welcomeBar" class="bg-gradient-to-l from-sky-600/20 to-indigo-600/20 border-b border-slate-700/50 px-4 py-2">
+    <div id="welcomeBar" class="bg-gradient-to-l from-sky-600/20 to-indigo-600/20 border-b border-slate-700/50 px-4 py-2 flex-shrink-0">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2 text-sm">
           <i class="fa-solid fa-bullhorn text-sky-400"></i>
@@ -111,7 +147,7 @@
     </div>
 
     <!-- Header -->
-    <header class="bg-slate-800/50 backdrop-blur-xl border-b border-slate-700/50 px-4 py-3">
+    <header class="bg-slate-800/50 backdrop-blur-xl border-b border-slate-700/50 px-4 py-3 flex-shrink-0">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
           <button id="toggleSidebar" class="lg:hidden p-2 hover:bg-slate-700 rounded-lg transition-colors">
@@ -125,14 +161,17 @@
             <p id="currentRoomName" class="text-xs text-slate-400">الغرفة العامة</p>
           </div>
         </div>
-        
+
         <div class="flex items-center gap-2">
+          <button id="manageRanksBtn" class="hidden p-2 hover:bg-amber-500/20 text-amber-400 rounded-lg transition-colors" title="إدارة الرتب">
+            <i class="fa-solid fa-crown"></i>
+          </button>
           <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-700/50 rounded-lg">
             <div class="online-dot w-2 h-2 bg-green-500 rounded-full"></div>
             <span id="onlineCount" class="text-sm text-slate-300">0</span>
             <span class="text-sm text-slate-400">متصل</span>
           </div>
-          
+
           <button id="logoutBtn" class="p-2 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors" title="تسجيل خروج">
             <i class="fa-solid fa-right-from-bracket"></i>
           </button>
@@ -142,10 +181,10 @@
 
     <!-- Main Content -->
     <div class="flex-1 flex overflow-hidden">
-      
+
       <!-- Sidebar -->
       <aside id="sidebar" class="fixed lg:relative inset-y-0 right-0 z-40 w-72 bg-slate-800/95 lg:bg-slate-800/50 backdrop-blur-xl border-l border-slate-700/50 transform translate-x-full lg:translate-x-0 transition-transform duration-300 flex flex-col">
-        
+
         <!-- User Profile -->
         <div class="p-4 border-b border-slate-700/50">
           <div class="flex items-center gap-3">
@@ -165,37 +204,42 @@
             </div>
           </div>
         </div>
-        
+
         <!-- Rooms Section -->
         <div class="flex-1 overflow-y-auto p-4">
           <div class="flex items-center justify-between mb-3">
             <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider">الغرف</h2>
-            <button id="createRoomBtn" class="hidden p-1.5 hover:bg-slate-700 rounded-lg transition-colors text-sky-400" title="إنشاء غرفة">
-              <i class="fa-solid fa-plus text-sm"></i>
-            </button>
+            <div class="flex gap-1">
+              <button id="createPremiumRoomBtn" class="hidden p-1.5 hover:bg-amber-500/20 text-amber-400 rounded-lg transition-colors" title="غرفة مميزة">
+                <i class="fa-solid fa-gem text-sm"></i>
+              </button>
+              <button id="createRoomBtn" class="hidden p-1.5 hover:bg-slate-700 rounded-lg transition-colors text-sky-400" title="إنشاء غرفة">
+                <i class="fa-solid fa-plus text-sm"></i>
+              </button>
+            </div>
           </div>
           <div id="roomsList" class="space-y-1"></div>
-          
+
           <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mt-6 mb-3">المتصلون</h2>
           <div id="onlineUsersList" class="space-y-1"></div>
         </div>
-        
+
       </aside>
-      
+
       <!-- Chat Area -->
       <main class="flex-1 flex flex-col bg-slate-900/30">
-        
+
         <!-- Messages -->
         <div id="messagesContainer" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
-        
+
         <!-- Typing Indicator -->
         <div id="typingIndicator" class="hidden px-4 py-2 text-sm text-slate-400">
           <i class="fa-solid fa-ellipsis fa-fade mr-2"></i>
           <span></span>
         </div>
-        
+
         <!-- Message Input -->
-        <div class="p-4 border-t border-slate-700/50 bg-slate-800/30 backdrop-blur-xl">
+        <div class="p-4 border-t border-slate-700/50 bg-slate-800/30 backdrop-blur-xl chat-input-container flex-shrink-0">
           <form id="messageForm" class="flex items-end gap-2">
             <div class="flex-1 bg-slate-700/50 rounded-xl border border-slate-600 focus-within:border-sky-500 transition-colors">
               <textarea id="messageInput" rows="1" maxlength="1000"
@@ -208,7 +252,7 @@
             </button>
           </form>
         </div>
-        
+
       </main>
     </div>
   </div>
@@ -250,20 +294,92 @@
   </div>
 </div>
 
-<div id="editWelcomeModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop bg-black/50">
-  <div class="bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-md mx-4 p-6">
-    <h3 class="text-xl font-bold mb-4">تعديل رسالة الترحيب</h3>
-    <form id="editWelcomeForm" class="space-y-4">
+<div id="createPremiumRoomModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop bg-black/50">
+  <div class="bg-slate-800 rounded-2xl shadow-2xl border border-amber-500/30 w-full max-w-md mx-4 p-6">
+    <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+      <i class="fa-solid fa-gem text-amber-400"></i>
+      إنشاء غرفة مميزة
+    </h3>
+    <form id="createPremiumRoomForm" class="space-y-4">
       <div>
-        <textarea id="welcomeTextInput" rows="3" maxlength="200"
-          class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-xl text-white focus:ring-2 focus:ring-sky-500 focus:outline-none"
-          placeholder="أدخل رسالة الترحيب العامة"></textarea>
+        <label class="block text-sm font-medium text-slate-300 mb-2">اسم الغرفة المميزة</label>
+        <input id="premiumRoomNameInput" type="text" required maxlength="30"
+          class="w-full px-4 py-3 bg-slate-900/50 border border-amber-500/50 rounded-xl text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+          placeholder="مثال: VIP Lounge">
       </div>
-      <div class="flex gap-2">
-        <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-600 hover:to-indigo-600 text-white font-semibold rounded-xl transition-all">حفظ</button>
-        <button type="button" id="cancelWelcomeBtn" class="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl transition-all">إلغاء</button>
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-2">رسالة الترحيب</label>
+        <input id="premiumRoomWelcomeInput" type="text" maxlength="100"
+          class="w-full px-4 py-3 bg-slate-900/50 border border-amber-500/50 rounded-xl text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+          placeholder="مرحباً بكم في الغرفة المميزة">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-2">تاريخ انتهاء الصلاحية</label>
+        <input id="premiumRoomExpiryInput" type="date" required
+          class="w-full px-4 py-3 bg-slate-900/50 border border-amber-500/50 rounded-xl text-white focus:ring-2 focus:ring-amber-500 focus:outline-none">
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white font-semibold rounded-xl transition-all">إنشاء مميزة</button>
+        <button type="button" id="cancelPremiumRoomBtn" class="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl transition-all">إلغاء</button>
       </div>
     </form>
+  </div>
+</div>
+
+<div id="manageRanksModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop bg-black/50">
+  <div class="bg-slate-800 rounded-2xl shadow-2xl border border-amber-500/30 w-full max-w-lg mx-4 p-6 max-h-[80vh] overflow-y-auto">
+    <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+      <i class="fa-solid fa-crown text-amber-400"></i>
+      إدارة الرتب والرموز
+    </h3>
+    <form id="manageRanksForm" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-2">كود الماستر</label>
+        <input id="masterCodeInput" type="text"
+          class="w-full px-4 py-3 bg-slate-900/50 border border-red-500/50 rounded-xl text-white focus:ring-2 focus:ring-red-500 focus:outline-none"
+          placeholder="كود رتبة الماستر">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-2">كود السوبر أدمن</label>
+        <input id="superadminCodeInput" type="text"
+          class="w-full px-4 py-3 bg-slate-900/50 border border-purple-500/50 rounded-xl text-white focus:ring-2 focus:ring-purple-500 focus:outline-none"
+          placeholder="كود رتبة السوبر أدمن">
+      </div>
+      <div class="bg-slate-900/50 rounded-xl p-4">
+        <p class="text-sm text-slate-400 mb-2">الرتب الحالية:</p>
+        <div id="currentRankCodes" class="space-y-2 text-xs"></div>
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white font-semibold rounded-xl transition-all">حفظ الرموز</button>
+        <button type="button" id="cancelManageRanksBtn" class="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl transition-all">إلغاء</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="userContextMenu" class="hidden fixed z-50 context-menu bg-slate-800 rounded-xl shadow-2xl border border-slate-700 overflow-hidden">
+  <div class="py-2">
+    <button class="user-action-btn w-full px-4 py-2 text-right hover:bg-slate-700 transition-colors flex items-center gap-3" data-action="kick">
+      <i class="fa-solid fa-person-walking-arrow-right text-orange-400"></i>
+      <span>طرد من الغرفة</span>
+    </button>
+    <button class="user-action-btn w-full px-4 py-2 text-right hover:bg-slate-700 transition-colors flex items-center gap-3" data-action="mute">
+      <i class="fa-solid fa-microphone-slash text-yellow-400"></i>
+      <span>إيقاف عن الكلام</span>
+    </button>
+    <button class="user-action-btn w-full px-4 py-2 text-right hover:bg-slate-700 transition-colors flex items-center gap-3" data-action="ban">
+      <i class="fa-solid fa-ban text-red-400"></i>
+      <span>حظر من الدردشة</span>
+    </button>
+    <div class="border-t border-slate-700 my-1"></div>
+    <button class="user-action-btn w-full px-4 py-2 text-right hover:bg-slate-700 transition-colors flex items-center gap-3" data-action="grant-master">
+      <i class="fa-solid fa-star text-red-400"></i>
+      <span>منح رتبة ماستر</span>
+    </button>
+    <button class="user-action-btn w-full px-4 py-2 text-right hover:bg-slate-700 transition-colors flex items-center gap-3" data-action="grant-superadmin">
+      <i class="fa-solid fa-shield-halved text-purple-400"></i>
+      <span>منح رتبة سوبر أدمن</span>
+    </button>
   </div>
 </div>
 
@@ -319,7 +435,7 @@ const COUNTRIES = {
 };
 
 const RANKS = {
-  owner: { name: 'مالك', icon: 'fa-crown', color: 'rank-owner', level: 5 },
+  owner: { name: 'مالك', icon: 'fa-crown', color: 'rank-owner', level: 5, protected: true },
   master: { name: 'ماستر', icon: 'fa-star', color: 'rank-master', level: 4 },
   superadmin: { name: 'سوبر أدمن', icon: 'fa-shield-halved', color: 'rank-superadmin', level: 3 },
   admin: { name: 'أدمن', icon: 'fa-shield', color: 'rank-admin', level: 2 },
@@ -334,6 +450,8 @@ let selectedRoomColor = '#0ea5e9';
 let unsubscribeMessages = null;
 let unsubscribeUsers = null;
 let unsubscribeRooms = null;
+let rankCodes = { master: '', superadmin: '' };
+let selectedUserForAction = null;
 
 // Populate countries
 const countrySelect = document.getElementById('countrySelect');
@@ -344,12 +462,24 @@ Object.entries(COUNTRIES).forEach(([code, data]) => {
   countrySelect.appendChild(option);
 });
 
+// Load rank codes
+onValue(ref(db, 'settings/rankCodes'), (snap) => {
+  rankCodes = snap.val() || { master: '', superadmin: '' };
+});
+
 // Auth State
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     const userSnap = await get(ref(db, `users/${user.uid}`));
     if (userSnap.exists()) {
-      currentUser = { uid: user.uid, ...userSnap.val() };
+      const userData = userSnap.val();
+      // Check if banned
+      if (userData.banned) {
+        alert('تم حظرك من الدردشة');
+        await signOut(auth);
+        return;
+      }
+      currentUser = { uid: user.uid,...userData };
       showMainApp();
       initRealtimeListeners();
     }
@@ -365,42 +495,48 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
   const loginBtn = document.getElementById('loginBtn');
   loginBtn.disabled = true;
   loginBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin ml-2"></i>جاري الدخول...';
-  
+
   try {
     const username = document.getElementById('usernameInput').value.trim();
     const country = document.getElementById('countrySelect').value;
-    const ownerCode = document.getElementById('ownerCodeInput').value;
-    
-    if (!username || !country) {
+    const rankCode = document.getElementById('rankCodeInput').value;
+
+    if (!username ||!country) {
       alert('الرجاء ملء جميع الحقول المطلوبة');
       return;
     }
-    
+
     const { user } = await signInAnonymously(auth);
-    
+
     let rank = 'member';
-    if (ownerCode === OWNER_CODE) {
+    if (rankCode === OWNER_CODE) {
       rank = 'owner';
+    } else if (rankCode === rankCodes.master && rankCodes.master) {
+      rank = 'master';
+    } else if (rankCode === rankCodes.superadmin && rankCodes.superadmin) {
+      rank = 'superadmin';
     }
-    
+
     const userData = {
       username,
       country,
       rank,
       online: true,
+      banned: false,
+      muted: false,
       lastSeen: serverTimestamp(),
       joinedAt: serverTimestamp()
     };
-    
+
     await set(ref(db, `users/${user.uid}`), userData);
-    
+
     // Set disconnect handler
     const userStatusRef = ref(db, `users/${user.uid}/online`);
     onDisconnect(userStatusRef).set(false);
     onDisconnect(ref(db, `users/${user.uid}/lastSeen`)).set(serverTimestamp());
-    
-    currentUser = { uid: user.uid, ...userData };
-    
+
+    currentUser = { uid: user.uid,...userData };
+
   } catch (error) {
     console.error('Login error:', error);
     alert('حدث خطأ أثناء تسجيل الدخول');
@@ -440,20 +576,33 @@ function showMainApp() {
 // Update User Profile
 function updateUserProfile() {
   if (!currentUser) return;
-  
-  document.getElementById('userAvatar').textContent = currentUser.username.charAt(0).toUpperCase();
+
+  const avatarEl = document.getElementById('userAvatar');
+  avatarEl.textContent = currentUser.username.charAt(0).toUpperCase();
+
+  // Owner special badge
+  if (currentUser.rank === 'owner') {
+    avatarEl.classList.add('owner-badge');
+  } else {
+    avatarEl.classList.remove('owner-badge');
+  }
+
   document.getElementById('userDisplayName').textContent = currentUser.username;
   document.getElementById('userFlag').textContent = COUNTRIES[currentUser.country]?.flag || '';
-  
+
   const rankInfo = RANKS[currentUser.rank] || RANKS.guest;
   document.getElementById('userRankIcon').className = `fa-solid ${rankInfo.icon} text-xs ${rankInfo.color}`;
   document.getElementById('userRankText').textContent = rankInfo.name;
   document.getElementById('userRankText').className = `text-xs ${rankInfo.color}`;
-  
+
   // Show owner controls
-  if (currentUser.rank === 'owner' || currentUser.rank === 'master') {
+  if (currentUser.rank === 'owner') {
     document.getElementById('createRoomBtn').classList.remove('hidden');
+    document.getElementById('createPremiumRoomBtn').classList.remove('hidden');
     document.getElementById('editWelcomeBtn').classList.remove('hidden');
+    document.getElementById('manageRanksBtn').classList.remove('hidden');
+  } else if (currentUser.rank === 'master' || currentUser.rank === 'superadmin') {
+    document.getElementById('createRoomBtn').classList.remove('hidden');
   }
 }
 
@@ -464,349 +613,4 @@ async function initDefaultRoom() {
   if (!snap.exists()) {
     await set(generalRoomRef, {
       name: 'الغرفة العامة',
-      welcome: 'مرحباً بكم في الغرفة العامة',
-      color: '#0ea5e9',
-      createdBy: 'system',
-      createdAt: serverTimestamp()
-    });
-  }
-  
-  const settingsRef = ref(db, 'settings/welcomeMessage');
-  const settingsSnap = await get(settingsRef);
-  if (!settingsSnap.exists()) {
-    await set(settingsRef, 'مرحباً بكم في الدردشة العربية');
-  }
-}
-
-// Realtime Listeners
-function initRealtimeListeners() {
-  // Welcome message
-  onValue(ref(db, 'settings/welcomeMessage'), (snap) => {
-    document.getElementById('welcomeMessage').textContent = snap.val() || 'مرحباً بكم';
-  });
-  
-  // Rooms
-  unsubscribeRooms = onValue(ref(db, 'rooms'), (snap) => {
-    const rooms = snap.val() || {};
-    renderRooms(rooms);
-  });
-  
-  // Online Users
-  unsubscribeUsers = onValue(ref(db, 'users'), (snap) => {
-    const users = snap.val() || {};
-    const onlineUsers = Object.entries(users).filter(([uid, u]) => u.online);
-    document.getElementById('onlineCount').textContent = onlineUsers.length;
-    renderOnlineUsers(onlineUsers);
-  });
-  
-  // Messages for current room
-  loadMessages(currentRoom);
-}
-
-// Load Messages
-function loadMessages(roomId) {
-  if (unsubscribeMessages) unsubscribeMessages();
-  
-  const messagesRef = query(ref(db, `messages/${roomId}`), orderByChild('timestamp'), limitToLast(100));
-  unsubscribeMessages = onValue(messagesRef, (snap) => {
-    const messages = [];
-    snap.forEach((child) => {
-      messages.push({ id: child.key, ...child.val() });
-    });
-    renderMessages(messages);
-  });
-}
-
-// Render Rooms
-function renderRooms(rooms) {
-  const container = document.getElementById('roomsList');
-  container.innerHTML = '';
-  
-  Object.entries(rooms).forEach(([id, room]) => {
-    const isActive = id === currentRoom;
-    const div = document.createElement('div');
-    div.className = `flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all ${isActive ? 'bg-slate-700/70' : 'hover:bg-slate-700/50'}`;
-    div.innerHTML = `
-      <div class="flex items-center gap-3 flex-1 min-w-0">
-        <div class="w-2 h-2 rounded-full" style="background-color: ${room.color}"></div>
-        <div class="flex-1 min-w-0">
-          <p class="text-sm font-semibold truncate">${room.name}</p>
-          <p class="text-xs text-slate-400 truncate">${room.welcome || ''}</p>
-        </div>
-      ${(currentUser?.rank === 'owner' && id !== 'general') ? `
-        <button class="delete-room-btn p-1.5 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors" data-room="${id}">
-          <i class="fa-solid fa-trash text-xs"></i>
-        </button>
-      ` : ''}
-    `;
-    
-    div.addEventListener('click', (e) => {
-      if (!e.target.closest('.delete-room-btn')) {
-        switchRoom(id, room);
-      }
-    });
-    
-    const deleteBtn = div.querySelector('.delete-room-btn');
-    if (deleteBtn) {
-      deleteBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        deleteRoom(id);
-      });
-    }
-    
-    container.appendChild(div);
-  });
-  
-  // Update current room name
-  const room = rooms[currentRoom];
-  if (room) {
-    document.getElementById('currentRoomName').textContent = room.name;
-    document.getElementById('currentRoomName').style.color = room.color;
-  }
-}
-
-// Switch Room
-function switchRoom(roomId, room) {
-  currentRoom = roomId;
-  document.getElementById('currentRoomName').textContent = room.name;
-  document.getElementById('currentRoomName').style.color = room.color;
-  loadMessages(roomId);
-  renderRooms({}); // Trigger re-render to update active state
-  get(ref(db, 'rooms')).then(snap => renderRooms(snap.val() || {}));
-}
-
-// Delete Room
-async function deleteRoom(roomId) {
-  if (roomId === 'general') {
-    alert('لا يمكن حذف الغرفة العامة');
-    return;
-  }
-  if (confirm('هل تريد حذف هذه الغرفة وجميع رسائلها؟')) {
-    await remove(ref(db, `rooms/${roomId}`));
-    await remove(ref(db, `messages/${roomId}`));
-    if (currentRoom === roomId) {
-      switchRoom('general', { name: 'الغرفة العامة', color: '#0ea5e9' });
-    }
-  }
-}
-
-// Render Online Users
-function renderOnlineUsers(users) {
-  const container = document.getElementById('onlineUsersList');
-  container.innerHTML = '';
-  
-  users.sort((a, b) => {
-    const rankA = RANKS[a[1].rank]?.level || 0;
-    const rankB = RANKS[b[1].rank]?.level || 0;
-    return rankB - rankA;
-  });
-  
-  users.forEach(([uid, user]) => {
-    const rankInfo = RANKS[user.rank] || RANKS.guest;
-    const div = document.createElement('div');
-    div.className = 'flex items-center gap-2 p-2 rounded-lg hover:bg-slate-700/50 transition-colors';
-    div.innerHTML = `
-      <div class="relative">
-        <div class="w-8 h-8 bg-gradient-to-br from-sky-500 to-indigo-500 rounded-lg flex items-center justify-center text-white text-sm font-bold">
-          ${user.username.charAt(0).toUpperCase()}
-        </div>
-        <div class="online-dot absolute -bottom-0.5 -left-0.5 w-3 h-3 bg-green-500 border-2 border-slate-800 rounded-full"></div>
-      </div>
-      <div class="flex-1 min-w-0">
-        <div class="flex items-center gap-1">
-          <p class="text-sm font-medium truncate">${user.username}</p>
-          <span class="text-xs">${COUNTRIES[user.country]?.flag || ''}</span>
-        </div>
-        <div class="flex items-center gap-1">
-          <i class="fa-solid ${rankInfo.icon} text-xs ${rankInfo.color}"></i>
-          <p class="text-xs ${rankInfo.color}">${rankInfo.name}</p>
-        </div>
-      </div>
-    `;
-    container.appendChild(div);
-  });
-}
-
-// Render Messages
-function renderMessages(messages) {
-  const container = document.getElementById('messagesContainer');
-  container.innerHTML = '';
-  
-  if (messages.length === 0) {
-    container.innerHTML = `
-      <div class="flex flex-col items-center justify-center h-full text-slate-500">
-        <i class="fa-regular fa-comments text-5xl mb-4"></i>
-        <p class="text-sm">لا توجد رسائل بعد. كن أول من يرسل!</p>
-      </div>
-    `;
-    return;
-  }
-  
-  messages.forEach((msg) => {
-    const isOwn = msg.senderId === currentUser?.uid;
-    const rankInfo = RANKS[msg.senderRank] || RANKS.guest;
-    const time = new Date(msg.timestamp).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
-    
-    const div = document.createElement('div');
-    div.className = `msg-enter flex gap-3 ${isOwn ? 'flex-row-reverse' : ''}`;
-    div.innerHTML = `
-      <div class="flex-shrink-0">
-        <div class="w-10 h-10 bg-gradient-to-br from-sky-500 to-indigo-500 rounded-xl flex items-center justify-center text-white font-bold shadow-lg">
-          ${msg.senderName.charAt(0).toUpperCase()}
-        </div>
-      </div>
-      <div class="flex-1 max-w-[75%] ${isOwn ? 'items-end' : 'items-start'} flex flex-col">
-        <div class="flex items-center gap-2 mb-1 ${isOwn ? 'flex-row-reverse' : ''}">
-          <span class="font-semibold text-sm ${rankInfo.color}">${msg.senderName}</span>
-          <span class="text-xs">${COUNTRIES[msg.senderCountry]?.flag || ''}</span>
-          <i class="fa-solid ${rankInfo.icon} text-xs ${rankInfo.color}"></i>
-          <span class="text-xs text-slate-500">${time}</span>
-        </div>
-        <div class="bg-slate-800/70 backdrop-blur-sm px-4 py-2.5 rounded-2xl ${isOwn ? 'rounded-tl-sm' : 'rounded-tr-sm'}">
-          <p class="text-sm leading-relaxed break-words">${escapeHtml(msg.text)}</p>
-        </div>
-      </div>
-    `;
-    container.appendChild(div);
-  });
-  
-  container.scrollTop = container.scrollHeight;
-}
-
-// Send Message
-document.getElementById('messageForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const input = document.getElementById('messageInput');
-  const text = input.value.trim();
-  
-  if (!text || !currentUser) return;
-  
-  const sendBtn = document.getElementById('sendBtn');
-  sendBtn.disabled = true;
-  
-  try {
-    await push(ref(db, `messages/${currentRoom}`), {
-      text,
-      senderId: currentUser.uid,
-      senderName: currentUser.username,
-      senderRank: currentUser.rank,
-      senderCountry: currentUser.country,
-      timestamp: serverTimestamp()
-    });
-    input.value = '';
-    input.style.height = 'auto';
-  } catch (error) {
-    console.error('Send error:', error);
-    alert('فشل إرسال الرسالة');
-  } finally {
-    sendBtn.disabled = false;
-  }
-});
-
-// Auto-resize textarea
-document.getElementById('messageInput').addEventListener('input', function() {
-  this.style.height = 'auto';
-  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
-});
-
-// Create Room Modal
-document.getElementById('createRoomBtn').addEventListener('click', () => {
-  document.getElementById('createRoomModal').classList.remove('hidden');
-});
-
-document.getElementById('cancelRoomBtn').addEventListener('click', () => {
-  document.getElementById('createRoomModal').classList.add('hidden');
-  document.getElementById('createRoomForm').reset();
-});
-
-document.querySelectorAll('.room-color-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.room-color-btn').forEach(b => b.classList.remove('ring-2', 'ring-white'));
-    btn.classList.add('ring-2', 'ring-white');
-    selectedRoomColor = btn.dataset.color;
-  });
-});
-
-document.getElementById('createRoomForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const name = document.getElementById('roomNameInput').value.trim();
-  const welcome = document.getElementById('roomWelcomeInput').value.trim();
-  
-  if (!name) return;
-  
-  const roomId = name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
-  
-  try {
-    await set(ref(db, `rooms/${roomId}`), {
-      name,
-      welcome: welcome || `مرحباً بكم في ${name}`,
-      color: selectedRoomColor,
-      createdBy: currentUser.uid,
-      createdAt: serverTimestamp()
-    });
-    
-    document.getElementById('createRoomModal').classList.add('hidden');
-    document.getElementById('createRoomForm').reset();
-  } catch (error) {
-    console.error('Create room error:', error);
-    alert('فشل إنشاء الغرفة');
-  }
-});
-
-// Edit Welcome Modal
-document.getElementById('editWelcomeBtn').addEventListener('click', async () => {
-  const snap = await get(ref(db, 'settings/welcomeMessage'));
-  document.getElementById('welcomeTextInput').value = snap.val() || '';
-  document.getElementById('editWelcomeModal').classList.remove('hidden');
-});
-
-document.getElementById('cancelWelcomeBtn').addEventListener('click', () => {
-  document.getElementById('editWelcomeModal').classList.add('hidden');
-});
-
-document.getElementById('editWelcomeForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const text = document.getElementById('welcomeTextInput').value.trim();
-  
-  try {
-    await set(ref(db, 'settings/welcomeMessage'), text || 'مرحباً بكم في الدردشة العربية');
-    document.getElementById('editWelcomeModal').classList.add('hidden');
-  } catch (error) {
-    console.error('Update welcome error:', error);
-    alert('فشل تحديث الرسالة');
-  }
-});
-
-// Toggle Sidebar Mobile
-document.getElementById('toggleSidebar').addEventListener('click', () => {
-  document.getElementById('sidebar').classList.toggle('translate-x-full');
-});
-
-// Close sidebar on click outside mobile
-document.addEventListener('click', (e) => {
-  const sidebar = document.getElementById('sidebar');
-  const toggleBtn = document.getElementById('toggleSidebar');
-  if (window.innerWidth < 1024 && !sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
-    sidebar.classList.add('translate-x-full');
-  }
-});
-
-// Utility
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-// Close modals on backdrop click
-document.querySelectorAll('.modal-backdrop').forEach(modal => {
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) {
-      modal.classList.add('hidden');
-    }
-  });
-});
-</script>
-
-</body>
-</html>
+      welcome: 'مرحباً بكم في الغرفة العامة
