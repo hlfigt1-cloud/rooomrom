@@ -1,1195 +1,812 @@
-٩<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<!-- Playables SDK -->
-<script>// Playables SDK v1.0.0
-// Game lifecycle bridge: rAF-based game-ready detection + event communication
-(function() {
-  'use strict';
-
-  // Idempotency: skip if already initialized (e.g., server-side injection
-  // followed by client-side inject-javascript via the Bloks webview component).
-  if (window.playablesSDK) return;
-
-  var HANDLER_NAME = 'playablesGameEventHandler';
-  var ANDROID_BRIDGE_NAME = '_MetaPlayablesBridge';
-  var RAF_FRAME_THRESHOLD = 3;
-
-  var gameReadySent = false;
-  var firstInteractionSent = false;
-  var errorSent = false;
-  var frameCount = 0;
-  var originalRAF = window.requestAnimationFrame;
-
-  // --- Transport Layer ---
-
-  function hasIOSBridge() {
-    return !!(window.webkit &&
-              window.webkit.messageHandlers &&
-              window.webkit.messageHandlers[HANDLER_NAME]);
-  }
-
-  function hasAndroidBridge() {
-    return !!(window[ANDROID_BRIDGE_NAME] &&
-              typeof window[ANDROID_BRIDGE_NAME].postEvent === 'function');
-  }
-
-  function isInIframe() {
-    return !!(window.parent && window.parent !== window);
-  }
-
-  function sendEvent(eventName, payload) {
-    var message = {
-      type: eventName,
-      payload: payload || {},
-      timestamp: Date.now()
-    };
-
-    if (hasIOSBridge()) {
-      try {
-        window.webkit.messageHandlers[HANDLER_NAME].postMessage(message);
-      } catch (e) { /* ignore */ }
-      return;
-    }
-
-    if (hasAndroidBridge()) {
-    try {
-      var p = payload || {};
-      p.__secureToken = window.__fbAndroidBridgeAuthToken || '';
-      p.timestamp = message.timestamp;
-      window[ANDROID_BRIDGE_NAME].postEvent(
-        eventName,
-        JSON.stringify(p)
-      );
-    } catch (e) { /* ignore */ }
-    return;
-  }
-
-    if (isInIframe()) {
-      try {
-        window.parent.postMessage(message, '*');
-      } catch (e) { /* ignore */ }
-      return;
-    }
-  }
-
-  // --- rAF Game-Ready Detection ---
-
-  function onFrame() {
-    if (gameReadySent) return;
-
-    frameCount++;
-    if (frameCount >= RAF_FRAME_THRESHOLD) {
-      gameReadySent = true;
-      sendEvent('game_ready', {
-        frame_count: frameCount,
-        detected_at: Date.now()
-      });
-      return;
-    }
-
-    originalRAF.call(window, onFrame);
-  }
-
-  if (originalRAF) {
-    window.requestAnimationFrame = function(callback) {
-      if (!gameReadySent) {
-        return originalRAF.call(window, function(timestamp) {
-          frameCount++;
-          if (frameCount >= RAF_FRAME_THRESHOLD && !gameReadySent) {
-            gameReadySent = true;
-            sendEvent('game_ready', {
-              frame_count: frameCount,
-              detected_at: Date.now()
-            });
-          }
-          callback(timestamp);
-        });
-      }
-      return originalRAF.call(window, callback);
-    };
-  }
-
-  // --- First User Interaction Detection ---
-
-  function setupFirstInteractionDetection() {
-    var events = ['touchstart', 'mousedown', 'keydown'];
-
-    function onFirstInteraction() {
-      if (firstInteractionSent) return;
-      firstInteractionSent = true;
-      sendEvent('user_interaction_start', null);
-
-      for (var i = 0; i < events.length; i++) {
-        document.removeEventListener(events[i], onFirstInteraction, true);
-      }
-    }
-
-    for (var i = 0; i < events.length; i++) {
-      document.addEventListener(events[i], onFirstInteraction, true);
-    }
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setupFirstInteractionDetection);
-  } else {
-    setupFirstInteractionDetection();
-  }
-
-  // --- Auto Error Capture ---
-
-  window.addEventListener('error', function(event) {
-    if (errorSent) return;
-    errorSent = true;
-    sendEvent('error', {
-      message: event.message || 'Unknown error',
-      source: event.filename || '',
-      lineno: event.lineno || 0,
-      colno: event.colno || 0,
-      auto_captured: true
-    });
-  });
-
-  window.addEventListener('unhandledrejection', function(event) {
-    if (errorSent) return;
-    errorSent = true;
-    var reason = event.reason;
-    sendEvent('error', {
-      message: (reason instanceof Error) ? reason.message : String(reason),
-      type: 'unhandled_promise_rejection',
-      auto_captured: true
-    });
-  });
-
-  // --- Public API ---
-
-  window.playablesSDK = {
-    complete: function(score) {
-      sendEvent('game_ended', {
-        score: score,
-        completed: true
-      });
-    },
-
-    error: function(message) {
-      if (errorSent) return;
-      errorSent = true;
-      sendEvent('error', {
-        message: message || 'Unknown error',
-        auto_captured: false
-      });
-    },
-
-    sendEvent: function(eventName, payload) {
-      if (!eventName || typeof eventName !== 'string') return;
-      sendEvent(eventName, payload);
-    }
-  };
-
-  // Kick off rAF detection in case no game code calls rAF immediately
-  if (originalRAF) {
-    originalRAF.call(window, onFrame);
-  }
-})();</script>
-<!-- PLAYABLE_TOUCH_PATCH_V1 --><script>
-(function() {
-  if (window.__playableTouchPatchInstalled) return;
-  window.__playableTouchPatchInstalled = true;
-  var origAdd = EventTarget.prototype.addEventListener;
-  var blockedTypes = { touchstart: 1, touchmove: 1, wheel: 1 };
-  EventTarget.prototype.addEventListener = function(type, listener, options) {
-    if (blockedTypes[type]) {
-      if (options === undefined || options === null) {
-        options = { passive: true };
-      } else if (typeof options === 'boolean') {
-        options = { capture: options, passive: true };
-      } else {
-        options = Object.assign({}, options, { passive: true });
-      }
-    }
-    return origAdd.call(this, type, listener, options);
-  };
-})();
-</script><script>window.Intl=window.Intl||{};Intl.t=function(s){return(Intl._locale&&Intl._locale[s])||s;};</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>شات عربي - دردشة فورية</title>
+<title>دردشة عربية | Chat Arab</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap');
-* {
-    font-family: 'Cairo', Tahoma, Arial, sans-serif;
-    font-weight: 500;
-}
-html, body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    overflow: hidden;
-}
-body {
-    background: #1a1a1a;
-}
-
-/* Phone Frame for Desktop */
-@media (min-width: 768px) {
-    body {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 100vh;
-        background: linear-gradient(135deg, #1e293b 0%, #0f172a 50%, #1e1b4b 100%);
-        padding: 20px;
-    }
-    .phone-frame {
-        width: 100%;
-        max-width: 420px;
-        height: 90vh;
-        max-height: 900px;
-        background: #000;
-        border-radius: 40px;
-        padding: 12px;
-        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6), 0 0 0 2px #2d3748;
-        position: relative;
-    }
-    .phone-frame::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 120px;
-        height: 28px;
-        background: #000;
-        border-radius: 0 0 18px 18px;
-        z-index: 100;
-    }
-    .phone-screen {
-        width: 100%;
-        height: 100%;
-        border-radius: 32px;
-        overflow: hidden;
-        position: relative;
-        background: #0f172a;
-    }
-    .app-wrapper {
-        width: 100%;
-        height: 100%;
-    }
-}
-
-/* Mobile Full Screen */
-@media (max-width: 767px) {
-    .phone-frame {
-        width: 100vw;
-        height: 100vh;
-        padding: 0;
-        border-radius: 0;
-    }
-    .phone-screen {
-        border-radius: 0;
-        height: 100vh;
-    }
-    .app-wrapper {
-        width: 100%;
-        height: 100%;
-    }
-}
-
-.app-wrapper {
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-}
-
-.scroll-hide::-webkit-scrollbar {
-    width: 5px;
-}
-.scroll-hide::-webkit-scrollbar-track {
-    background: transparent;
-}
-.scroll-hide::-webkit-scrollbar-thumb {
-    background: #475569;
-    border-radius: 3px;
-}
-
-.owner-name {
-    background: linear-gradient(90deg, #f59e0b, #ef4444, #8b5cf6, #3b82f6, #10b981, #f59e0b);
-    background-size: 200% auto;
+  * { font-family: 'Cairo', sans-serif; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: #1e293b; }
+  ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+  
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .msg-enter { animation: slideIn 0.2s ease-out; }
+  
+  @keyframes pulse-ring {
+    0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+    100% { box-shadow: 0 0 rgba(34, 197, 94, 0); }
+  }
+  .online-dot { animation: pulse-ring 2s infinite; }
+  
+  .gradient-text {
+    background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
     -webkit-background-clip: text;
-    background-clip: text;
     -webkit-text-fill-color: transparent;
-    animation: gradient-flow 3s linear infinite;
-    font-weight: 700;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-}
-@keyframes gradient-flow {
-    to { background-position: -200% center; }
-}
-
-.message-anim {
-    animation: slideUp 0.25s ease-out;
-}
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(8px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.glass {
-    background: rgba(30, 41, 59, 0.95);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(148, 163, 184, 0.1);
-}
-
-.badge {
-    font-size: 10px;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-weight: 600;
-}
-
-.modal-bg {
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(4px);
-}
-
-#messagesContainer {
-    display: flex;
-    flex-direction: column;
-    scroll-behavior: smooth;
-    overflow-y: auto;
-    overflow-x: hidden;
-}
-
-.chat-main {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    min-height: 0;
-}
-
-.messages-wrapper {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-.input-area {
-    flex-shrink: 0;
-}
-
-#messageInput {
-    direction: rtl;
-    text-align: right;
-}
+    background-clip: text;
+  }
+  
+  .rank-owner { color: #fbbf24; }
+  .rank-master { color: #f87171; }
+  .rank-superadmin { color: #c084fc; }
+  .rank-admin { color: #60a5fa; }
+  .rank-member { color: #34d399; }
+  .rank-guest { color: #94a3b8; }
+  
+  .modal-backdrop { backdrop-filter: blur(8px); }
 </style>
 </head>
-<body>
-<div class="phone-frame">
-    <div class="phone-screen">
-        <div class="app-wrapper text-slate-100 h-full overflow-hidden flex flex-col">
-
-<!-- Login Screen -->
-<div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gradient-to-br from-indigo-900 via-slate-900 to-slate-950">
-    <div class="glass rounded-3xl p-6 w-full max-w-sm shadow-2xl">
-        <div class="text-center mb-6">
-            <div class="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
-                <i class="fa-solid fa-comments text-2xl"></i>
-            </div>
-            <h1 class="text-2xl font-bold mb-1">شات عربي</h1>
-            <p class="text-slate-400 text-xs">منصة الدردشة العربية الفورية</p>
+<body class="bg-[#0f172a] text-slate-100 overflow-hidden h-screen">
+<div id="app" class="h-screen flex flex-col">
+  
+  <!-- Login Screen -->
+  <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div class="w-full max-w-md mx-4">
+      <div class="bg-slate-800/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-700/50 p-8">
+        <div class="text-center mb-8">
+          <div class="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-sky-500 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg shadow-sky-500/30">
+            <i class="fa-solid fa-comments text-3xl text-white"></i>
+          </div>
+          <h1 class="text-3xl font-bold gradient-text mb-2">دردشة عربية</h1>
+          <p class="text-slate-400 text-sm">تواصل مع أصدقائك في جميع أنحاء الوطن العربي</p>
         </div>
-
-        <div class="flex gap-1.5 mb-5 bg-slate-800/50 rounded-xl p-1">
-            <button onclick="switchLoginType('guest')" id="tab-guest" class="login-tab flex-1 py-2 rounded-lg text-xs font-semibold transition bg-indigo-600">
-                <i class="fa-solid fa-user"></i> زائر
-            </button>
-            <button onclick="switchLoginType('member')" id="tab-member" class="login-tab flex-1 py-2 rounded-lg text-xs font-semibold transition">
-                <i class="fa-solid fa-user-check"></i> عضو
-            </button>
-            <button onclick="switchLoginType('owner')" id="tab-owner" class="login-tab flex-1 py-2 rounded-lg text-xs font-semibold transition">
-                <i class="fa-solid fa-crown"></i> مالك
-            </button>
-        </div>
-
-        <div id="login-guest" class="login-form">
-            <input type="text" id="guestName" placeholder="ادخل اسمك كزائر" class="w-full mb-3 px-4 py-2.5 bg-slate-800/80 rounded-xl border border-slate-700 focus:border-indigo-500 focus:outline-none transition text-sm">
-            <button onclick="loginAsGuest()" class="w-full py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 rounded-xl font-semibold hover:shadow-lg transition text-sm">
-                دخول كزائر
-            </button>
-        </div>
-
-        <div id="login-member" class="login-form hidden">
-            <input type="text" id="memberName" placeholder="اسم المستخدم" class="w-full mb-2.5 px-4 py-2.5 bg-slate-800/80 rounded-xl border border-slate-700 focus:border-indigo-500 focus:outline-none transition text-sm">
-            <input type="password" id="memberPass" placeholder="كلمة المرور" class="w-full mb-3 px-4 py-2.5 bg-slate-800/80 rounded-xl border border-slate-700 focus:border-indigo-500 focus:outline-none transition text-sm">
-            <button onclick="loginAsMember()" class="w-full py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 rounded-xl font-semibold hover:shadow-lg transition mb-2.5 text-sm">
-                تسجيل دخول
-            </button>
-            <button onclick="registerMember()" class="w-full py-2.5 bg-slate-700 rounded-xl font-semibold hover:bg-slate-600 transition text-xs">
-                إنشاء حساب جديد
-            </button>
-        </div>
-
-        <div id="login-owner" class="login-form hidden">
-            <input type="text" id="ownerName" placeholder="اسم المالك" value="المالك" class="w-full mb-2.5 px-4 py-2.5 bg-slate-800/80 rounded-xl border border-slate-700 focus:border-indigo-500 focus:outline-none transition text-sm">
-            <input type="password" id="ownerCode" placeholder="رمز المالك" class="w-full mb-3 px-4 py-2.5 bg-slate-800/80 rounded-xl border border-slate-700 focus:border-indigo-500 focus:outline-none transition text-sm">
-            <button onclick="loginAsOwner()" class="w-full py-2.5 bg-gradient-to-r from-amber-600 to-orange-600 rounded-xl font-semibold hover:shadow-lg transition text-sm">
-                <i class="fa-solid fa-crown"></i> دخول المالك
-            </button>
-        </div>
+        
+        <form id="loginForm" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-2">الاسم المستعار</label>
+            <input id="usernameInput" type="text" required minlength="3" maxlength="20"
+              class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+              placeholder="أدخل اسمك">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-2">الدولة</label>
+            <select id="countrySelect" required
+              class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all">
+              <option value="">اختر دولتك</option>
+            </select>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-2">كود الدخول <span class="text-slate-500 text-xs">(اختياري للمدير)</span></label>
+            <input id="ownerCodeInput" type="password"
+              class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+              placeholder="كود المشرف">
+          </div>
+          
+          <button type="submit" id="loginBtn"
+            class="w-full py-3 bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-600 hover:to-indigo-600 text-white font-semibold rounded-xl shadow-lg shadow-sky-500/30 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]">
+            <i class="fa-solid fa-right-to-bracket ml-2"></i>
+            دخول الدردشة
+          </button>
+        </form>
+      </div>
     </div>
-</div>
+  </div>
 
-<!-- Main App -->
-<div id="mainApp" class="hidden h-full flex flex-col">
-    <div id="globalWelcomeBar" class="glass px-3 py-1.5 text-center text-xs border-b border-slate-700/50 hidden flex-shrink-0">
-        <span id="globalWelcomeText">مرحباً بكم في شات عربي</span>
-        <button id="editWelcomeBtn" onclick="editGlobalWelcome()" class="hidden mr-2 text-indigo-400 hover:text-indigo-300">
-            <i class="fa-solid fa-pen text-xs"></i>
+  <!-- Main App -->
+  <div id="mainApp" class="hidden h-screen flex flex-col">
+    
+    <!-- Welcome Bar -->
+    <div id="welcomeBar" class="bg-gradient-to-l from-sky-600/20 to-indigo-600/20 border-b border-slate-700/50 px-4 py-2">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2 text-sm">
+          <i class="fa-solid fa-bullhorn text-sky-400"></i>
+          <span id="welcomeMessage" class="text-slate-300">مرحباً بكم في الدردشة العربية</span>
+        </div>
+        <button id="editWelcomeBtn" class="hidden text-xs px-2 py-1 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors">
+          <i class="fa-solid fa-pen ml-1"></i>تعديل
         </button>
+      </div>
     </div>
 
-    <header class="glass px-3 py-2.5 flex items-center justify-between shadow-lg z-40 flex-shrink-0">
-        <div class="flex items-center gap-2 flex-1">
-            <button onclick="toggleRoomsSidebar()" class="p-2 hover:bg-slate-700/50 rounded-lg transition">
-                <i class="fa-solid fa-bars text-sm"></i>
-            </button>
-            <div class="flex items-center gap-2 flex-1 min-w-0">
-                <div class="w-9 h-9 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <i class="fa-solid fa-comments text-sm"></i>
-                </div>
-                <div class="min-w-0 flex-1">
-                    <h1 class="font-bold text-sm truncate">شات عربي</h1>
-                    <p class="text-xs text-slate-400 truncate" id="currentRoomName">الغرفة العامة</p>
-                </div>
-            </div>
+    <!-- Header -->
+    <header class="bg-slate-800/50 backdrop-blur-xl border-b border-slate-700/50 px-4 py-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <button id="toggleSidebar" class="lg:hidden p-2 hover:bg-slate-700 rounded-lg transition-colors">
+            <i class="fa-solid fa-bars text-xl"></i>
+          </button>
+          <div class="w-10 h-10 bg-gradient-to-br from-sky-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-sky-500/20">
+            <i class="fa-solid fa-comments text-white"></i>
+          </div>
+          <div>
+            <h1 class="text-lg font-bold gradient-text">دردشة عربية</h1>
+            <p id="currentRoomName" class="text-xs text-slate-400">الغرفة العامة</p>
+          </div>
         </div>
-        <div class="flex items-center gap-1">
-            <button onclick="toggleUsersSidebar()" class="p-2 hover:bg-slate-700/50 rounded-lg transition">
-                <i class="fa-solid fa-users text-sm"></i>
-            </button>
-            <button onclick="logout()" class="p-2 hover:bg-red-600/20 text-red-400 rounded-lg transition">
-                <i class="fa-solid fa-right-from-bracket text-sm"></i>
-            </button>
+        
+        <div class="flex items-center gap-2">
+          <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-700/50 rounded-lg">
+            <div class="online-dot w-2 h-2 bg-green-500 rounded-full"></div>
+            <span id="onlineCount" class="text-sm text-slate-300">0</span>
+            <span class="text-sm text-slate-400">متصل</span>
+          </div>
+          
+          <button id="logoutBtn" class="p-2 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors" title="تسجيل خروج">
+            <i class="fa-solid fa-right-from-bracket"></i>
+          </button>
         </div>
+      </div>
     </header>
 
-    <div class="flex-1 flex overflow-hidden relative min-h-0">
-        <aside id="roomsSidebar" class="w-64 glass border-l border-slate-700/50 flex flex-col transition-all duration-300 -mr-64 absolute z-30 h-full">
-            <div class="p-3 border-b border-slate-700/50 flex-shrink-0">
-                <div class="flex items-center justify-between mb-2">
-                    <h2 class="font-bold text-sm flex items-center gap-2">
-                        <i class="fa-solid fa-layer-group text-indigo-400 text-xs"></i>
-                        الغرف
-                    </h2>
-                    <button id="createRoomBtn" onclick="showCreateRoomModal()" class="hidden p-1.5 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-xs transition">
-                        <i class="fa-solid fa-plus"></i>
-                    </button>
-                </div>
-                <div class="text-xs text-slate-400">
-                    <i class="fa-solid fa-circle text-green-500 text-[6px]"></i>
-                    <span id="onlineCount">1</span> متصل
-                </div>
+    <!-- Main Content -->
+    <div class="flex-1 flex overflow-hidden">
+      
+      <!-- Sidebar -->
+      <aside id="sidebar" class="fixed lg:relative inset-y-0 right-0 z-40 w-72 bg-slate-800/95 lg:bg-slate-800/50 backdrop-blur-xl border-l border-slate-700/50 transform translate-x-full lg:translate-x-0 transition-transform duration-300 flex flex-col">
+        
+        <!-- User Profile -->
+        <div class="p-4 border-b border-slate-700/50">
+          <div class="flex items-center gap-3">
+            <div class="relative">
+              <div id="userAvatar" class="w-12 h-12 bg-gradient-to-br from-sky-500 to-indigo-500 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg"></div>
+              <div class="online-dot absolute -bottom-1 -left-1 w-4 h-4 bg-green-500 border-2 border-slate-800 rounded-full"></div>
             </div>
-            <div id="roomsList" class="flex-1 overflow-y-auto scroll-hide p-2"></div>
-            <button onclick="toggleRoomsSidebar()" class="m-2 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs transition flex-shrink-0">
-                إغلاق
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <p id="userDisplayName" class="font-bold text-white truncate"></p>
+                <i id="userFlag" class="text-lg"></i>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <i id="userRankIcon" class="fa-solid fa-star text-xs"></i>
+                <p id="userRankText" class="text-xs text-slate-400"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Rooms Section -->
+        <div class="flex-1 overflow-y-auto p-4">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider">الغرف</h2>
+            <button id="createRoomBtn" class="hidden p-1.5 hover:bg-slate-700 rounded-lg transition-colors text-sky-400" title="إنشاء غرفة">
+              <i class="fa-solid fa-plus text-sm"></i>
             </button>
-        </aside>
-
-        <main class="flex-1 flex flex-col room-bg chat-main" id="chatContainer">
-            <div id="roomWelcome" class="glass mx-3 mt-3 px-3 py-2 rounded-lg border border-slate-700/50 hidden flex-shrink-0">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2 text-xs">
-                        <i class="fa-solid fa-bullhorn text-amber-400"></i>
-                        <span id="roomWelcomeText"></span>
-                    </div>
-                    <button id="editRoomWelcomeBtn" onclick="editRoomWelcome()" class="hidden text-indigo-400 hover:text-indigo-300 text-xs">
-                        <i class="fa-solid fa-pen"></i>
-                    </button>
-                </div>
+          </div>
+          <div id="roomsList" class="space-y-1"></div>
+          
+          <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mt-6 mb-3">المتصلون</h2>
+          <div id="onlineUsersList" class="space-y-1"></div>
+        </div>
+        
+      </aside>
+      
+      <!-- Chat Area -->
+      <main class="flex-1 flex flex-col bg-slate-900/30">
+        
+        <!-- Messages -->
+        <div id="messagesContainer" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
+        
+        <!-- Typing Indicator -->
+        <div id="typingIndicator" class="hidden px-4 py-2 text-sm text-slate-400">
+          <i class="fa-solid fa-ellipsis fa-fade mr-2"></i>
+          <span></span>
+        </div>
+        
+        <!-- Message Input -->
+        <div class="p-4 border-t border-slate-700/50 bg-slate-800/30 backdrop-blur-xl">
+          <form id="messageForm" class="flex items-end gap-2">
+            <div class="flex-1 bg-slate-700/50 rounded-xl border border-slate-600 focus-within:border-sky-500 transition-colors">
+              <textarea id="messageInput" rows="1" maxlength="1000"
+                class="w-full px-4 py-3 bg-transparent text-white placeholder-slate-500 resize-none focus:outline-none"
+                placeholder="اكتب رسالتك هنا..."></textarea>
             </div>
-
-            <div class="messages-wrapper">
-                <div id="messagesContainer" class="flex-1 px-3 py-3 space-y-2">
-                    <div class="text-center text-slate-500 text-xs pt-10">
-                        <i class="fa-solid fa-face-smile text-3xl mb-2 block"></i>
-                        ابدأ المحادثة الآن!
-                    </div>
-                </div>
-            </div>
-
-            <div class="glass p-2 border-t border-slate-700/50 input-area">
-                <div class="flex gap-2">
-                    <input type="text" id="messageInput" placeholder="اكتب رسالتك..." class="flex-1 px-3 py-2 bg-slate-800/80 rounded-lg border border-slate-700 focus:border-indigo-500 focus:outline-none transition text-sm" onkeypress="if(event.key==='Enter') sendMessage()">
-                    <button onclick="sendMessage()" class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 rounded-lg font-semibold hover:shadow-lg transition">
-                        <i class="fa-solid fa-paper-plane text-sm"></i>
-                    </button>
-                </div>
-            </div>
-        </main>
-
-        <aside id="usersSidebar" class="w-64 glass border-r border-slate-700/50 flex flex-col transition-all duration-300 -ml-64 absolute left-0 z-30 h-full">
-            <div class="p-3 border-b border-slate-700/50 flex-shrink-0">
-                <h2 class="font-bold text-sm flex items-center gap-2 mb-2">
-                    <i class="fa-solid fa-users text-indigo-400 text-xs"></i>
-                    المتصلون
-                </h2>
-                <button id="roomSettingsBtn" onclick="showRoomSettings()" class="hidden w-full py-1.5 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs transition mb-1">
-                    <i class="fa-solid fa-gear"></i> إعدادات الغرفة
-                </button>
-                <div id="userInfo" class="text-right">
-                    <div id="headerUserName" class="font-semibold text-xs"></div>
-                    <div id="headerUserRole" class="text-xs text-slate-400"></div>
-                </div>
-            <div id="usersList" class="flex-1 overflow-y-auto scroll-hide p-2"></div>
-            <button onclick="toggleUsersSidebar()" class="m-2 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs transition flex-shrink-0">
-                إغلاق
+            <button type="submit" id="sendBtn"
+              class="p-3 bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-600 hover:to-indigo-600 text-white rounded-xl shadow-lg shadow-sky-500/30 transition-all duration-200 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+              <i class="fa-solid fa-paper-plane"></i>
             </button>
-        </aside>
+          </form>
+        </div>
+        
+      </main>
     </div>
+  </div>
 </div>
 
 <!-- Modals -->
-<div id="createRoomModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-bg" onclick="if(event.target==this) closeCreateRoomModal()">
-    <div class="glass rounded-2xl p-5 w-full max-w-sm" onclick="event.stopPropagation()">
-        <h3 class="text-lg font-bold mb-3 flex items-center gap-2">
-            <i class="fa-solid fa-plus-circle text-indigo-400"></i>
-            إنشاء غرفة جديدة
-        </h3>
-        <input type="text" id="newRoomName" placeholder="اسم الغرفة" class="w-full mb-2.5 px-3 py-2 bg-slate-800/80 rounded-lg border border-slate-700 focus:border-indigo-500 focus:outline-none text-sm">
-        <select id="newRoomCountry" class="w-full mb-3 px-3 py-2 bg-slate-800/80 rounded-lg border border-slate-700 focus:border-indigo-500 focus:outline-none text-sm">
-            <option value="iq">🇮🇶 العراق</option>
-            <option value="sa">🇸🇦 السعودية</option>
-            <option value="eg">🇪🇬 مصر</option>
-            <option value="ae">🇦🇪 الإمارات</option>
-            <option value="jo">🇯🇴 الأردن</option>
-            <option value="ma">🇲🇦 المغرب</option>
-            <option value="ps">🇵🇸 فلسطين</option>
-            <option value="lb">🇱🇧 لبنان</option>
-            <option value="kw">🇰🇼 الكويت</option>
-            <option value="qa">🇶🇦 قطر</option>
-            <option value="om">🇴🇲 عمان</option>
-            <option value="bh">🇧🇭 البحرين</option>
-            <option value="sy">🇸🇾 سوريا</option>
-            <option value="ye">🇾🇪 اليمن</option>
-            <option value="dz">🇩🇿 الجزائر</option>
-            <option value="tn">🇹🇳 تونس</option>
-            <option value="ly">🇱🇾 ليبيا</option>
-        </select>
-        <div class="flex gap-2">
-            <button onclick="createRoom()" class="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-semibold transition text-sm">
-                إنشاء
-            </button>
-            <button onclick="closeCreateRoomModal()" class="flex-1 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold transition text-sm">
-                إلغاء
-            </button>
+<div id="createRoomModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop bg-black/50">
+  <div class="bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-md mx-4 p-6">
+    <h3 class="text-xl font-bold mb-4">إنشاء غرفة جديدة</h3>
+    <form id="createRoomForm" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-2">اسم الغرفة</label>
+        <input id="roomNameInput" type="text" required maxlength="30"
+          class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-xl text-white focus:ring-2 focus:ring-sky-500 focus:outline-none"
+          placeholder="مثال: غرفة الأصدقاء">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-2">رسالة الترحيب</label>
+        <input id="roomWelcomeInput" type="text" maxlength="100"
+          class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-xl text-white focus:ring-2 focus:ring-sky-500 focus:outline-none"
+          placeholder="مرحباً بكم في الغرفة">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-2">لون الغرفة</label>
+        <div class="grid grid-cols-6 gap-2">
+          <button type="button" class="room-color-btn w-full aspect-square rounded-lg bg-sky-500 ring-2 ring-white" data-color="#0ea5e9"></button>
+          <button type="button" class="room-color-btn w-full aspect-square rounded-lg bg-purple-500" data-color="#a855f7"></button>
+          <button type="button" class="room-color-btn w-full aspect-square rounded-lg bg-pink-500" data-color="#ec4899"></button>
+          <button type="button" class="room-color-btn w-full aspect-square rounded-lg bg-green-500" data-color="#22c55e"></button>
+          <button type="button" class="room-color-btn w-full aspect-square rounded-lg bg-yellow-500" data-color="#eab308"></button>
+          <button type="button" class="room-color-btn w-full aspect-square rounded-lg bg-red-500" data-color="#ef4444"></button>
         </div>
-    </div>
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-600 hover:to-indigo-600 text-white font-semibold rounded-xl transition-all">إنشاء</button>
+        <button type="button" id="cancelRoomBtn" class="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl transition-all">إلغاء</button>
+      </div>
+    </form>
+  </div>
 </div>
 
-<div id="roomSettingsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-bg" onclick="if(event.target==this) closeRoomSettings()">
-    <div class="glass rounded-2xl p-5 w-full max-w-md max-h-[85vh] overflow-y-auto scroll-hide" onclick="event.stopPropagation()">
-        <h3 class="text-lg font-bold mb-3 flex items-center gap-2">
-            <i class="fa-solid fa-gear text-indigo-400"></i>
-            إعدادات الغرفة
-        </h3>
-        
-        <div class="mb-4">
-            <label class="block text-xs font-semibold mb-2">لون الغرفة</label>
-            <div class="grid grid-cols-6 gap-2">
-                <button onclick="setRoomTheme('#0f172a')" class="h-9 rounded-lg bg-slate-900 border-2 border-slate-700 hover:scale-110 transition"></button>
-                <button onclick="setRoomTheme('#1e1b4b')" class="h-9 rounded-lg bg-indigo-950 border-2 border-slate-700 hover:scale-110 transition"></button>
-                <button onclick="setRoomTheme('#4c1d95')" class="h-9 rounded-lg bg-violet-950 border-2 border-slate-700 hover:scale-110 transition"></button>
-                <button onclick="setRoomTheme('#701a75')" class="h-9 rounded-lg bg-fuchsia-950 border-2 border-slate-700 hover:scale-110 transition"></button>
-                <button onclick="setRoomTheme('#831843')" class="h-9 rounded-lg bg-pink-950 border-2 border-slate-700 hover:scale-110 transition"></button>
-                <button onclick="setRoomTheme('#1e3a8a')" class="h-9 rounded-lg bg-blue-950 border-2 border-slate-700 hover:scale-110 transition"></button>
-            </div>
-        </div>
-
-        <div class="mb-4">
-            <label class="block text-xs font-semibold mb-2">لوحة الترحيب</label>
-            <textarea id="roomWelcomeInput" placeholder="نص الترحيب الخاص بالغرفة..." class="w-full px-3 py-2 bg-slate-800/80 rounded-lg border border-slate-700 focus:border-indigo-500 focus:outline-none resize-none text-sm" rows="3"></textarea>
-        </div>
-
-        <div class="mb-4">
-            <label class="block text-xs font-semibold mb-2">إحصائيات الغرفة</label>
-            <div class="grid grid-cols-2 gap-2">
-                <div class="bg-slate-800/50 rounded-lg p-2.5 text-center">
-                    <div class="text-xl font-bold text-indigo-400" id="statsMessages">0</div>
-                    <div class="text-xs text-slate-400">الرسائل</div>
-                </div>
-                <div class="bg-slate-800/50 rounded-lg p-2.5 text-center">
-                    <div class="text-xl font-bold text-green-400" id="statsUsers">0</div>
-                    <div class="text-xs text-slate-400">الأعضاء</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="mb-3">
-            <button onclick="deleteRoom()" class="w-full py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg font-semibold transition border border-red-600/50 text-sm">
-                <i class="fa-solid fa-trash"></i> حذف الغرفة
-            </button>
-        </div>
-
-        <button onclick="saveRoomSettings()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-semibold transition text-sm">
-            حفظ الإعدادات
-        </button>
-    </div>
+<div id="editWelcomeModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop bg-black/50">
+  <div class="bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-md mx-4 p-6">
+    <h3 class="text-xl font-bold mb-4">تعديل رسالة الترحيب</h3>
+    <form id="editWelcomeForm" class="space-y-4">
+      <div>
+        <textarea id="welcomeTextInput" rows="3" maxlength="200"
+          class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-xl text-white focus:ring-2 focus:ring-sky-500 focus:outline-none"
+          placeholder="أدخل رسالة الترحيب العامة"></textarea>
+      </div>
+      <div class="flex gap-2">
+        <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-600 hover:to-indigo-600 text-white font-semibold rounded-xl transition-all">حفظ</button>
+        <button type="button" id="cancelWelcomeBtn" class="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl transition-all">إلغاء</button>
+      </div>
+    </form>
+  </div>
 </div>
 
-<div id="userRoleModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-bg" onclick="if(event.target==this) closeUserRoleModal()">
-    <div class="glass rounded-2xl p-5 w-full max-w-xs" onclick="event.stopPropagation()">
-        <h3 class="text-lg font-bold mb-3">تغيير رتبة المستخدم</h3>
-        <p class="text-slate-400 text-xs mb-3" id="roleUserName"></p>
-        <div class="space-y-1.5 mb-3">
-            <button onclick="setUserRole('member')" class="w-full py-2.5 bg-slate-700 hover:bg-slate-600 rounded-lg transition text-right text-sm">
-                <i class="fa-solid fa-user text-slate-400 ml-2"></i> عضو
-            </button>
-            <button onclick="setUserRole('admin')" class="w-full py-2.5 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-400 rounded-lg transition text-right text-sm">
-                <i class="fa-solid fa-shield text-cyan-400 ml-2"></i> ادمن
-            </button>
-            <button onclick="setUserRole('superadmin')" class="w-full py-2.5 bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 rounded-lg transition text-right text-sm">
-                <i class="fa-solid fa-star text-purple-400 ml-2"></i> سوبر ادمن
-            </button>
-            <button onclick="setUserRole('master')" class="w-full py-2.5 bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 rounded-lg transition text-right text-sm">
-                <i class="fa-solid fa-crown text-amber-400 ml-2"></i> ماستر
-            </button>
-        </div>
-        <button onclick="closeUserRoleModal()" class="w-full py-2.5 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold transition text-sm">
-            إلغاء
-        </button>
-    </div>
-</div>
+<script type="importmap">
+{
+  "imports": {
+    "firebase/app": "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js",
+    "firebase/auth": "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js",
+    "firebase/database": "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"
+  }
+}
+</script>
 
-<div id="welcomeEditModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-bg" onclick="if(event.target==this) closeWelcomeEdit()">
-    <div class="glass rounded-2xl p-5 w-full max-w-sm" onclick="event.stopPropagation()">
-        <h3 class="text-lg font-bold mb-3">تعديل الشريط الترحيبي</h3>
-        <textarea id="welcomeTextInput" placeholder="نص الترحيب العام..." class="w-full mb-3 px-3 py-2 bg-slate-800/80 rounded-lg border border-slate-700 focus:border-indigo-500 focus:outline-none resize-none text-sm" rows="3"></textarea>
-        <div class="flex gap-2">
-            <button onclick="saveGlobalWelcome()" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-semibold transition text-sm">
-                حفظ
-            </button>
-            <button onclick="closeWelcomeEdit()" class="flex-1 py-2.5 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold transition text-sm">
-                إلغاء
-            </button>
-        </div>
-    </div>
-</div>
+<script type="module">
+import { initializeApp } from 'firebase/app';
+import { getAuth, signInAnonymously, onAuthStateChanged, signOut } from 'firebase/auth';
+import { getDatabase, ref, set, push, onValue, onDisconnect, serverTimestamp, remove, get, update, query, orderByChild, limitToLast } from 'firebase/database';
 
-        </div>
-    </div>
-</div>
+const firebaseConfig = {
+  apiKey: "AIzaSyAGpES78mV7-jgEQzi63R0TONGKfUQHFHc",
+  authDomain: "hashed-cht.firebaseapp.com",
+  databaseURL: "https://hashed-cht-default-rtdb.firebaseio.com",
+  projectId: "hashed-cht",
+  storageBucket: "hashed-cht.firebasestorage.app",
+  messagingSenderId: "442699332645",
+  appId: "1:442699332645:web:08d332758ac215a07453cc"
+};
 
-<script>
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+// Constants
 const OWNER_CODE = "19952005";
 const COUNTRIES = {
-    iq: { name: "العراق", flag: "🇮🇶" },
-    sa: { name: "السعودية", flag: "🇸🇦" },
-    eg: { name: "مصر", flag: "🇪🇬" },
-    ae: { name: "الإمارات", flag: "🇦🇪" },
-    jo: { name: "الأردن", flag: "🇯🇴" },
-    ma: { name: "المغرب", flag: "🇲🇦" },
-    ps: { name: "فلسطين", flag: "🇵🇸" },
-    lb: { name: "لبنان", flag: "🇱🇧" },
-    kw: { name: "الكويت", flag: "🇰🇼" },
-    qa: { name: "قطر", flag: "🇶🇦" },
-    om: { name: "عمان", flag: "🇴🇲" },
-    bh: { name: "البحرين", flag: "🇧🇭" },
-    sy: { name: "سوريا", flag: "🇸🇾" },
-    ye: { name: "اليمن", flag: "🇾🇪" },
-    dz: { name: "الجزائر", flag: "🇩🇿" },
-    tn: { name: "تونس", flag: "🇹🇳" },
-    ly: { name: "ليبيا", flag: "🇱🇾" }
+  'Iraq': { name: 'العراق', flag: '🇮🇶' },
+  'Saudi': { name: 'السعودية', flag: '🇸🇦' },
+  'Egypt': { name: 'مصر', flag: '🇪🇬' },
+  'UAE': { name: 'الإمارات', flag: '🇦🇪' },
+  'Jordan': { name: 'الأردن', flag: '🇯🇴' },
+  'Morocco': { name: 'المغرب', flag: '🇲🇦' },
+  'Palestine': { name: 'فلسطين', flag: '🇵🇸' },
+  'Lebanon': { name: 'لبنان', flag: '🇱🇧' },
+  'Kuwait': { name: 'الكويت', flag: '🇰🇼' },
+  'Qatar': { name: 'قطر', flag: '🇶🇦' },
+  'Oman': { name: 'عمان', flag: '🇴🇲' },
+  'Bahrain': { name: 'البحرين', flag: '🇧🇭' },
+  'Syria': { name: 'سوريا', flag: '🇸🇾' },
+  'Yemen': { name: 'اليمن', flag: '🇾🇪' },
+  'Algeria': { name: 'الجزائر', flag: '🇩🇿' },
+  'Tunisia': { name: 'تونس', flag: '🇹🇳' },
+  'Libya': { name: 'ليبيا', flag: '🇱🇾' }
 };
 
+const RANKS = {
+  owner: { name: 'مالك', icon: 'fa-crown', color: 'rank-owner', level: 5 },
+  master: { name: 'ماستر', icon: 'fa-star', color: 'rank-master', level: 4 },
+  superadmin: { name: 'سوبر أدمن', icon: 'fa-shield-halved', color: 'rank-superadmin', level: 3 },
+  admin: { name: 'أدمن', icon: 'fa-shield', color: 'rank-admin', level: 2 },
+  member: { name: 'عضو', icon: 'fa-user', color: 'rank-member', level: 1 },
+  guest: { name: 'زائر', icon: 'fa-user', color: 'rank-guest', level: 0 }
+};
+
+// State
 let currentUser = null;
-let currentRoomId = "general";
-let selectedUserId = null;
-let data = {
-    users: [],
-    rooms: [],
-    messages: {},
-    settings: {
-        globalWelcome: "مرحباً بكم في شات عربي - أكبر تجمع عربي للدردشة"
-    }
-};
+let currentRoom = 'general';
+let selectedRoomColor = '#0ea5e9';
+let unsubscribeMessages = null;
+let unsubscribeUsers = null;
+let unsubscribeRooms = null;
 
-function init() {
-    loadData();
-    if (data.rooms.length === 0) {
-        createDefaultRooms();
+// Populate countries
+const countrySelect = document.getElementById('countrySelect');
+Object.entries(COUNTRIES).forEach(([code, data]) => {
+  const option = document.createElement('option');
+  option.value = code;
+  option.textContent = `${data.flag} ${data.name}`;
+  countrySelect.appendChild(option);
+});
+
+// Auth State
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    const userSnap = await get(ref(db, `users/${user.uid}`));
+    if (userSnap.exists()) {
+      currentUser = { uid: user.uid, ...userSnap.val() };
+      showMainApp();
+      initRealtimeListeners();
     }
+  } else {
+    currentUser = null;
+    showLoginScreen();
+  }
+});
+
+// Login Form
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const loginBtn = document.getElementById('loginBtn');
+  loginBtn.disabled = true;
+  loginBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin ml-2"></i>جاري الدخول...';
+  
+  try {
+    const username = document.getElementById('usernameInput').value.trim();
+    const country = document.getElementById('countrySelect').value;
+    const ownerCode = document.getElementById('ownerCodeInput').value;
+    
+    if (!username || !country) {
+      alert('الرجاء ملء جميع الحقول المطلوبة');
+      return;
+    }
+    
+    const { user } = await signInAnonymously(auth);
+    
+    let rank = 'member';
+    if (ownerCode === OWNER_CODE) {
+      rank = 'owner';
+    }
+    
+    const userData = {
+      username,
+      country,
+      rank,
+      online: true,
+      lastSeen: serverTimestamp(),
+      joinedAt: serverTimestamp()
+    };
+    
+    await set(ref(db, `users/${user.uid}`), userData);
+    
+    // Set disconnect handler
+    const userStatusRef = ref(db, `users/${user.uid}/online`);
+    onDisconnect(userStatusRef).set(false);
+    onDisconnect(ref(db, `users/${user.uid}/lastSeen`)).set(serverTimestamp());
+    
+    currentUser = { uid: user.uid, ...userData };
+    
+  } catch (error) {
+    console.error('Login error:', error);
+    alert('حدث خطأ أثناء تسجيل الدخول');
+  } finally {
+    loginBtn.disabled = false;
+    loginBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket ml-2"></i>دخول الدردشة';
+  }
+});
+
+// Logout
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  if (confirm('هل تريد تسجيل الخروج؟')) {
     if (currentUser) {
-        showMainApp();
+      await set(ref(db, `users/${currentUser.uid}/online`), false);
+      await set(ref(db, `users/${currentUser.uid}/lastSeen`), serverTimestamp());
     }
-}
+    await signOut(auth);
+  }
+});
 
-function loadData() {
-    const saved = localStorage.getItem('arabicChatData');
-    if (saved) {
-        data = JSON.parse(saved);
-    }
-    const savedUser = localStorage.getItem('arabicChatUser');
-    if (savedUser) {
-        currentUser = JSON.parse(savedUser);
-    }
-}
-
-function saveData() {
-    localStorage.setItem('arabicChatData', JSON.stringify(data));
-}
-
-function saveUser() {
-    localStorage.setItem('arabicChatUser', JSON.stringify(currentUser));
-}
-
-function switchLoginType(type) {
-    document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('bg-indigo-600'));
-    document.querySelectorAll('.login-form').forEach(f => f.classList.add('hidden'));
-    document.getElementById('tab-' + type).classList.add('bg-indigo-600');
-    document.getElementById('login-' + type).classList.remove('hidden');
-}
-
-function loginAsGuest() {
-    const name = document.getElementById('guestName').value.trim();
-    if (!name) return alert('الرجاء إدخال اسم');
-    currentUser = {
-        id: 'guest_' + Date.now(),
-        name: name,
-        type: 'guest',
-        role: 'guest'
-    };
-    addUserToData();
-    saveUser();
-    showMainApp();
-}
-
-function loginAsMember() {
-    const name = document.getElementById('memberName').value.trim();
-    const pass = document.getElementById('memberPass').value;
-    if (!name || !pass) return alert('الرجاء إدخال جميع البيانات');
-    
-    const user = data.users.find(u => u.name === name && u.password === pass);
-    if (!user) return alert('اسم المستخدم أو كلمة المرور غير صحيحة');
-    
-    currentUser = user;
-    saveUser();
-    showMainApp();
-}
-
-function registerMember() {
-    const name = document.getElementById('memberName').value.trim();
-    const pass = document.getElementById('memberPass').value;
-    if (!name || !pass) return alert('الرجاء إدخال جميع البيانات');
-    if (pass.length < 4) return alert('كلمة المرور قصيرة جداً');
-    
-    if (data.users.find(u => u.name === name)) {
-        return alert('اسم المستخدم موجود مسبقاً');
-    }
-    
-    currentUser = {
-        id: 'member_' + Date.now(),
-        name: name,
-        password: pass,
-        type: 'member',
-        role: 'member',
-        joinDate: Date.now()
-    };
-    addUserToData();
-    saveUser();
-    showMainApp();
-}
-
-function loginAsOwner() {
-    const name = document.getElementById('ownerName').value.trim();
-    const code = document.getElementById('ownerCode').value;
-    if (code !== OWNER_CODE) return alert('رمز المالك غير صحيح');
-    if (!name) return alert('الرجاء إدخال اسم');
-    
-    currentUser = {
-        id: 'owner_' + Date.now(),
-        name: name,
-        type: 'owner',
-        role: 'owner'
-    };
-    addUserToData();
-    saveUser();
-    showMainApp();
-}
-
-function addUserToData() {
-    if (!data.users.find(u => u.id === currentUser.id)) {
-        data.users.push({ ...currentUser });
-        saveData();
-    }
-}
-
-function logout() {
-    if (confirm('هل تريد تسجيل الخروج؟')) {
-        localStorage.removeItem('arabicChatUser');
-        currentUser = null;
-        location.reload();
-    }
+// Show/Hide Screens
+function showLoginScreen() {
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('mainApp').classList.add('hidden');
+  if (unsubscribeMessages) unsubscribeMessages();
+  if (unsubscribeUsers) unsubscribeUsers();
+  if (unsubscribeRooms) unsubscribeRooms();
 }
 
 function showMainApp() {
-    document.getElementById('loginScreen').classList.add('hidden');
-    document.getElementById('mainApp').classList.remove('hidden');
-    updateHeader();
-    renderRooms();
-    renderUsers();
-    loadRoom(currentRoomId);
-    updateGlobalWelcome();
-    
-    if (currentUser.role === 'owner') {
-        document.getElementById('createRoomBtn').classList.remove('hidden');
-        document.getElementById('editWelcomeBtn').classList.remove('hidden');
-        document.getElementById('roomSettingsBtn').classList.remove('hidden');
-    }
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('mainApp').classList.remove('hidden');
+  updateUserProfile();
+  initDefaultRoom();
 }
 
-function updateHeader() {
-    const nameEl = document.getElementById('headerUserName');
-    const roleEl = document.getElementById('headerUserRole');
-    
-    if (currentUser.role === 'owner') {
-        nameEl.innerHTML = `<span class="owner-name"><i class="fa-solid fa-crown text-xs"></i>${currentUser.name}</span>`;
-        roleEl.textContent = 'مالك التطبيق';
-    } else {
-        nameEl.textContent = currentUser.name;
-        roleEl.textContent = getRoleName(currentUser.role);
-    }
+// Update User Profile
+function updateUserProfile() {
+  if (!currentUser) return;
+  
+  document.getElementById('userAvatar').textContent = currentUser.username.charAt(0).toUpperCase();
+  document.getElementById('userDisplayName').textContent = currentUser.username;
+  document.getElementById('userFlag').textContent = COUNTRIES[currentUser.country]?.flag || '';
+  
+  const rankInfo = RANKS[currentUser.rank] || RANKS.guest;
+  document.getElementById('userRankIcon').className = `fa-solid ${rankInfo.icon} text-xs ${rankInfo.color}`;
+  document.getElementById('userRankText').textContent = rankInfo.name;
+  document.getElementById('userRankText').className = `text-xs ${rankInfo.color}`;
+  
+  // Show owner controls
+  if (currentUser.rank === 'owner' || currentUser.rank === 'master') {
+    document.getElementById('createRoomBtn').classList.remove('hidden');
+    document.getElementById('editWelcomeBtn').classList.remove('hidden');
+  }
 }
 
-function getRoleName(role) {
-    const roles = {
-        guest: 'زائر',
-        member: 'عضو',
-        admin: 'ادمن',
-        superadmin: 'سوبر ادمن',
-        master: 'ماستر',
-        owner: 'مالك'
-    };
-    return roles[role] || 'عضو';
+// Initialize Default Room
+async function initDefaultRoom() {
+  const generalRoomRef = ref(db, 'rooms/general');
+  const snap = await get(generalRoomRef);
+  if (!snap.exists()) {
+    await set(generalRoomRef, {
+      name: 'الغرفة العامة',
+      welcome: 'مرحباً بكم في الغرفة العامة',
+      color: '#0ea5e9',
+      createdBy: 'system',
+      createdAt: serverTimestamp()
+    });
+  }
+  
+  const settingsRef = ref(db, 'settings/welcomeMessage');
+  const settingsSnap = await get(settingsRef);
+  if (!settingsSnap.exists()) {
+    await set(settingsRef, 'مرحباً بكم في الدردشة العربية');
+  }
 }
 
-function createDefaultRooms() {
-    data.rooms = [
-        {
-            id: 'general',
-            name: 'الغرفة العامة',
-            country: 'iq',
-            color: '#0f172a',
-            welcome: 'مرحباً بكم في الغرفة العامة',
-            created: Date.now()
-        }
-    ];
-    data.messages.general = [];
-    saveData();
-}
-
-function renderRooms() {
-    const list = document.getElementById('roomsList');
-    list.innerHTML = data.rooms.map(room => {
-        const isActive = room.id === currentRoomId;
-        const country = COUNTRIES[room.country];
-        return `
-            <div onclick="loadRoom('${room.id}')" class="p-2.5 rounded-lg mb-1.5 cursor-pointer transition ${isActive ? 'bg-indigo-600/20 border border-indigo-500/50' : 'hover:bg-slate-700/50'}">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2 flex-1 min-w-0">
-                        <span class="text-xl">${country.flag}</span>
-                        <div class="min-w-0 flex-1">
-                            <div class="font-semibold text-xs truncate">${room.name}</div>
-                            <div class="text-xs text-slate-400">${country.name}</div>
-                        </div>
-                    </div>
-                    <div class="text-xs bg-slate-700/50 px-1.5 py-0.5 rounded-full">
-                        ${(data.messages[room.id] || []).length}
-                    </div>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
-function loadRoom(roomId) {
-    currentRoomId = roomId;
-    const room = data.rooms.find(r => r.id === roomId);
-    if (!room) return;
-    
-    document.getElementById('currentRoomName').textContent = room.name;
-    document.getElementById('chatContainer').style.background = `linear-gradient(135deg, ${room.color} 0%, #1e293b 100%)`;
-    
-    if (room.welcome) {
-        document.getElementById('roomWelcome').classList.remove('hidden');
-        document.getElementById('roomWelcomeText').textContent = room.welcome;
-        if (currentUser.role === 'owner') {
-            document.getElementById('editRoomWelcomeBtn').classList.remove('hidden');
-        }
-    } else {
-        document.getElementById('roomWelcome').classList.add('hidden');
-    }
-    
-    renderMessages();
-    renderRooms();
-    closeRoomsSidebar();
-}
-
-function showCreateRoomModal() {
-    document.getElementById('createRoomModal').classList.remove('hidden');
-    document.getElementById('newRoomName').value = '';
-}
-
-function closeCreateRoomModal() {
-    document.getElementById('createRoomModal').classList.add('hidden');
-}
-
-function createRoom() {
-    const name = document.getElementById('newRoomName').value.trim();
-    const country = document.getElementById('newRoomCountry').value;
-    if (!name) return alert('الرجاء إدخال اسم الغرفة');
-    
-    const room = {
-        id: 'room_' + Date.now(),
-        name: name,
-        country: country,
-        color: '#0f172a',
-        welcome: '',
-        created: Date.now()
-    };
-    
-    data.rooms.push(room);
-    data.messages[room.id] = [];
-    saveData();
-    renderRooms();
-    closeCreateRoomModal();
-    loadRoom(room.id);
-}
-
-function deleteRoom() {
-    if (currentRoomId === 'general') {
-        return alert('لا يمكن حذف الغرفة العامة');
-    }
-    if (confirm('هل أنت متأكد من حذف هذه الغرفة؟')) {
-        data.rooms = data.rooms.filter(r => r.id !== currentRoomId);
-        delete data.messages[currentRoomId];
-        saveData();
-        closeRoomSettings();
-        loadRoom('general');
-        renderRooms();
-    }
-}
-
-function sendMessage() {
-    const input = document.getElementById('messageInput');
-    const text = input.value.trim();
-    if (!text) return;
-    
-    const message = {
-        id: 'msg_' + Date.now(),
-        userId: currentUser.id,
-        userName: currentUser.name,
-        userRole: currentUser.role,
-        text: text,
-        timestamp: Date.now()
-    };
-    
-    if (!data.messages[currentRoomId]) {
-        data.messages[currentRoomId] = [];
-    }
-    data.messages[currentRoomId].push(message);
-    saveData();
-    input.value = '';
-    renderMessages();
-}
-
-function renderMessages() {
-    const container = document.getElementById('messagesContainer');
-    const messages = data.messages[currentRoomId] || [];
-    
-    if (messages.length === 0) {
-        container.innerHTML = `
-            <div class="text-center text-slate-500 text-xs pt-10">
-                <i class="fa-solid fa-face-smile text-3xl mb-2 block"></i>
-                ابدأ المحادثة الآن!
-            </div>
-        `;
-        return;
-    }
-    
-    container.innerHTML = messages.map(msg => {
-        const isOwn = msg.userId === currentUser.id;
-        const time = new Date(msg.timestamp).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
-        const isOwner = msg.userRole === 'owner';
-        
-        return `
-            <div class="message-anim flex ${isOwn ? 'justify-start' : 'justify-end'}">
-                <div class="max-w-[75%] ${isOwn ? 'order-2' : 'order-1'}">
-                    <div class="mb-1 text-xs text-slate-400 ${isOwn ? 'text-right' : 'text-left'}">
-                        ${isOwner ? `<span class="owner-name"><i class="fa-solid fa-crown text-xs"></i>${msg.userName}</span>` : msg.userName}
-                        <span class="badge ${getRoleBadgeClass(msg.userRole)}">${getRoleName(msg.userRole)}</span>
-                    </div>
-                    <div class="px-3 py-2 rounded-2xl ${isOwn ? 'bg-indigo-600 rounded-tr-sm' : 'glass rounded-tl-sm'} shadow-lg">
-                        <div class="text-sm break-words leading-relaxed" style="text-align: right; direction: rtl;">${msg.text}</div>
-                        <div class="text-xs opacity-60 mt-0.5 text-left">${time}</div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }).join('');
-    
-    setTimeout(() => {
-        container.scrollTop = container.scrollHeight;
-    }, 0);
-}
-
-function getRoleBadgeClass(role) {
-    const classes = {
-        guest: 'bg-slate-600 text-slate-200',
-        member: 'bg-slate-600 text-slate-200',
-        admin: 'bg-cyan-600/30 text-cyan-300',
-        superadmin: 'bg-purple-600/30 text-purple-300',
-        master: 'bg-amber-600/30 text-amber-300',
-        owner: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
-    };
-    return classes[role] || classes.member;
-}
-
-function renderUsers() {
-    const list = document.getElementById('usersList');
-    const onlineUsers = [currentUser, ...data.users.filter(u => u.id !== currentUser.id)].slice(0, 20);
-    
+// Realtime Listeners
+function initRealtimeListeners() {
+  // Welcome message
+  onValue(ref(db, 'settings/welcomeMessage'), (snap) => {
+    document.getElementById('welcomeMessage').textContent = snap.val() || 'مرحباً بكم';
+  });
+  
+  // Rooms
+  unsubscribeRooms = onValue(ref(db, 'rooms'), (snap) => {
+    const rooms = snap.val() || {};
+    renderRooms(rooms);
+  });
+  
+  // Online Users
+  unsubscribeUsers = onValue(ref(db, 'users'), (snap) => {
+    const users = snap.val() || {};
+    const onlineUsers = Object.entries(users).filter(([uid, u]) => u.online);
     document.getElementById('onlineCount').textContent = onlineUsers.length;
+    renderOnlineUsers(onlineUsers);
+  });
+  
+  // Messages for current room
+  loadMessages(currentRoom);
+}
+
+// Load Messages
+function loadMessages(roomId) {
+  if (unsubscribeMessages) unsubscribeMessages();
+  
+  const messagesRef = query(ref(db, `messages/${roomId}`), orderByChild('timestamp'), limitToLast(100));
+  unsubscribeMessages = onValue(messagesRef, (snap) => {
+    const messages = [];
+    snap.forEach((child) => {
+      messages.push({ id: child.key, ...child.val() });
+    });
+    renderMessages(messages);
+  });
+}
+
+// Render Rooms
+function renderRooms(rooms) {
+  const container = document.getElementById('roomsList');
+  container.innerHTML = '';
+  
+  Object.entries(rooms).forEach(([id, room]) => {
+    const isActive = id === currentRoom;
+    const div = document.createElement('div');
+    div.className = `flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all ${isActive ? 'bg-slate-700/70' : 'hover:bg-slate-700/50'}`;
+    div.innerHTML = `
+      <div class="flex items-center gap-3 flex-1 min-w-0">
+        <div class="w-2 h-2 rounded-full" style="background-color: ${room.color}"></div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold truncate">${room.name}</p>
+          <p class="text-xs text-slate-400 truncate">${room.welcome || ''}</p>
+        </div>
+      ${(currentUser?.rank === 'owner' && id !== 'general') ? `
+        <button class="delete-room-btn p-1.5 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors" data-room="${id}">
+          <i class="fa-solid fa-trash text-xs"></i>
+        </button>
+      ` : ''}
+    `;
     
-    list.innerHTML = onlineUsers.map(user => {
-        const isOwner = user.role === 'owner';
-        const canEditRole = currentUser.role === 'owner' && user.id !== currentUser.id;
-        
-        return `
-            <div class="p-2 rounded-lg mb-1 hover:bg-slate-700/50 transition ${canEditRole ? 'cursor-pointer' : ''}" ${canEditRole ? `onclick="showUserRoleModal('${user.id}')"` : ''}>
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2 flex-1 min-w-0">
-                        <div class="w-7 h-7 bg-gradient-to-br from-indigo-600 to-violet-600 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">
-                            ${user.name.charAt(0)}
-                        </div>
-                        <div class="min-w-0 flex-1">
-                            <div class="font-semibold text-xs truncate">
-                                ${isOwner ? `<span class="owner-name"><i class="fa-solid fa-crown text-xs"></i>${user.name}</span>` : user.name}
-                            </div>
-                            <div class="text-xs text-slate-400">${getRoleName(user.role)}</div>
-                        </div>
-                    </div>
-                    <div class="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
-function showUserRoleModal(userId) {
-    selectedUserId = userId;
-    const user = data.users.find(u => u.id === userId);
-    document.getElementById('roleUserName').textContent = user.name;
-    document.getElementById('userRoleModal').classList.remove('hidden');
-}
-
-function closeUserRoleModal() {
-    document.getElementById('userRoleModal').classList.add('hidden');
-    selectedUserId = null;
-}
-
-function setUserRole(role) {
-    if (!selectedUserId) return;
-    const user = data.users.find(u => u.id === selectedUserId);
-    user.role = role;
-    saveData();
-    closeUserRoleModal();
-    renderUsers();
-    renderMessages();
-}
-
-function showRoomSettings() {
-    const room = data.rooms.find(r => r.id === currentRoomId);
-    document.getElementById('roomWelcomeInput').value = room.welcome || '';
-    document.getElementById('statsMessages').textContent = (data.messages[currentRoomId] || []).length;
-    document.getElementById('statsUsers').textContent = data.users.length;
-    document.getElementById('roomSettingsModal').classList.remove('hidden');
-}
-
-function closeRoomSettings() {
-    document.getElementById('roomSettingsModal').classList.add('hidden');
-}
-
-function setRoomTheme(color) {
-    const room = data.rooms.find(r => r.id === currentRoomId);
-    room.color = color;
-    saveData();
-    document.getElementById('chatContainer').style.background = `linear-gradient(135deg, ${color} 0%, #1e293b 100%)`;
-}
-
-function saveRoomSettings() {
-    const room = data.rooms.find(r => r.id === currentRoomId);
-    room.welcome = document.getElementById('roomWelcomeInput').value.trim();
-    saveData();
-    closeRoomSettings();
-    loadRoom(currentRoomId);
-}
-
-function editRoomWelcome() {
-    showRoomSettings();
-}
-
-function updateGlobalWelcome() {
-    if (data.settings.globalWelcome) {
-        document.getElementById('globalWelcomeBar').classList.remove('hidden');
-        document.getElementById('globalWelcomeText').textContent = data.settings.globalWelcome;
+    div.addEventListener('click', (e) => {
+      if (!e.target.closest('.delete-room-btn')) {
+        switchRoom(id, room);
+      }
+    });
+    
+    const deleteBtn = div.querySelector('.delete-room-btn');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        deleteRoom(id);
+      });
     }
+    
+    container.appendChild(div);
+  });
+  
+  // Update current room name
+  const room = rooms[currentRoom];
+  if (room) {
+    document.getElementById('currentRoomName').textContent = room.name;
+    document.getElementById('currentRoomName').style.color = room.color;
+  }
 }
 
-function editGlobalWelcome() {
-    document.getElementById('welcomeTextInput').value = data.settings.globalWelcome;
-    document.getElementById('welcomeEditModal').classList.remove('hidden');
+// Switch Room
+function switchRoom(roomId, room) {
+  currentRoom = roomId;
+  document.getElementById('currentRoomName').textContent = room.name;
+  document.getElementById('currentRoomName').style.color = room.color;
+  loadMessages(roomId);
+  renderRooms({}); // Trigger re-render to update active state
+  get(ref(db, 'rooms')).then(snap => renderRooms(snap.val() || {}));
 }
 
-function closeWelcomeEdit() {
-    document.getElementById('welcomeEditModal').classList.add('hidden');
+// Delete Room
+async function deleteRoom(roomId) {
+  if (roomId === 'general') {
+    alert('لا يمكن حذف الغرفة العامة');
+    return;
+  }
+  if (confirm('هل تريد حذف هذه الغرفة وجميع رسائلها؟')) {
+    await remove(ref(db, `rooms/${roomId}`));
+    await remove(ref(db, `messages/${roomId}`));
+    if (currentRoom === roomId) {
+      switchRoom('general', { name: 'الغرفة العامة', color: '#0ea5e9' });
+    }
+  }
 }
 
-function saveGlobalWelcome() {
-    data.settings.globalWelcome = document.getElementById('welcomeTextInput').value.trim();
-    saveData();
-    updateGlobalWelcome();
-    closeWelcomeEdit();
+// Render Online Users
+function renderOnlineUsers(users) {
+  const container = document.getElementById('onlineUsersList');
+  container.innerHTML = '';
+  
+  users.sort((a, b) => {
+    const rankA = RANKS[a[1].rank]?.level || 0;
+    const rankB = RANKS[b[1].rank]?.level || 0;
+    return rankB - rankA;
+  });
+  
+  users.forEach(([uid, user]) => {
+    const rankInfo = RANKS[user.rank] || RANKS.guest;
+    const div = document.createElement('div');
+    div.className = 'flex items-center gap-2 p-2 rounded-lg hover:bg-slate-700/50 transition-colors';
+    div.innerHTML = `
+      <div class="relative">
+        <div class="w-8 h-8 bg-gradient-to-br from-sky-500 to-indigo-500 rounded-lg flex items-center justify-center text-white text-sm font-bold">
+          ${user.username.charAt(0).toUpperCase()}
+        </div>
+        <div class="online-dot absolute -bottom-0.5 -left-0.5 w-3 h-3 bg-green-500 border-2 border-slate-800 rounded-full"></div>
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-1">
+          <p class="text-sm font-medium truncate">${user.username}</p>
+          <span class="text-xs">${COUNTRIES[user.country]?.flag || ''}</span>
+        </div>
+        <div class="flex items-center gap-1">
+          <i class="fa-solid ${rankInfo.icon} text-xs ${rankInfo.color}"></i>
+          <p class="text-xs ${rankInfo.color}">${rankInfo.name}</p>
+        </div>
+      </div>
+    `;
+    container.appendChild(div);
+  });
 }
 
-function toggleRoomsSidebar() {
-    const sidebar = document.getElementById('roomsSidebar');
-    sidebar.classList.toggle('-mr-64');
-    sidebar.classList.toggle('mr-0');
+// Render Messages
+function renderMessages(messages) {
+  const container = document.getElementById('messagesContainer');
+  container.innerHTML = '';
+  
+  if (messages.length === 0) {
+    container.innerHTML = `
+      <div class="flex flex-col items-center justify-center h-full text-slate-500">
+        <i class="fa-regular fa-comments text-5xl mb-4"></i>
+        <p class="text-sm">لا توجد رسائل بعد. كن أول من يرسل!</p>
+      </div>
+    `;
+    return;
+  }
+  
+  messages.forEach((msg) => {
+    const isOwn = msg.senderId === currentUser?.uid;
+    const rankInfo = RANKS[msg.senderRank] || RANKS.guest;
+    const time = new Date(msg.timestamp).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
+    
+    const div = document.createElement('div');
+    div.className = `msg-enter flex gap-3 ${isOwn ? 'flex-row-reverse' : ''}`;
+    div.innerHTML = `
+      <div class="flex-shrink-0">
+        <div class="w-10 h-10 bg-gradient-to-br from-sky-500 to-indigo-500 rounded-xl flex items-center justify-center text-white font-bold shadow-lg">
+          ${msg.senderName.charAt(0).toUpperCase()}
+        </div>
+      </div>
+      <div class="flex-1 max-w-[75%] ${isOwn ? 'items-end' : 'items-start'} flex flex-col">
+        <div class="flex items-center gap-2 mb-1 ${isOwn ? 'flex-row-reverse' : ''}">
+          <span class="font-semibold text-sm ${rankInfo.color}">${msg.senderName}</span>
+          <span class="text-xs">${COUNTRIES[msg.senderCountry]?.flag || ''}</span>
+          <i class="fa-solid ${rankInfo.icon} text-xs ${rankInfo.color}"></i>
+          <span class="text-xs text-slate-500">${time}</span>
+        </div>
+        <div class="bg-slate-800/70 backdrop-blur-sm px-4 py-2.5 rounded-2xl ${isOwn ? 'rounded-tl-sm' : 'rounded-tr-sm'}">
+          <p class="text-sm leading-relaxed break-words">${escapeHtml(msg.text)}</p>
+        </div>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+  
+  container.scrollTop = container.scrollHeight;
 }
 
-function closeRoomsSidebar() {
-    document.getElementById('roomsSidebar').classList.add('-mr-64');
-    document.getElementById('roomsSidebar').classList.remove('mr-0');
+// Send Message
+document.getElementById('messageForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const input = document.getElementById('messageInput');
+  const text = input.value.trim();
+  
+  if (!text || !currentUser) return;
+  
+  const sendBtn = document.getElementById('sendBtn');
+  sendBtn.disabled = true;
+  
+  try {
+    await push(ref(db, `messages/${currentRoom}`), {
+      text,
+      senderId: currentUser.uid,
+      senderName: currentUser.username,
+      senderRank: currentUser.rank,
+      senderCountry: currentUser.country,
+      timestamp: serverTimestamp()
+    });
+    input.value = '';
+    input.style.height = 'auto';
+  } catch (error) {
+    console.error('Send error:', error);
+    alert('فشل إرسال الرسالة');
+  } finally {
+    sendBtn.disabled = false;
+  }
+});
+
+// Auto-resize textarea
+document.getElementById('messageInput').addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+});
+
+// Create Room Modal
+document.getElementById('createRoomBtn').addEventListener('click', () => {
+  document.getElementById('createRoomModal').classList.remove('hidden');
+});
+
+document.getElementById('cancelRoomBtn').addEventListener('click', () => {
+  document.getElementById('createRoomModal').classList.add('hidden');
+  document.getElementById('createRoomForm').reset();
+});
+
+document.querySelectorAll('.room-color-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.room-color-btn').forEach(b => b.classList.remove('ring-2', 'ring-white'));
+    btn.classList.add('ring-2', 'ring-white');
+    selectedRoomColor = btn.dataset.color;
+  });
+});
+
+document.getElementById('createRoomForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name = document.getElementById('roomNameInput').value.trim();
+  const welcome = document.getElementById('roomWelcomeInput').value.trim();
+  
+  if (!name) return;
+  
+  const roomId = name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+  
+  try {
+    await set(ref(db, `rooms/${roomId}`), {
+      name,
+      welcome: welcome || `مرحباً بكم في ${name}`,
+      color: selectedRoomColor,
+      createdBy: currentUser.uid,
+      createdAt: serverTimestamp()
+    });
+    
+    document.getElementById('createRoomModal').classList.add('hidden');
+    document.getElementById('createRoomForm').reset();
+  } catch (error) {
+    console.error('Create room error:', error);
+    alert('فشل إنشاء الغرفة');
+  }
+});
+
+// Edit Welcome Modal
+document.getElementById('editWelcomeBtn').addEventListener('click', async () => {
+  const snap = await get(ref(db, 'settings/welcomeMessage'));
+  document.getElementById('welcomeTextInput').value = snap.val() || '';
+  document.getElementById('editWelcomeModal').classList.remove('hidden');
+});
+
+document.getElementById('cancelWelcomeBtn').addEventListener('click', () => {
+  document.getElementById('editWelcomeModal').classList.add('hidden');
+});
+
+document.getElementById('editWelcomeForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const text = document.getElementById('welcomeTextInput').value.trim();
+  
+  try {
+    await set(ref(db, 'settings/welcomeMessage'), text || 'مرحباً بكم في الدردشة العربية');
+    document.getElementById('editWelcomeModal').classList.add('hidden');
+  } catch (error) {
+    console.error('Update welcome error:', error);
+    alert('فشل تحديث الرسالة');
+  }
+});
+
+// Toggle Sidebar Mobile
+document.getElementById('toggleSidebar').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('translate-x-full');
+});
+
+// Close sidebar on click outside mobile
+document.addEventListener('click', (e) => {
+  const sidebar = document.getElementById('sidebar');
+  const toggleBtn = document.getElementById('toggleSidebar');
+  if (window.innerWidth < 1024 && !sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
+    sidebar.classList.add('translate-x-full');
+  }
+});
+
+// Utility
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
 }
 
-function toggleUsersSidebar() {
-    const sidebar = document.getElementById('usersSidebar');
-    sidebar.classList.toggle('-ml-64');
-    sidebar.classList.toggle('ml-0');
-}
-
-init();
+// Close modals on backdrop click
+document.querySelectorAll('.modal-backdrop').forEach(modal => {
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.classList.add('hidden');
+    }
+  });
+});
 </script>
+
 </body>
 </html>
