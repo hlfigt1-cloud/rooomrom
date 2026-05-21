@@ -1,5 +1,419 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>دردشة عربية | Chat Arab</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+    * { font-family: 'Cairo', sans-serif; }
+  html, body { height: 100%; overflow: hidden; position: fixed; width: 100%; }
+  #app { height: 100dvh; height: 100vh; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: #1e293b; }
+  ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+ .msg-enter { animation: slideIn 0.2s ease-out; }
+  @keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 rgba(34, 197, 94, 0); } }
+ .online-dot { animation: pulse-ring 2s infinite; }
+  @keyframes owner-glow {
+    0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.6), 0 0 40px rgba(251, 191, 36, 0.3); transform: scale(1); }
+    50% { box-shadow: 0 0 30px rgba(251, 191, 36, 0.9), 0 0 60px rgba(251, 191, 36, 0.5); transform: scale(1.05); }
+  }
+ .owner-badge { animation: owner-glow 2s infinite; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); }
+ .gradient-text { background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+ .rank-owner { color: #fbbf24; text-shadow: 0 0 10px rgba(251, 191, 36, 0.5); }
+ .rank-master { color: #f87171; }
+ .rank-superadmin { color: #c084fc; }
+ .rank-admin { color: #60a5fa; }
+ .rank-member { color: #34d399; }
+ .rank-guest { color: #94a3b8; }
+ .modal-backdrop { backdrop-filter: blur(8px); }
+  #messageInput { font-size: 16px; }
+ .chat-input-container { padding-bottom: env(safe-area-inset-bottom); }
+ .premium-room { background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%); border: 1px solid rgba(251, 191, 36, 0.3); }
+ .context-menu { min-width: 200px; }
+ .expired-room { opacity: 0.5; pointer-events: none; }
+ .muted-msg { opacity: 0.4; }
+</style>
+</head>
+<body class="bg-[#0f172a] text-slate-100">
+<div id="app" class="flex flex-col">
 
-      </ma
+  <!-- Login Screen -->
+  <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div class="w-full max-w-md mx-4">
+      <div class="bg-slate-800/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-700/50 p-8">
+        <div class="text-center mb-8">
+          <div class="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-sky-500 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg shadow-sky-500/30">
+            <i class="fa-solid fa-comments text-3xl text-white"></i>
+          </div>
+          <h1 class="text-3xl font-bold gradient-text mb-2">دردشة عربية</h1>
+          <p class="text-slate-400 text-sm">تواصل مع أصدقائك في جميع أنحاء الوطن العربي</p>
+        </div>
+
+        <form id="loginForm" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-2">الاسم المستعار</label>
+            <input id="usernameInput" type="text" required minlength="3" maxlength="20"
+              class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+              placeholder="أدخل اسمك">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-2">الدولة</label>
+            <select id="countrySelect" required
+              class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all">
+              <option value="">اختر دولتك</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-2">كود الدخول <span class="text-slate-500 text-xs">(اختياري للرتب)</span></label>
+            <input id="rankCodeInput" type="password"
+              class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+              placeholder="كود المالك/الماستر/السوبر">
+          </div>
+
+          <button type="submit" id="loginBtn"
+            class="w-full py-3 bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-600 hover:to-indigo-600 text-white font-semibold rounded-xl shadow-lg shadow-sky-500/30 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]">
+            <i class="fa-solid fa-right-to-bracket ml-2"></i>
+            دخول الدردشة
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="mainApp" class="hidden flex flex-col" style="height: 100dvh;">
+
+    <!-- Welcome Bar -->
+    <div id="welcomeBar" class="bg-gradient-to-l from-sky-600/20 to-indigo-600/20 border-b border-slate-700/50 px-4 py-2 flex-shrink-0">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2 text-sm">
+          <i class="fa-solid fa-bullhorn text-sky-400"></i>
+          <span id="welcomeMessage" class="text-slate-300">مرحباً بكم في الدردشة العربية</span>
+        </div>
+        <button id="editWelcomeBtn" class="hidden text-xs px-2 py-1 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors">
+          <i class="fa-solid fa-pen ml-1"></i>تعديل
+        </button>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-slate-800/50 backdrop-blur-xl border-b border-slate-700/50 px-4 py-3 flex-shrink-0">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <button id="toggleSidebar" class="lg:hidden p-2 hover:bg-slate-700 rounded-lg transition-colors">
+            <i class="fa-solid fa-bars text-xl"></i>
+          </button>
+          <div class="w-10 h-10 bg-gradient-to-br from-sky-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-sky-500/20">
+            <i class="fa-solid fa-comments text-white"></i>
+          </div>
+          <div>
+            <h1 class="text-lg font-bold gradient-text">دردشة عربية</h1>
+            <p id="currentRoomName" class="text-xs text-slate-400">الغرفة العامة</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button id="manageRanksBtn" class="hidden p-2 hover:bg-amber-500/20 text-amber-400 rounded-lg transition-colors" title="إدارة الرتب">
+            <i class="fa-solid fa-crown"></i>
+          </button>
+          <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-700/50 rounded-lg">
+            <div class="online-dot w-2 h-2 bg-green-500 rounded-full"></div>
+            <span id="onlineCount" class="text-sm text-slate-300">0</span>
+            <span class="text-sm text-slate-400">متصل</span>
+          </div>
+
+          <button id="logoutBtn" class="p-2 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors" title="تسجيل خروج">
+            <i class="fa-solid fa-right-from-bracket"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex overflow-hidden">
+
+      <!-- Sidebar -->
+      <aside id="sidebar" class="fixed lg:relative inset-y-0 right-0 z-40 w-72 bg-slate-800/95 lg:bg-slate-800/50 backdrop-blur-xl border-l border-slate-700/50 transform translate-x-full lg:translate-x-0 transition-transform duration-300 flex flex-col">
+
+        <!-- User Profile -->
+        <div class="p-4 border-b border-slate-700/50">
+          <div class="flex items-center gap-3">
+            <div class="relative">
+              <div id="userAvatar" class="w-12 h-12 bg-gradient-to-br from-sky-500 to-indigo-500 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg"></div>
+              <div class="online-dot absolute -bottom-1 -left-1 w-4 h-4 bg-green-500 border-2 border-slate-800 rounded-full"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <p id="userDisplayName" class="font-bold text-white truncate"></p>
+                <i id="userFlag" class="text-lg"></i>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <i id="userRankIcon" class="fa-solid fa-star text-xs"></i>
+                <p id="userRankText" class="text-xs text-slate-400"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rooms Section -->
+        <div class="flex-1 overflow-y-auto p-4">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider">الغرف</h2>
+            <div class="flex gap-1">
+              <button id="createPremiumRoomBtn" class="hidden p-1.5 hover:bg-amber-500/20 text-amber-400 rounded-lg transition-colors" title="غرفة مميزة">
+                <i class="fa-solid fa-gem text-sm"></i>
+              </button>
+              <button id="createRoomBtn" class="hidden p-1.5 hover:bg-slate-700 rounded-lg transition-colors text-sky-400" title="إنشاء غرفة">
+                <i class="fa-solid fa-plus text-sm"></i>
+              </button>
+            </div>
+          <div id="roomsList" class="space-y-1"></div>
+
+          <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mt-6 mb-3">المتصلون</h2>
+          <div id="onlineUsersList" class="space-y-1"></div>
+        </div>
+
+      </aside>
+
+      <!-- Chat Area -->
+      <main class="flex-1 flex flex-col bg-slate-900/30">
+
+        <!-- Messages -->
+        <div id="messagesContainer" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
+
+        <!-- Message Input -->
+        <div class="p-4 border-t border-slate-700/50 bg-slate-800/30 backdrop-blur-xl chat-input-container flex-shrink-0">
+          <form id="messageForm" class="flex items-end gap-2">
+            <div class="flex-1 bg-slate-700/50 rounded-xl border border-slate-600 focus-within:border-sky-500 transition-colors">
+              <textarea id="messageInput" rows="1" maxlength="1000"
+                class="w-full px-4 py-3 bg-transparent text-white placeholder-slate-500 resize-none focus:outline-none"
+                placeholder="اكتب رسالتك هنا..."></textarea>
+            </div>
+            <button type="submit" id="sendBtn"
+              class="p-3 bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-600 hover:to-indigo-600 text-white rounded-xl shadow-lg shadow-sky-500/30 transition-all duration-200 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+              <i class="fa-solid fa-paper-plane"></i>
+            </button>
+          </form>
+          <div id="muteNotice" class="hidden mt-2 text-xs text-red-400 text-center">
+            <i class="fa-solid fa-microphone-slash ml-1"></i>تم إيقافك عن الكلام
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+</div>
+
+<!-- Modals -->
+<div id="createRoomModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop bg-black/50">
+  <div class="bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-md mx-4 p-6">
+    <h3 class="text-xl font-bold mb-4">إنشاء غرفة جديدة</h3>
+    <form id="createRoomForm" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-2">اسم الغرفة</label>
+        <input id="roomNameInput" type="text" required maxlength="30"
+          class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-xl text-white focus:ring-2 focus:ring-sky-500 focus:outline-none">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-2">رسالة الترحيب</label>
+        <input id="roomWelcomeInput" type="text" maxlength="100"
+          class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-xl text-white focus:ring-2 focus:ring-sky-500 focus:outline-none">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-2">لون الغرفة</label>
+        <div class="grid grid-cols-6 gap-2">
+          <button type="button" class="room-color-btn w-full aspect-square rounded-lg bg-sky-500 ring-2 ring-white" data-color="#0ea5e9"></button>
+          <button type="button" class="room-color-btn w-full aspect-square rounded-lg bg-purple-500" data-color="#a855f7"></button>
+          <button type="button" class="room-color-btn w-full aspect-square rounded-lg bg-pink-500" data-color="#ec4899"></button>
+          <button type="button" class="room-color-btn w-full aspect-square rounded-lg bg-green-500" data-color="#22c55e"></button>
+          <button type="button" class="room-color-btn w-full aspect-square rounded-lg bg-yellow-500" data-color="#eab308"></button>
+          <button type="button" class="room-color-btn w-full aspect-square rounded-lg bg-red-500" data-color="#ef4444"></button>
+        </div>
+      <div class="flex gap-2 pt-2">
+        <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-sky-500 to-indigo-500 text-white font-semibold rounded-xl">إنشاء</button>
+        <button type="button" id="cancelRoomBtn" class="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl">إلغاء</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="createPremiumRoomModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop bg-black/50">
+  <div class="bg-slate-800 rounded-2xl shadow-2xl border border-amber-500/30 w-full max-w-md mx-4 p-6">
+    <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+      <i class="fa-solid fa-gem text-amber-400"></i>إنشاء غرفة مميزة
+    </h3>
+    <form id="createPremiumRoomForm" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-2">اسم الغرفة المميزة</label>
+        <input id="premiumRoomNameInput" type="text" required maxlength="30"
+          class="w-full px-4 py-3 bg-slate-900/50 border border-amber-500/50 rounded-xl text-white focus:ring-2 focus:ring-amber-500 focus:outline-none">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-2">رسالة الترحيب</label>
+        <input id="premiumRoomWelcomeInput" type="text" maxlength="100"
+          class="w-full px-4 py-3 bg-slate-900/50 border border-amber-500/50 rounded-xl text-white focus:ring-2 focus:ring-amber-500 focus:outline-none">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-2">تاريخ انتهاء الصلاحية</label>
+        <input id="premiumRoomExpiryInput" type="date" required
+          class="w-full px-4 py-3 bg-slate-900/50 border border-amber-500/50 rounded-xl text-white focus:ring-2 focus:ring-amber-500 focus:outline-none">
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-semibold rounded-xl">إنشاء مميزة</button>
+        <button type="button" id="cancelPremiumRoomBtn" class="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl">إلغاء</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="manageRanksModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop bg-black/50">
+  <div class="bg-slate-800 rounded-2xl shadow-2xl border border-amber-500/30 w-full max-w-lg mx-4 p-6 max-h-96 overflow-y-auto">
+    <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+      <i class="fa-solid fa-crown text-amber-400"></i>إدارة الرتب والرموز
+    </h3>
+    <form id="manageRanksForm" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-2">كود الماستر</label>
+        <input id="masterCodeInput" type="text"
+          class="w-full px-4 py-3 bg-slate-900/50 border border-red-500/50 rounded-xl text-white focus:ring-2 focus:ring-red-500 focus:outline-none"
+          placeholder="كود رتبة الماستر">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-2">كود السوبر أدمن</label>
+        <input id="superadminCodeInput" type="text"
+          class="w-full px-4 py-3 bg-slate-900/50 border border-purple-500/50 rounded-xl text-white focus:ring-2 focus:ring-purple-500 focus:outline-none"
+          placeholder="كود رتبة السوبر أدمن">
+      </div>
+      <div class="bg-slate-900/50 rounded-xl p-4">
+        <p class="text-sm text-slate-400 mb-2">الرتب الحالية:</p>
+        <div id="currentRankCodes" class="space-y-2 text-xs"></div>
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-semibold rounded-xl">حفظ الرموز</button>
+        <button type="button" id="cancelManageRanksBtn" class="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl">إلغاء</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="userContextMenu" class="hidden fixed z-50 context-menu bg-slate-800 rounded-xl shadow-2xl border border-slate-700 overflow-hidden">
+  <div class="py-2">
+    <button class="user-action-btn w-full px-4 py-2 text-right hover:bg-slate-700 transition-colors flex items-center gap-3" data-action="kick">
+      <i class="fa-solid fa-person-walking-arrow-right text-orange-400"></i><span>طرد من الغرفة</span>
+    </button>
+    <button class="user-action-btn w-full px-4 py-2 text-right hover:bg-slate-700 transition-colors flex items-center gap-3" data-action="mute">
+      <i class="fa-solid fa-microphone-slash text-yellow-400"></i><span>إيقاف عن الكلام</span>
+    </button>
+    <button class="user-action-btn w-full px-4 py-2 text-right hover:bg-slate-700 transition-colors flex items-center gap-3" data-action="unmute">
+      <i class="fa-solid fa-microphone text-green-400"></i><span>إلغاء الإيقاف</span>
+    </button>
+    <button class="user-action-btn w-full px-4 py-2 text-right hover:bg-slate-700 transition-colors flex items-center gap-3" data-action="ban">
+      <i class="fa-solid fa-ban text-red-400"></i><span>حظر من الدردشة</span>
+    </button>
+    <div class="border-t border-slate-700 my-1"></div>
+    <button class="user-action-btn w-full px-4 py-2 text-right hover:bg-slate-700 transition-colors flex items-center gap-3" data-action="grant-master">
+      <i class="fa-solid fa-star text-red-400"></i><span>منح رتبة ماستر</span>
+    </button>
+    <button class="user-action-btn w-full px-4 py-2 text-right hover:bg-slate-700 transition-colors flex items-center gap-3" data-action="grant-superadmin">
+      <i class="fa-solid fa-shield-halved text-purple-400"></i><span>منح رتبة سوبر أدمن</span>
+    </button>
+    <button class="user-action-btn w-full px-4 py-2 text-right hover:bg-slate-700 transition-colors flex items-center gap-3" data-action="remove-rank">
+      <i class="fa-solid fa-user-minus text-slate-400"></i><span>إزالة الرتبة</span>
+    </button>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "firebase/app": "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js",
+    "firebase/auth": "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js",
+    "firebase/database": "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"
+  }
+}
+</script>
+
+<script type="module">
+import { initializeApp } from 'firebase/app';
+import { getAuth, signInAnonymously, onAuthStateChanged, signOut } from 'firebase/auth';
+import { getDatabase, ref, set, push, onValue, onDisconnect, serverTimestamp, remove, get, update } from 'firebase/database';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAGpES78mV7-jgEQzi63R0TONGKfUQHFHc",
+  authDomain: "hashed-cht.firebaseapp.com",
+  databaseURL: "https://hashed-cht-default-rtdb.firebaseio.com",
+  projectId: "hashed-cht",
+  storageBucket: "hashed-cht.firebasestorage.app",
+  messagingSenderId: "442699332645",
+  appId: "1:442699332645:web:08d332758ac215a07453cc"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+const OWNER_CODE = "19952005";
+const COUNTRIES = {
+  'Iraq': { name: 'العراق', flag: '🇮🇶' }, 'Saudi': { name: 'السعودية', flag: '🇸🇦' }, 'Egypt': { name: 'مصر', flag: '🇪🇬' },
+  'UAE': { name: 'الإمارات', flag: '🇦🇪' }, 'Jordan': { name: 'الأردن', flag: '🇯🇴' }, 'Morocco': { name: 'المغرب', flag: '🇲🇦' },
+  'Palestine': { name: 'فلسطين', flag: '🇵🇸' }, 'Lebanon': { name: 'لبنان', flag: '🇱🇧' }, 'Kuwait': { name: 'الكويت', flag: '🇰🇼' },
+  'Qatar': { name: 'قطر', flag: '🇶🇦' }, 'Oman': { name: 'عمان', flag: '🇴🇲' }, 'Bahrain': { name: 'البحرين', flag: '🇧🇭' },
+  'Syria': { name: 'سوريا', flag: '🇸🇾' }, 'Yemen': { name: 'اليمن', flag: '🇾🇪' }, 'Algeria': { name: 'الجزائر', flag: '🇩🇿' },
+  'Tunisia': { name: 'تونس', flag: '🇹🇳' }, 'Libya': { name: 'ليبيا', flag: '🇱🇾' }
+};
+
+const RANKS = {
+  owner: { name: 'مالك', icon: 'fa-crown', color: 'rank-owner', level: 5, protected: true },
+  master: { name: 'ماستر', icon: 'fa-star', color: 'rank-master', level: 4 },
+  superadmin: { name: 'سوبر أدمن', icon: 'fa-shield-halved', color: 'rank-superadmin', level: 3 },
+  admin: { name: 'أدمن', icon: 'fa-shield', color: 'rank-admin', level: 2 },
+  member: { name: 'عضو', icon: 'fa-user', color: 'rank-member', level: 1 },
+  guest: { name: 'زائر', icon: 'fa-user', color: 'rank-guest', level: 0 }
+};
+
+let currentUser = null;
+let currentRoom = 'general';
+let selectedRoomColor = '#0ea5e9';
+let unsubscribeMessages = null;
+let unsubscribeUsers = null;
+let unsubscribeRooms = null;
+let rankCodes = { master: '', superadmin: '' };
+let selectedUserForAction = null;
+
+// Populate countries - Fixed
+function populateCountries() {
+  const countrySelect = document.getElementById('countrySelect');
+  if (countrySelect && countrySelect.options.length <= 1) {
+    Object.entries(COUNTRIES).forEach(([code, data]) => {
+      const option = document.createElement('option');
+      option.value = code;
+      option.textContent = `${data.flag} ${data.name}`;
+      countrySelect.appendChild(option);
+    });
+  }
+}
+document.addEventListener('DOMContentLoaded', populateCountries);
+setTimeout(populateCountries, 100);
+
+// Load rank codes
+onValue(ref(db, 'settings/rankCodes'), (snap) => {
+  rankCodes = snap.val() || { master: '', superadmin: '' };
+  updateRankCodesDisplay();
+});
+
+function updateRankCodesDisplay() {
+  const container = document.getElementById('currentRankCodes');
+  if (!container) return;
+  container.innerHTML = `
     <div class="flex justify-between"><span class="text-red-400">ماستر:</span><span class="text-slate-300">${rankCodes.master || 'غير محدد'}</span></div>
     <div class="flex justify-between"><span class="text-purple-400">سوبر أدمن:</span><span class="text-slate-300">${rankCodes.superadmin || 'غير محدد'}</span></div>
   `;
@@ -125,6 +539,19 @@ function updateUserProfile() {
     document.getElementById('createRoomBtn').classList.remove('hidden');
   }
   
-  // Mute check
+  // Check mute status
   if (currentUser.muted) {
-    document.getElementBy
+    document.getElementById('muteNotice').classList.remove('hidden');
+    document.getElementById('messageInput').disabled = true;
+    document.getElementById('sendBtn').disabled = true;
+  } else {
+    document.getElementById('muteNotice').classList.add('hidden');
+    document.getElementById('messageInput').disabled = false;
+    document.getElementById('sendBtn').disabled = false;
+  }
+}
+
+async function initDefaultRoom() {
+  const generalRoomRef = ref(db, 'rooms/general');
+  const snap = await get(generalRoomRef);
+  if (!snap
