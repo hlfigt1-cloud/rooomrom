@@ -1,2565 +1,1985 @@
-                        <span class="flex items-center gap-2">
-                            <i class="fas fa-hashtag text-xs text-purple-400"></i>
-                            ${room.name}
-                        </span>
-                        ${room.master ? '<i class="fas fa-star text-xs text-red-400" title="لها ماستر"></i>' : ''}
-                    </div>
-                    <div class="text-xs text-slate-500 mt-1">تنتهي خلال ${daysLeft > 0 ? daysLeft : 0} يوم</div>
-                `;
-                container.appendChild(roomBtn);
-            });
-        }
-
-        function toggleCountry(countryId) {
-            const roomsDiv = document.getElementById(`rooms-${countryId}`);
-            const arrow = document.querySelector(`.country-arrow[data-country="${countryId}"]`);
-            const isOpen = openCountries.has(countryId);
-            
-            if (isOpen) {
-                openCountries.delete(countryId);
-                roomsDiv.classList.remove('opening');
-                roomsDiv.classList.add('closing');
-                arrow.classList.remove('rotated');
-                
-                setTimeout(() => {
-                    roomsDiv.classList.add('hidden');
-                    roomsDiv.classList.remove('closing');
-                }, 400);
-            } else {
-                openCountries.add(countryId);
-                roomsDiv.classList.remove('hidden');
-                roomsDiv.classList.add('opening');
-                arrow.classList.add('rotated');
-                
-                setTimeout(() => {
-                    roomsDiv.classList.remove('opening');
-                }, 400);
-            }
-        }
-
-        function joinRoom(roomId) {
-            const room = db.rooms.find(r => r.id === roomId);
-            if (!room) return;
-            
-            const expiry = new Date(room.expiry);
-            if (expiry < new Date()) {
-                alert('هذه الغرفة منتهية الصلاحية');
-                return;
-            }
-            
-            removeUserFromOnline();
-            
-            currentRoom = room;
-            currentCountry = db.countries.find(c => c.id === room.countryId);
-            
-            document.getElementById('roomHeader').classList.remove('hidden');
-            document.getElementById('messageInputArea').classList.remove('hidden');
-            document.getElementById('membersSidebar').classList.remove('hidden');
-            document.getElementById('toggleOnlineBtn').classList.remove('hidden');
-            
-            document.getElementById('roomName').textContent = room.name;
-            document.getElementById('roomCountry').innerHTML = `${currentCountry.icon} ${currentCountry.name}`;
-            
-            const daysLeft = Math.ceil((expiry - new Date()) / (1000 * 60 * 60 * 24));
-            document.getElementById('roomExpiry').innerHTML = `<i class="fas fa-clock ml-1"></i>تنتهي خلال ${daysLeft} يوم`;
-            
-            document.getElementById('currentRoomInfo').innerHTML = `
-                <div class="font-semibold text-purple-400">${room.name}</div>
-                <div class="text-xs text-slate-400">${currentCountry.icon} ${currentCountry.name}</div>
-            `;
-            
-            addUserToOnline();
-            renderMessages();
-            renderMembers();
-            closeSidebar();
-            closePrivateChatPanel();
-            
-            if (onlineUpdateInterval) clearInterval(onlineUpdateInterval);
-            onlineUpdateInterval = setInterval(updateOnlineUsersDisplay, 3000);
-        }
-
-        // Messages
-        function sendMessage() {
-            const input = document.getElementById('messageInput');
-            const text = input.value.trim();
-            if (!text || !currentRoom) return;
-            
-            const message = {
-                id: Date.now().toString(),
-                roomId: currentRoom.id,
-                username: currentUser.username,
-                rank: currentUser.rank,
-                text,
-                timestamp: new Date().toISOString()
-            };
-            
-            db.messages.push(message);
-            saveData();
-            input.value = '';
-            renderMessages();
-        }
-
-        function renderMessages() {
-            const area = document.getElementById('messagesArea');
-            if (!currentRoom) return;
-            
-            const messages = db.messages.filter(m => m.roomId === currentRoom.id);
-            
-            if (messages.length === 0) {
-                area.innerHTML = `
-                    <div class="flex items-center justify-center h-full">
-                        <div class="text-center text-slate-500">
-                            <i class="fas fa-comments text-6xl mb-4 opacity-20"></i>
-                            <p>لا توجد رسائل بعد. كن أول من يبدأ المحادثة!</p>
-                        </div>
-                    </div>
-                `;
-                return;
-            }
-            
-            area.innerHTML = messages.map(msg => {
-                const rank = RANKS[msg.rank];
-                const time = new Date(msg.timestamp).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
-                
-                let usernameDisplay = '';
-                if (msg.rank === 'owner') {
-                    usernameDisplay = `<span class="owner-gradient cursor-pointer" onclick="showUserActions('${msg.username}', '${msg.rank}')"><i class="fas fa-crown text-xs ml-1"></i>${msg.username} <i class="fas fa-check-circle text-xs"></i></span>`;
-                } else {
-                    usernameDisplay = `<span class="${rank.color} cursor-pointer" onclick="showUserActions('${msg.username}', '${msg.rank}')"><i class="fas ${rank.icon} text-xs ml-1"></i>${msg.username}</span>`;
-                }
-                
-                return `
-                    <div class="chat-bubble flex gap-3">
-                        <div class="flex-shrink-0 w-10 h-10 rounded-full ${rank.badge} flex items-center justify-center cursor-pointer" onclick="showUserActions('${msg.username}', '${msg.rank}')">
-                            <i class="fas ${rank.icon} text-white text-sm"></i>
-                        </div>
-                        <div class="flex-1 glass-effect rounded-xl p-3">
-                            <div class="flex items-center justify-between mb-1">
-                                <div class="text-sm font-semibold">${usernameDisplay}</div>
-                                <div class="text-xs text-slate-500">${time}</div>
-                            </div>
-                            <div class="text-slate-300">${msg.text}</div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-            
-            area.scrollTop = area.scrollHeight;
-        }
-
-        // Members - Desktop sidebar
-        function renderMembers() {
-            const list = document.getElementById('membersList');
-            if (!currentRoom) return;
-            
-            const roomUsers = onlineUsers.filter(u => u.roomId === currentRoom.id);
-            
-            document.getElementById('onlineCount').textContent = roomUsers.length;
-            
-            list.innerHTML = roomUsers.map(member => {
-                const rank = RANKS[member.rank];
-                let display = '';
-                
-                if (member.rank === 'owner') {
-                    display = `<span class="owner-gradient"><i class="fas fa-crown text-xs ml-1"></i>${member.username} <i class="fas fa-check-circle text-xs"></i></span>`;
-                } else {
-                    display = `<span class="${rank.color}"><i class="fas ${rank.icon} text-xs ml-1"></i>${member.username}</span>`;
-                }
-                
-                const canPrivateChat = member.username !== currentUser.username;
-                
-                return `
-                    <div class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-800/50 transition ${canPrivateChat ? 'cursor-pointer' : ''}" ${canPrivateChat ? `onclick="showUserActions('${member.username}', '${member.rank}')"` : ''}>
-                        <div class="flex items-center gap-2">
-                            <div class="w-2 h-2 bg-green-500 rounded-full pulse-online"></div>
-                            <span class="text-sm">${display}</span>
-                        </div>
-                        <span class="text-xs px-2 py-0.5 rounded ${rank.badge} text-white">${rank.name}</span>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // Private Chat Functions
-        function showUserActions(username, rank) {
-            if (username === currentUser.username) return;
-            
-            selectedUserForAction = { username, rank };
-            const rankData = RANKS[rank];
-            
-            document.getElementById('userActionsAvatar').className = `inline-block w-20 h-20 rounded-full mb-3 flex items-center justify-center text-3xl ${rankData.badge}`;
-            document.getElementById('userActionsAvatar').innerHTML = `<i class="fas ${rankData.icon} text-white"></i>`;
-            document.getElementById('userActionsName').textContent = username;
-            document.getElementById('userActionsRank').textContent = rankData.name;
-            document.getElementById('userActionsModal').classList.remove('hidden');
-        }
-
-        function closeUserActionsModal() {
-            document.getElementById('userActionsModal').classList.add('hidden');
-            selectedUserForAction = null;
-        }
-
-        function openPrivateChatFromModal() {
-            if (!selectedUserForAction) return;
-            openPrivateChat(selectedUserForAction.username);
-            closeUserActionsModal();
-        }
-
-        function loadPrivateMessages() {
-            privateChatMessages = {};
-            db.privateMessages.forEach(msg => {
-                const key = getPrivateChatKey(msg.from, msg.to);
-                if (!privateChatMessages[key]) privateChatMessages[key] = [];
-                privateChatMessages[key].push(msg);
-            });
-        }
-
-        function getPrivateChatKey(user1, user2) {
-            return [user1, user2].sort().join('_');
-        }
-
-        function openPrivateChat(username) {
-            activePrivateChat = username;
-            document.getElementById('privateChatPanel').classList.remove('hidden');
-            renderPrivateChatTabs();
-            renderPrivateChatMessages();
-            markPrivateMessagesAsRead(username);
-        }
-
-        function togglePrivateChatPanel() {
-            document.getElementById('privateChatPanel').classList.toggle('hidden');
-            if (!document.getElementById('privateChatPanel').classList.contains('hidden')) {
-                renderPrivateChatTabs();
-                if (activePrivateChat) {
-                    renderPrivateChatMessages();
-                }
-            }
-        }
-
-        function closePrivateChatPanel() {
-            document.getElementById('privateChatPanel').classList.add('hidden');
-        }
-
-        function renderPrivateChatTabs() {
-            const tabsContainer = document.getElementById('privateChatTabs');
-            const chats = new Set();
-            
-            db.privateMessages.forEach(msg => {
-                if (msg.from === currentUser.username || msg.to === currentUser.username) {
-                    const otherUser = msg.from === currentUser.username ? msg.to : msg.from;
-                    chats.add(otherUser);
-                }
-            });
-            
-            if (activePrivateChat && !chats.has(activePrivateChat)) {
-                chats.add(activePrivateChat);
-            }
-            
-            if (chats.size === 0) {
-                tabsContainer.innerHTML = '<div class="text-slate-500 text-sm px-3 py-2">لا توجد محادثات خاصة</div>';
-                return;
-            }
-            
-            tabsContainer.innerHTML = Array.from(chats).map(username => {
-                const key = getPrivateChatKey(currentUser.username, username);
-                const messages = privateChatMessages[key] || [];
-                const unreadCount = messages.filter(m => m.to === currentUser.username && !m.read).length;
-                const isActive = activePrivateChat === username;
-                
-                return `
-                    <button onclick="switchPrivateChat('${username}')" class="private-chat-tab ${isActive ? 'active' : 'bg-slate-800'} px-4 py-2 rounded-lg text-sm font-semibold hover-scale flex items-center gap-2 whitespace-nowrap">
-                        <span>${username}</span>
-                        ${unreadCount > 0 ? `<span class="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">${unreadCount}</span>` : ''}
-                    </button>
-                `;
-            }).join('');
-        }
-
-        function switchPrivateChat(username) {
-            activePrivateChat = username;
-            renderPrivateChatTabs();
-            renderPrivateChatMessages();
-            markPrivateMessagesAsRead(username);
-        }
-
-        function renderPrivateChatMessages() {
-            const content = document.getElementById('privateChatContent');
-            
-            if (!activePrivateChat) {
-                content.innerHTML = `
-                    <div class="flex-1 flex items-center justify-center text-slate-500">
-                        <div class="text-center">
-                            <i class="fas fa-comment-dots text-5xl mb-3 opacity-20"></i>
-                            <p>اختر محادثة أو ابدأ محادثة جديدة</p>
-                        </div>
-                    </div>
-                `;
-                return;
-            }
-            
-            const key = getPrivateChatKey(currentUser.username, activePrivateChat);
-            const messages = privateChatMessages[key] || [];
-            
-            const messagesHtml = messages.length === 0 ? `
-                <div class="flex-1 flex items-center justify-center text-slate-500">
-                    <div class="text-center">
-                        <i class="fas fa-comment text-5xl mb-3 opacity-20"></i>
-                        <p>ابدأ المحادثة مع ${activePrivateChat}</p>
-                    </div>
-                </div>
-            ` : `
-                <div class="flex-1 overflow-y-auto scrollbar-custom p-4 space-y-3" id="privateMessagesArea">
-                    ${messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)).map(msg => {
-                        const isOwn = msg.from === currentUser.username;
-                        const rank = RANKS[msg.fromRank];
-                        const time = new Date(msg.timestamp).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
-                        
-                        let fromDisplay = '';
-                        if (msg.fromRank === 'owner') {
-                            fromDisplay = `<span class="owner-gradient"><i class="fas fa-crown text-xs ml-1"></i>${msg.from} <i class="fas fa-check-circle text-xs"></i></span>`;
-                        } else {
-                            fromDisplay = `<span class="${rank.color}"><i class="fas ${rank.icon} text-xs ml-1"></i>${msg.from}</span>`;
-                        }
-                        
-                        return `
-                            <div class="chat-bubble flex gap-2 ${isOwn ? 'flex-row-reverse' : ''}">
-                                <div class="flex-shrink-0 w-8 h-8 rounded-full ${rank.badge} flex items-center justify-center">
-                                    <i class="fas ${rank.icon} text-white text-xs"></i>
-                                </div>
-                                <div class="max-w-md">
-                                    <div class="${isOwn ? 'gradient-bg text-white' : 'glass-effect'} rounded-xl p-3">
-                                        <div class="text-sm mb-1 ${isOwn ? 'text-white/90' : 'text-slate-400'}">${isOwn ? 'أنت' : fromDisplay}</div>
-                                        <div class="${isOwn ? 'text-white' : 'text-slate-300'}">${msg.text}</div>
-                                        <div class="text-xs mt-1 ${isOwn ? 'text-white/70' : 'text-slate-500'}">${time}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-            `;
-            
-            content.innerHTML = `
-                ${messagesHtml}
-                <div class="glass-effect border-t border-slate-700 p-4">
-                    <div class="flex gap-2">
-                        <input type="text" id="privateMessageInput" placeholder="اكتب رسالتك الخاصة..." class="flex-1 bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 transition" onkeypress="if(event.key==='Enter') sendPrivateMessage()">
-                        <button onclick="sendPrivateMessage()" class="gradient-bg text-white px-6 py-3 rounded-xl font-semibold hover-scale">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            setTimeout(() => {
-                const msgArea = document.getElementById('privateMessagesArea');
-                if (msgArea) msgArea.scrollTop = msgArea.scrollHeight;
-            }, 100);
-        }
-
-        function sendPrivateMessage() {
-            const input = document.getElementById('privateMessageInput');
-            const text = input.value.trim();
-            if (!text || !activePrivateChat) return;
-            
-            const message = {
-                id: Date.now().toString(),
-                from: currentUser.username,
-                fromRank: currentUser.rank,
-                to: activePrivateChat,
-                text,
-                timestamp: new Date().toISOString(),
-                read: false
-            };
-            
-            db.privateMessages.push(message);
-            const key = getPrivateChatKey(currentUser.username, activePrivateChat);
-            if (!privateChatMessages[key]) privateChatMessages[key] = [];
-            privateChatMessages[key].push(message);
-            
-            saveData();
-            input.value = '';
-            renderPrivateChatMessages();
-            renderPrivateChatTabs();
-        }
-
-        function markPrivateMessagesAsRead(username) {
-            const key = getPrivateChatKey(currentUser.username, username);
-            const messages = privateChatMessages[key] || [];
-            
-            messages.forEach(msg => {
-                if (msg.to === currentUser.username) {
-                    msg.read = true;
-                }
-            });
-            
-            db.privateMessages.forEach(msg => {
-                if (msg.to === currentUser.username && 
-                    (msg.from === username || msg.to === username)) {
-                    msg.read = true;
-                }
-            });
-            
-            saveData();
-            updatePrivateUnreadCount();
-        }
-
-        function updatePrivateUnreadCount() {
-            if (!currentUser) return;
-            
-            const unreadCount = db.privateMessages.filter(msg => 
-                msg.to === currentUser.username && !msg.read
-            ).length;
-            
-            const badge = document.getElementById('privateUnreadBadge');
-            if (unreadCount > 0) {
-                badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
-                badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
-            }
-        }
-
-        // Owner Panel Functions
-        function openOwnerPanel() {
-            document.getElementById('ownerPanel').classList.remove('hidden');
-            updateStats();
-        }
-
-        function closeOwnerPanel() {
-            document.getElementById('ownerPanel').classList.add('hidden');
-        }
-
-        function updateStats() {
-            document.getElementById('statCountries').textContent = db.countries.length;
-            document.getElementById('statRooms').textContent = db.rooms.length;
-            document.getElementById('statUsers').textContent = db.users.length;
-            document.getElementById('statMessages').textContent = db.messages.length;
-        }
-
-        function openChangeOwnerName() {
-            const content = `
-                <div class="space-y-4">
-                    <div class="bg-slate-800/50 rounded-lg p-4 mb-4">
-                        <div class="text-sm text-slate-400 mb-2">الاسم الحالي:</div>
-                        <div class="text-lg font-bold owner-gradient">
-                            <i class="fas fa-crown ml-1"></i>${db.ownerName} <i class="fas fa-check-circle text-xs"></i>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm text-slate-400 mb-2">الاسم الجديد:</label>
-                        <input type="text" id="newOwnerNameInput" value="${db.ownerName}" placeholder="أدخل الاسم الجديد" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-purple-500 transition">
-                    </div>
-                    <div class="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 text-sm text-amber-300">
-                        <i class="fas fa-info-circle ml-1"></i>
-                        سيظهر الاسم الجديد مع التاج والعلامة المتحركة في جميع الرسائل
-                    </div>
-                    <button onclick="saveOwnerName()" class="w-full gradient-bg py-3 rounded-lg text-white font-semibold hover-scale">
-                        <i class="fas fa-save ml-2"></i>حفظ الاسم
-                    </button>
-                </div>
-            `;
-            showGenericModal('تغيير اسم المالك', content);
-        }
-
-        function saveOwnerName() {
-            const newName = document.getElementById('newOwnerNameInput').value.trim();
-            
-            if (!newName) {
-                alert('الرجاء إدخال اسم صحيح');
-                return;
-            }
-            
-            if (db.bannedUsers.includes(newName)) {
-                alert('هذا الاسم محظور');
-                return;
-            }
-            
-            const oldName = db.ownerName;
-            db.ownerName = newName;
-            
-            if (currentUser && currentUser.role === 'owner') {
-                currentUser.username = newName;
-                localStorage.setItem('olychat_currentUser', JSON.stringify(currentUser));
-                updateUserInfo();
-            }
-            
-            db.messages.forEach(msg => {
-                if (msg.username === oldName && msg.rank === 'owner') {
-                    msg.username = newName;
-                }
-            });
-            
-            db.privateMessages.forEach(msg => {
-                if (msg.from === oldName && msg.fromRank === 'owner') {
-                    msg.from = newName;
-                }
-                if (msg.to === oldName) {
-                    msg.to = newName;
-                }
-            });
-            
-            localStorage.setItem('olychat_ownerName', newName);
-            saveData();
-            closeGenericModal();
-            
-            if (currentRoom) {
-                renderMessages();
-                renderMembers();
-            }
-            
-            alert('تم تغيير اسم المالك بنجاح');
-        }
-
-        function openManageCountries() {
-            const content = `
-                <div class="space-y-4">
-                    <div class="flex gap-2">
-                        <input type="text" id="newCountryName" placeholder="اسم الدولة" class="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white">
-                        <input type="text" id="newCountryIcon" placeholder="🇸🇦" class="w-20 bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white text-center">
-                        <button onclick="addCountry()" class="gradient-bg px-6 py-2 rounded-lg text-white font-semibold">إضافة</button>
-                    </div>
-                    <div id="countriesManageList" class="space-y-2 max-h-96 overflow-y-auto scrollbar-custom"></div>
-                </div>
-            `;
-            showGenericModal('إدارة الدول', content);
-            renderCountriesManage();
-        }
-
-        function renderCountriesManage() {
-            const list = document.getElementById('countriesManageList');
-            list.innerHTML = db.countries.map(c => `
-                <div class="flex items-center justify-between bg-slate-800/50 p-3 rounded-lg">
-                    <span>${c.icon} ${c.name}</span>
-                    <button onclick="deleteCountry('${c.id}')" class="text-red-400 hover:text-red-300">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            `).join('');
-        }
-
-        function addCountry() {
-            const name = document.getElementById('newCountryName').value.trim();
-            const icon = document.getElementById('newCountryIcon').value.trim();
-            if (!name || !icon) return alert('الرجاء إدخال الاسم والأيقونة');
-            
-            db.countries.push({ id: Date.now().toString(), name, icon });
-            saveData();
-            renderCountries();
-            renderCountriesManage();
-            document.getElementById('newCountryName').value = '';
-            document.getElementById('newCountryIcon').value = '';
-        }
-
-        function deleteCountry(id) {
-            if (!confirm('هل أنت متأكد من حذف هذه الدولة وجميع غرفها؟')) return;
-            db.countries = db.countries.filter(c => c.id !== id);
-            db.rooms = db.rooms.filter(r => r.countryId !== id);
-            saveData();
-            renderCountriesManage();
-        }
-
-        function openManageRooms() {
-            const content = `
-                <div class="space-y-4">
-                    <div class="grid md:grid-cols-2 gap-2">
-                        <select id="roomCountrySelect" class="bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white">
-                            ${db.countries.map(c => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join('')}
-                        </select>
-                        <input type="text" id="newRoomName" placeholder="اسم الغرفة" class="bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white">
-                        <input type="number" id="roomExpiryDays" placeholder="مدة الصلاحية بالأيام" value="30" min="1" class="bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white">
-                        <button onclick="addRoom()" class="gradient-bg px-6 py-2 rounded-lg text-white font-semibold">إضافة غرفة</button>
-                    </div>
-                    <div id="roomsManageList" class="space-y-2 max-h-96 overflow-y-auto scrollbar-custom"></div>
-                </div>
-            `;
-            showGenericModal('إدارة الغرف', content);
-            renderRoomsManage();
-        }
-
-        function renderRoomsManage() {
-            const list = document.getElementById('roomsManageList');
-            list.innerHTML = db.rooms.map(r => {
-                const country = db.countries.find(c => c.id === r.countryId);
-                const expiry = new Date(r.expiry);
-                const daysLeft = Math.ceil((expiry - new Date()) / (1000 * 60 * 60 * 24));
-                return `
-                    <div class="bg-slate-800/50 p-3 rounded-lg">
-                        <div class="flex items-center justify-between mb-2">
-                            <div>
-                                <div class="font-semibold">${country?.icon} ${country?.name} - #${r.name}</div>
-                                <div class="text-xs text-slate-400">تنتهي خلال ${daysLeft} يوم</div>
-                            </div>
-                            <div class="flex gap-2">
-                                <button onclick="assignMaster('${r.id}')" class="text-blue-400 hover:text-blue-300 text-sm">
-                                    <i class="fas fa-user-shield"></i>
-                                </button>
-                                <button onclick="deleteRoom('${r.id}')" class="text-red-400 hover:text-red-300">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                        ${r.master ? `<div class="text-xs text-red-400"><i class="fas fa-star ml-1"></i>الماستر: ${r.master}</div>` : ''}
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function addRoom() {
-            const countryId = document.getElementById('roomCountrySelect').value;
-            const name = document.getElementById('newRoomName').value.trim();
-            const days = parseInt(document.getElementById('roomExpiryDays').value);
-            
-            if (!name || !days) return alert('الرجاء ملء جميع الحقول');
-            
-            const expiry = new Date();
-            expiry.setDate(expiry.getDate() + days);
-            
-            db.rooms.push({
-                id: Date.now().toString(),
-                countryId,
-                name,
-                master: null,
-                expiry: expiry.toISOString(),
-                created: new Date().toISOString()
-            });
-            
-            saveData();
-            renderCountries();
-            renderRoomsManage();
-            document.getElementById('newRoomName').value = '';
-        }
-
-        function deleteRoom(id) {
-            if (!confirm('هل أنت متأكد من حذف هذه الغرفة؟')) return;
-            db.rooms = db.rooms.filter(r => r.id !== id);
-            saveData();
-            renderCountries();
-            renderRoomsManage();
-        }
-
-        function assignMaster(roomId) {
-            const username = prompt('أدخل اسم المستخدم للماستر:');
-            if (!username) return;
-            
-            const room = db.rooms.find(r => r.id === roomId);
-            room.master = username;
-            saveData();
-            renderRoomsManage();
-        }
-
-        function openManageUsers() {
-            const content = `
-                <div class="space-y-4">
-                    <div class="grid md:grid-cols-3 gap-2">
-                        <input type="text" id="newUserUsername" placeholder="اسم المستخدم" class="bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white">
-                        <input type="text" id="newUserPassword" placeholder="الرمز السري" class="bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white">
-                        <select id="newUserRank" class="bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white">
-                            <option value="member">عضو</option>
-                            <option value="minbar">منبر</option>
-                            <option value="admin">ادمن</option>
-                            <option value="superadmin">سوبر ادمن</option>
-                            <option value="master">ماستر</option>
-                        </select>
-                        <button onclick="addUser()" class="md:col-span-3 gradient-bg px-6 py-2 rounded-lg text-white font-semibold">إضافة عضو</button>
-                    </div>
-                    <h4 class="font-bold text-slate-300">الأعضاء المسجلون</h4>
-                    <div id="usersManageList" class="space-y-2 max-h-64 overflow-y-auto scrollbar-custom"></div>
-                    <h4 class="font-bold text-slate-300">المحظورون</h4>
-                    <div class="flex gap-2">
-                        <input type="text" id="banUsername" placeholder="اسم المستخدم للحظر" class="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white">
-                        <button onclick="banUser()" class="bg-red-500/20 text-red-400 px-6 py-2 rounded-lg font-semibold">حظر</button>
-                    </div>
-                    <div id="bannedManageList" class="space-y-2"></div>
-                </div>
-            `;
-            showGenericModal('إدارة الأعضاء', content);
-            renderUsersManage();
-        }
-
-        function renderUsersManage() {
-            const list = document.getElementById('usersManageList');
-            const bannedList = document.getElementById('bannedManageList');
-            
-            list.innerHTML = db.users.map(u => {
-                const rank = RANKS[u.rank];
-                return `
-                    <div class="flex items-center justify-between bg-slate-800/50 p-3 rounded-lg">
-                        <div>
-                            <div class="font-semibold">${u.username}</div>
-                            <div class="text-xs ${rank.color}">${rank.name}</div>
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="deleteUser('${u.id}')" class="text-red-400 hover:text-red-300">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join('') || '<p class="text-slate-500 text-center">لا يوجد أعضاء مسجلون</p>';
-            
-            bannedList.innerHTML = db.bannedUsers.map(username => `
-                <div class="flex items-center justify-between bg-red-500/10 p-2 rounded-lg">
-                    <span class="text-sm">${username}</span>
-                    <button onclick="unbanUser('${username}')" class="text-green-400 hover:text-green-300 text-sm">إلغاء الحظر</button>
-                </div>
-            `).join('') || '<p class="text-slate-500 text-center text-sm">لا يوجد محظورون</p>';
-        }
-
-        function addUser() {
-            const username = document.getElementById('newUserUsername').value.trim();
-            const password = document.getElementById('newUserPassword').value.trim();
-            const rank = document.getElementById('newUserRank').value;
-            
-            if (!username || !password) return alert('الرجاء ملء جميع الحقول');
-            if (db.users.find(u => u.username === username)) return alert('اسم المستخدم موجود بالفعل');
-            
-            db.users.push({ id: Date.now().toString(), username, password, rank });
-            saveData();
-            renderUsersManage();
-            document.getElementById('newUserUsername').value = '';
-            document.getElementById('newUserPassword').value = '';
-        }
-
-        function deleteUser(id) {
-            if (!confirm('هل أنت متأكد من حذف هذا العضو؟')) return;
-            db.users = db.users.filter(u => u.id !== id);
-            saveData();
-            renderUsersManage();
-        }
-
-        function banUser() {
-            const username = document.getElementById('banUsername').value.trim();
-            if (!username) return;
-            if (!db.bannedUsers.includes(username)) {
-                db.bannedUsers.push(username);
-                saveData();
-                renderUsersManage();
-                document.getElementById('banUsername').value = '';
-            }
-        }
-
-        function unbanUser(username) {
-            db.bannedUsers = db.bannedUsers.filter(u => u !== username);
-            saveData();
-            renderUsersManage();
-        }
-
-        function openWelcomeMessageModal() {
-            const content = `
-                <div class="space-y-4">
-                    <textarea id="welcomeMessageInput" rows="4" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white" placeholder="أدخل رسالة الترحيب">${db.welcomeMessage}</textarea>
-                    <button onclick="saveWelcomeMessage()" class="w-full gradient-bg py-3 rounded-lg text-white font-semibold">حفظ الرسالة</button>
-                </div>
-            `;
-            showGenericModal('تعديل رسالة الترحيب', content);
-        }
-
-        function saveWelcomeMessage() {
-            const msg = document.getElementById('welcomeMessageInput').value.trim();
-            if (msg) {
-                db.welcomeMessage = msg;
-                saveData();
-                updateWelcomeMessage();
-                closeGenericModal();
-                alert('تم حفظ رسالة الترحيب بنجاح');
-            }
-        }
-
-        // UI Helpers
-        function showGenericModal(title, content) {
-            document.getElementById('genericTitle').textContent = title;
-            document.getElementById('genericContent').innerHTML = content;
-            document.getElementById('genericModal').classList.remove('hidden');
-        }
-
-        function closeGenericModal() {
-            document.getElementById('genericModal').classList.add('hidden');
-        }
-
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('open');
-        }
-
-        function closeSidebar() {
-            document.getElementById('sidebar').classList.remove('open');
-        }
-
-        function openAddCountryModal() {
-            openManageCountries();
-        }
-
-        function updateSidebar() {
-            // Update sidebar state if needed
-        }
-
-        // Auto-login if session exists
-        window.addEventListener('load', () => {
-            init();
-            const saved = localStorage.getItem('olychat_currentUser');
-            if (saved) {
-                currentUser = JSON.parse(saved);
-                startApp();
-            }
-        });
-
-        // Cleanup expired rooms periodically
-        setInterval(checkExpiredRooms, 60000);
-    </script>
-</body>
-   <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>شات اويلي | OlyChat</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <style>
-        * {
-            font-family: 'Cairo', sans-serif;
-        }
-        
-        body {
-            background: #0f172a;
-            color: #e2e8f0;
-        }
+<!-- Playables SDK -->
+<script>// Playables SDK v1.0.0
+// Game lifecycle bridge: rAF-based game-ready detection + event communication
+(function() {
+  'use strict';
 
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #6366f1 100%);
-        }
+  // Idempotency: skip if already initialized (e.g., server-side injection
+  // followed by client-side inject-javascript via the Bloks webview component).
+  if (window.playablesSDK) return;
 
-        .gradient-text {
-            background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 50%, #3b82f6 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+  var HANDLER_NAME = 'playablesGameEventHandler';
+  var ANDROID_BRIDGE_NAME = '_MetaPlayablesBridge';
+  var RAF_FRAME_THRESHOLD = 3;
 
-        @keyframes gradient-shift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
+  var gameReadySent = false;
+  var firstInteractionSent = false;
+  var errorSent = false;
+  var frameCount = 0;
+  var originalRAF = window.requestAnimationFrame;
 
-        .owner-gradient {
-            background: linear-gradient(90deg, #f59e0b, #ec4899, #8b5cf6, #3b82f6, #10b981, #f59e0b);
-            background-size: 300% 300%;
-            animation: gradient-shift 4s ease infinite;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            font-weight: 700;
-        }
+  // --- Transport Layer ---
 
-        .master-badge { background: linear-gradient(135deg, #dc2626 0%, #f59e0b 100%); }
-        .superadmin-badge { background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); }
-        .admin-badge { background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%); }
-        .minbar-badge { background: linear-gradient(135deg, #059669 0%, #10b981 100%); }
-        .member-badge { background: linear-gradient(135deg, #64748b 0%, #94a3b8 100%); }
-        .guest-badge { background: linear-gradient(135deg, #71717a 0%, #a1a1aa 100%); }
+  function hasIOSBridge() {
+    return !!(window.webkit &&
+              window.webkit.messageHandlers &&
+              window.webkit.messageHandlers[HANDLER_NAME]);
+  }
 
-        .glass-effect {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(148, 163, 184, 0.1);
-        }
+  function hasAndroidBridge() {
+    return !!(window[ANDROID_BRIDGE_NAME] &&
+              typeof window[ANDROID_BRIDGE_NAME].postEvent === 'function');
+  }
 
-        .chat-bubble {
-            animation: slideIn 0.3s ease-out;
-        }
+  function isInIframe() {
+    return !!(window.parent && window.parent !== window);
+  }
 
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+  function sendEvent(eventName, payload) {
+    var message = {
+      type: eventName,
+      payload: payload || {},
+      timestamp: Date.now()
+    };
 
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                max-height: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                max-height: 500px;
-                transform: translateY(0);
-            }
-        }
+    if (hasIOSBridge()) {
+      try {
+        window.webkit.messageHandlers[HANDLER_NAME].postMessage(message);
+      } catch (e) { /* ignore */ }
+      return;
+    }
 
-        @keyframes slideUp {
-            from {
-                opacity: 1;
-                max-height: 500px;
-                transform: translateY(0);
-            }
-            to {
-                opacity: 0;
-                max-height: 0;
-                transform: translateY(-10px);
-            }
-        }
+    if (hasAndroidBridge()) {
+    try {
+      var p = payload || {};
+      p.__secureToken = window.__fbAndroidBridgeAuthToken || '';
+      p.timestamp = message.timestamp;
+      window[ANDROID_BRIDGE_NAME].postEvent(
+        eventName,
+        JSON.stringify(p)
+      );
+    } catch (e) { /* ignore */ }
+    return;
+  }
 
-        .rooms-container {
-            overflow: hidden;
-        }
+    if (isInIframe()) {
+      try {
+        window.parent.postMessage(message, '*');
+      } catch (e) { /* ignore */ }
+      return;
+    }
+  }
 
-        .rooms-container.opening {
-            animation: slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        }
+  // --- rAF Game-Ready Detection ---
 
-        .rooms-container.closing {
-            animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        }
+  function onFrame() {
+    if (gameReadySent) return;
 
-        .modal-backdrop {
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(4px);
-        }
+    frameCount++;
+    if (frameCount >= RAF_FRAME_THRESHOLD) {
+      gameReadySent = true;
+      sendEvent('game_ready', {
+        frame_count: frameCount,
+        detected_at: Date.now()
+      });
+      return;
+    }
 
-        .scrollbar-custom::-webkit-scrollbar {
-            width: 6px;
-        }
+    originalRAF.call(window, onFrame);
+  }
 
-        .scrollbar-custom::-webkit-scrollbar-track {
-            background: rgba(30, 41, 59, 0.5);
-        }
+  if (originalRAF) {
+    window.requestAnimationFrame = function(callback) {
+      if (!gameReadySent) {
+        return originalRAF.call(window, function(timestamp) {
+          frameCount++;
+          if (frameCount >= RAF_FRAME_THRESHOLD && !gameReadySent) {
+            gameReadySent = true;
+            sendEvent('game_ready', {
+              frame_count: frameCount,
+              detected_at: Date.now()
+            });
+          }
+          callback(timestamp);
+        });
+      }
+      return originalRAF.call(window, callback);
+    };
+  }
 
-        .scrollbar-custom::-webkit-scrollbar-thumb {
-            background: rgba(99, 102, 241, 0.5);
-            border-radius: 3px;
-        }
+  // --- First User Interaction Detection ---
 
-        .scrollbar-custom::-webkit-scrollbar-thumb:hover {
-            background: rgba(99, 102, 241, 0.7);
-        }
+  function setupFirstInteractionDetection() {
+    var events = ['touchstart', 'mousedown', 'keydown'];
 
-        .hover-scale {
-            transition: transform 0.2s ease;
-        }
+    function onFirstInteraction() {
+      if (firstInteractionSent) return;
+      firstInteractionSent = true;
+      sendEvent('user_interaction_start', null);
 
-        .hover-scale:hover {
-            transform: scale(1.02);
-        }
+      for (var i = 0; i < events.length; i++) {
+        document.removeEventListener(events[i], onFirstInteraction, true);
+      }
+    }
 
-        .glow-effect {
-            box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
-        }
+    for (var i = 0; i < events.length; i++) {
+      document.addEventListener(events[i], onFirstInteraction, true);
+    }
+  }
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupFirstInteractionDetection);
+  } else {
+    setupFirstInteractionDetection();
+  }
 
-        .float-animation {
-            animation: float 3s ease-in-out infinite;
-        }
+  // --- Auto Error Capture ---
 
-        .sidebar-mobile {
-            transform: translateX(100%);
-            transition: transform 0.3s ease-in-out;
-        }
+  window.addEventListener('error', function(event) {
+    if (errorSent) return;
+    errorSent = true;
+    sendEvent('error', {
+      message: event.message || 'Unknown error',
+      source: event.filename || '',
+      lineno: event.lineno || 0,
+      colno: event.colno || 0,
+      auto_captured: true
+    });
+  });
 
-        .sidebar-mobile.open {
-            transform: translateX(0);
-        }
+  window.addEventListener('unhandledrejection', function(event) {
+    if (errorSent) return;
+    errorSent = true;
+    var reason = event.reason;
+    sendEvent('error', {
+      message: (reason instanceof Error) ? reason.message : String(reason),
+      type: 'unhandled_promise_rejection',
+      auto_captured: true
+    });
+  });
 
-        @keyframes pulse-badge {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
+  // --- Public API ---
 
-        .pulse-badge {
-            animation: pulse-badge 2s ease-in-out infinite;
-        }
+  window.playablesSDK = {
+    complete: function(score) {
+      sendEvent('game_ended', {
+        score: score,
+        completed: true
+      });
+    },
 
-        @keyframes pulse-online {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(1.1); }
-        }
+    error: function(message) {
+      if (errorSent) return;
+      errorSent = true;
+      sendEvent('error', {
+        message: message || 'Unknown error',
+        auto_captured: false
+      });
+    },
 
-        .pulse-online {
-            animation: pulse-online 2s ease-in-out infinite;
-        }
+    sendEvent: function(eventName, payload) {
+      if (!eventName || typeof eventName !== 'string') return;
+      sendEvent(eventName, payload);
+    }
+  };
 
-        .private-chat-tab {
-            transition: all 0.3s ease;
-        }
+  // Kick off rAF detection in case no game code calls rAF immediately
+  if (originalRAF) {
+    originalRAF.call(window, onFrame);
+  }
+})();</script>
+<!-- PLAYABLE_TOUCH_PATCH_V1 --><script>
+(function() {
+  if (window.__playableTouchPatchInstalled) return;
+  window.__playableTouchPatchInstalled = true;
+  var origAdd = EventTarget.prototype.addEventListener;
+  var blockedTypes = { touchstart: 1, touchmove: 1, wheel: 1 };
+  EventTarget.prototype.addEventListener = function(type, listener, options) {
+    if (blockedTypes[type]) {
+      if (options === undefined || options === null) {
+        options = { passive: true };
+      } else if (typeof options === 'boolean') {
+        options = { capture: options, passive: true };
+      } else {
+        options = Object.assign({}, options, { passive: true });
+      }
+    }
+    return origAdd.call(this, type, listener, options);
+  };
+})();
+</script><script>window.Intl=window.Intl||{};Intl.t=function(s){return(Intl._locale&&Intl._locale[s])||s;};</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>شات عربي - دردشة فورية</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap');
+* { font-family: 'Cairo', sans-serif; }
+body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
-        .private-chat-tab.active {
-            background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
-        }
+/* Ranks Styles */
+.glow-owner {
+    background: linear-gradient(90deg, 
+        #ff0000, #ff7f00, #ffff00, #00ff00, 
+        #0000ff, #4b0082, #9400d3, #ff0000);
+    background-size: 400% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: rainbowFlow 3s linear infinite, glowPulse 1.5s ease-in-out infinite;
+    font-weight: 900;
+    font-size: 1.15em;
+    filter: drop-shadow(0 0 10px rgba(255, 0, 255, 0.8)) 
+            drop-shadow(0 0 20px rgba(0, 255, 255, 0.6))
+            drop-shadow(0 0 30px rgba(255, 255, 0, 0.4));
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
 
-        .back-btn {
-            transition: all 0.3s ease;
-        }
+@keyframes rainbowFlow {
+    0% { background-position: 0% 50%; filter: hue-rotate(0deg); }
+    50% { background-position: 100% 50%; filter: hue-rotate(180deg); }
+    100% { background-position: 0% 50%; filter: hue-rotate(360deg); }
+}
 
-        .back-btn:hover {
-            background: rgba(139, 92, 246, 0.2);
-            transform: translateX(-4px);
-        }
+@keyframes glowPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
 
-        .country-arrow {
-            transition: transform 0.3s ease;
-        }
+.rank-master { color: #ff0000; font-weight: 800; }
+.rank-super { color: #00ff00; font-weight: 800; }
+.rank-root { color: #ff8800; font-weight: 800; }
+.rank-user { color: #ffffff; font-weight: 600; }
+.rank-guest { color: #888888; font-weight: 600; }
 
-        .country-arrow.rotated {
-            transform: rotate(-180deg);
-        }
+.message-appear {
+    animation: slideIn 0.3s ease-out;
+}
 
-        /* Online Users Sliding Panel */
-        #onlineUsersPanel {
-            position: fixed;
-            left: 0;
-            top: 61px;
-            bottom: 0;
-            width: 280px;
-            transform: translateX(-100%);
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 35;
-        }
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 
-        #onlineUsersPanel.open {
-            transform: translateX(0);
-        }
+.room-active {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+}
 
-        @media (max-width: 1023px) {
-            #onlineUsersPanel {
-                width: 85%;
-                max-width: 320px;
-            }
-        }
+.ticker-scroll {
+    animation: scroll 30s linear infinite;
+}
 
-        #onlineUsersOverlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(2px);
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-            z-index: 34;
-        }
+@keyframes scroll {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+}
 
-        #onlineUsersOverlay.open {
-            opacity: 1;
-            visibility: visible;
-        }
+.modal-backdrop {
+    backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.7);
+}
 
-        .toggle-online-btn {
-            position: fixed;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%) translateX(0);
-            z-index: 33;
-            transition: all 0.3s ease;
-        }
+.sidebar-overlay {
+    transition: opacity 300ms ease;
+}
 
-        .toggle-online-btn.shifted {
-            transform: translateY(-50%) translateX(280px);
-        }
+.sidebar-drawer {
+    transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
 
-        @media (max-width: 1023px) {
-            .toggle-online-btn.shifted {
-                transform: translateY(-50%) translateX(calc(85vw));
-            }
-        }
+.login-type-btn {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
-        .toggle-online-btn .badge {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-        }
-    </style>
+.login-type-btn:hover {
+    transform: translateY(-2px);
+}
+
+.login-type-btn.active {
+    border-color: currentColor;
+    box-shadow: 0 0 20px currentColor;
+}
+
+#messageInputArea {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 999;
+}
+
+#messagesArea {
+    padding-bottom: 120px;
+}
+
+.username-click {
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.username-click:hover {
+    opacity: 0.8;
+    text-decoration: underline;
+}
+
+.mute-badge {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+#messagesArea {
+    display: flex;
+    flex-direction: column-reverse;
+    overflow-y: auto;
+}
+#messagesArea > div {
+    animation: slideIn 0.3s ease-out;
+}
+
+
+.private-msg-icon {
+    display: inline-block;
+    margin-left: 6px;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+</style>
 </head>
-<body class="min-h-screen">
+<body class="text-white overflow-hidden h-screen">
 
-    <!-- Welcome Modal -->
-    <div id="welcomeModal" class="fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4">
-        <div class="glass-effect rounded-2xl p-8 max-w-md w-full glow-effect">
-            <div class="text-center mb-6">
-                <div class="inline-block p-4 rounded-full gradient-bg mb-4 float-animation">
-                    <i class="fas fa-comments text-4xl text-white"></i>
-                </div>
-                <h1 class="text-3xl font-black mb-2 gradient-text">شات اويلي</h1>
-                <p class="text-slate-400 text-sm">OlyChat - منصة الدردشة العربية المتكاملة</p>
+<!-- Login Screen -->
+<div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-4">
+    <div class="bg-slate-800/90 backdrop-blur-xl p-6 md:p-8 rounded-3xl shadow-2xl w-full max-w-lg border border-blue-500/20">
+        <div class="text-center mb-6">
+            <div class="inline-block p-4 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl mb-4 shadow-lg shadow-blue-500/50">
+                <i class="fas fa-comments text-4xl"></i>
+            </div>
+            <h1 class="text-3xl font-bold mb-2">شات عربي</h1>
+            <p class="text-slate-400 text-sm">دردشة فورية لجميع العرب</p>
+        </div>
+        
+        <!-- Login Type Selection -->
+        <div class="grid grid-cols-3 gap-3 mb-6">
+            <button id="guestBtn" class="login-type-btn py-4 bg-gradient-to-br from-emerald-500/20 to-green-500/20 hover:from-emerald-500/30 hover:to-green-500/30 border-2 border-emerald-500 rounded-xl font-bold text-sm transition" style="color: #10b981;">
+                <i class="fas fa-user text-2xl mb-2 block"></i>
+                زائر
+            </button>
+            <button id="memberBtn" class="login-type-btn active py-4 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 hover:from-blue-500/30 hover:to-cyan-500/30 border-2 border-blue-500 rounded-xl font-bold text-sm transition" style="color: #3b82f6;">
+                <i class="fas fa-user-check text-2xl mb-2 block"></i>
+                عضو
+            </button>
+            <button id="ownerBtn" class="login-type-btn py-4 bg-gradient-to-br from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 border-2 border-amber-500 rounded-xl font-bold text-sm transition" style="color: #f59e0b;">
+                <i class="fas fa-crown text-2xl mb-2 block"></i>
+                مالك
+            </button>
+        </div>
+
+        <!-- Login Form -->
+        <div class="space-y-4">
+            <div id="usernameField">
+                <label class="block text-sm font-semibold mb-2 text-slate-300">اسم المستخدم</label>
+                <input id="usernameInput" type="text" placeholder="ادخل اسمك" maxlength="20"
+                    class="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-white placeholder-slate-500">
             </div>
             
-            <div id="welcomeMessage" class="bg-slate-800/50 rounded-xl p-4 mb-6 text-center text-slate-300">
-                مرحباً بك في شات اويلي! اختر طريقة الدخول المناسبة
+            <div id="codeField">
+                <label class="block text-sm font-semibold mb-2 text-slate-300">كود الدخول</label>
+                <input id="ownerCodeInput" type="password" placeholder="كود العضو"
+                    class="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-white placeholder-slate-500">
             </div>
+            
+            <button id="loginBtn" class="w-full py-3.5 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 rounded-xl font-bold text-lg shadow-lg shadow-blue-500/30 transition transform hover:scale-105">
+                <i class="fas fa-sign-in-alt ml-2"></i>دخول الشات
+            </button>
+            
+            <p class="text-xs text-center text-slate-500 mt-4">بالدخول أنت توافق على قوانين الدردشة</p>
+        </div>
+    </div>
+</div>
 
-            <div class="space-y-3">
-                <button onclick="selectRole('guest')" class="w-full gradient-bg text-white py-3 rounded-xl font-semibold hover-scale shadow-lg">
-                    <i class="fas fa-user ml-2"></i>دخول كزائر - مشاركة كاملة
-                </button>
-                <button onclick="selectRole('member')" class="w-full bg-slate-700 text-white py-3 rounded-xl font-semibold hover-scale">
-                    <i class="fas fa-user-check ml-2"></i>دخول كعضو
-                </button>
-                <button onclick="selectRole('owner')" class="w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white py-3 rounded-xl font-semibold hover-scale">
-                    <i class="fas fa-crown ml-2"></i>دخول المالك
+<!-- Sidebar Drawer -->
+<div id="sidebarOverlay" class="hidden fixed inset-0 z-40 sidebar-overlay bg-black/60 backdrop-blur-sm">
+    <div id="sidebarDrawer" class="fixed inset-y-0 right-0 w-80 max-w-[85%] bg-slate-900 sidebar-drawer transform translate-x-full border-l border-slate-700/50 flex flex-col shadow-2xl">
+        <!-- Sidebar Header -->
+        <div class="p-4 border-b border-slate-700/50 bg-slate-800/70 backdrop-blur-lg">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold">شات عربي</h1>
+                        <p class="text-xs text-slate-400" id="drawerUserInfo"></p>
+                    </div>
+                </div>
+                <button id="closeSidebar" class="p-2 hover:bg-slate-700 rounded-lg transition">
+                    <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
         </div>
-    </div>
 
-    <!-- Login Modal -->
-    <div id="loginModal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4">
-        <div class="glass-effect rounded-2xl p-8 max-w-md w-full">
-            <h2 id="loginTitle" class="text-2xl font-bold mb-6 text-center gradient-text"></h2>
-            <div id="loginError" class="hidden bg-red-500/20 border border-red-500 text-red-200 px-4 py-3 rounded-lg mb-4 text-sm"></div>
-            
-            <input type="text" id="usernameInput" placeholder="اسم المستخدم" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 mb-3 text-white focus:outline-none focus:border-purple-500 transition">
-            <input type="password" id="passwordInput" placeholder="الرمز السري" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 mb-4 text-white focus:outline-none focus:border-purple-500 transition">
-            <div id="ownerNameHint" class="hidden text-xs text-slate-400 mb-4 text-center">
-                <i class="fas fa-info-circle ml-1"></i>
-                سيتم عرض الاسم الذي تكتبه مع التاج واللون المميز
+        <!-- Sidebar Content -->
+        <div class="flex-1 overflow-y-auto scrollbar-hide">
+            <!-- Countries Section -->
+            <div class="p-4 border-b border-slate-700/50">
+                <h2 class="font-bold text-lg mb-3 flex items-center gap-2">
+                    <i class="fas fa-globe text-blue-400"></i>قائمة الدول
+                </h2>
+                <div id="countriesList" class="space-y-2"></div>
             </div>
             
-            <div class="flex gap-3">
-                <button onclick="handleLogin()" class="flex-1 gradient-bg text-white py-3 rounded-xl font-semibold hover-scale">
-                    دخول
+            <!-- Current Room Users -->
+            <div class="p-4 border-b border-slate-700/50">
+                <h3 class="font-bold text-sm mb-3 flex items-center gap-2">
+                    <i class="fas fa-users text-purple-400"></i>المتواجدين في الروم 
+                    <span id="roomUserCountBadge" class="text-xs bg-blue-500 px-2 py-0.5 rounded-full">0</span>
+                </h3>
+                <div id="roomUsersList" class="space-y-1.5 max-h-48 overflow-y-auto scrollbar-hide"></div>
+            </div>
+
+            <!-- All Online Users -->
+            <div class="p-4 border-b border-slate-700/50">
+                <h3 class="font-bold text-sm mb-3 flex items-center gap-2">
+                    <i class="fas fa-circle text-green-400 text-xs"></i>جميع المتصلين 
+                    <span id="userCount" class="text-xs bg-green-500 px-2 py-0.5 rounded-full">0</span>
+                </h3>
+                <div id="usersList" class="space-y-1.5 max-h-48 overflow-y-auto scrollbar-hide"></div>
+            </div>
+        </div>
+
+        <!-- Sidebar Footer Actions -->
+        <div class="p-4 border-t border-slate-700/50 bg-slate-900/50 space-y-2">
+            <button id="drawerOwnerPanelBtn" class="hidden w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl text-sm font-bold shadow-lg hover:shadow-amber-500/50 transition">
+                <i class="fas fa-crown ml-1"></i>لوحة المالك
+            </button>
+            <button id="drawerLogoutBtn" class="w-full py-2.5 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 rounded-xl text-sm font-semibold transition">
+                <i class="fas fa-sign-out-alt ml-1"></i>تسجيل خروج
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Main App -->
+<div id="mainApp" class="hidden h-screen flex flex-col">
+    <!-- Header -->
+    <header class="bg-slate-800/90 backdrop-blur-lg border-b border-slate-700/50 shadow-lg">
+        <div class="px-4 py-3">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-3">
+                    <button id="hamburgerBtn" class="p-3 bg-blue-600 hover:bg-blue-700 rounded-xl shadow-lg transition transform hover:scale-105">
+                        <i class="fas fa-bars text-lg"></i>
+                    </button>
+                    <div>
+                        <h1 class="text-xl font-bold">شات عربي</h1>
+                        <p class="text-xs text-slate-400" id="userInfo"></p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Welcome Ticker -->
+            <div class="bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border border-blue-500/30 rounded-lg px-3 py-2 overflow-hidden">
+                <div class="ticker-scroll whitespace-nowrap text-sm" id="welcomeTicker">
+                    مرحباً بكم في شات عربي - للتواصل الراقي والمحترم
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Rooms Bar -->
+        <div class="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-4 py-3">
+            <div class="flex items-center justify-between mb-2">
+                <h2 class="font-bold text-sm flex items-center gap-2">
+                    <i class="fas fa-door-open text-cyan-400"></i>الغرف المتاحة
+                </h2>
+                <span id="selectedCountryName" class="text-xs text-slate-400"></span>
+            </div>
+            <div id="roomsBar" class="flex gap-2 overflow-x-auto scrollbar-hide">
+                <p class="text-slate-500 text-sm py-2">اختر دولة لعرض الغرف</p>
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <main class="flex-1 flex flex-col bg-slate-900/30 relative">
+            <!-- Room Header -->
+            <div id="roomHeader" class="bg-slate-800/70 backdrop-blur-lg border-b border-slate-700/50 px-4 py-3">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 id="currentRoomName" class="font-bold text-lg">اختر غرفة للدردشة</h2>
+                        <p id="currentCountryName" class="text-xs text-slate-400"></p>
+                    </div>
+                    <div id="roomActions" class="hidden flex items-center gap-2">
+                        <button id="manageMembersBtn" class="hidden px-3 py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg text-xs font-bold transition">
+                            <i class="fas fa-users-cog ml-1"></i>إدارة الأعضاء
+                        </button>
+                        <span id="roomUserCount" class="text-xs bg-slate-700 px-3 py-1.5 rounded-lg">
+                            <i class="fas fa-user ml-1"></i>0
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages Area -->
+            <div id="messagesArea" class="flex-1 overflow-y-auto scrollbar-hide p-4 space-y-3">
+                <div class="text-center text-slate-500 mt-20">
+                    <i class="fas fa-comments text-6xl mb-4 opacity-30"></i>
+                    <p>اختر غرفة لبدء الدردشة</p>
+                </div>
+            </div>
+
+            <!-- Message Input - Fixed Bottom -->
+            <div id="messageInputArea" class="hidden bg-slate-800/70 backdrop-blur-lg border-t border-slate-700/50 p-4">
+                <div class="flex gap-2">
+                    <input id="messageInput" type="text" placeholder="اكتب رسالتك هنا..." maxlength="500"
+                        class="flex-1 px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-white placeholder-slate-500">
+                    <button id="sendBtn" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 rounded-xl font-bold shadow-lg shadow-blue-500/30 transition transform hover:scale-105">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Create Room Modal -->
+<div id="createRoomModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
+    <div class="bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md mx-4 border border-blue-500/20">
+        <h3 class="text-xl font-bold mb-4">إنشاء غرفة جديدة</h3>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-semibold mb-2">اسم الغرفة</label>
+                <input id="newRoomName" type="text" placeholder="مثال: دردشة الشباب" maxlength="30"
+                    class="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-white">
+            </div>
+            <div>
+                <label class="block text-sm font-semibold mb-2">الدولة</label>
+                <select id="newRoomCountry" class="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-white">
+                </select>
+            </div>
+            <div class="flex gap-2">
+                <button id="confirmCreateRoom" class="flex-1 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 rounded-lg font-bold transition">
+                    إنشاء
                 </button>
-                <button onclick="closeLoginModal()" class="flex-1 bg-slate-700 text-white py-3 rounded-xl font-semibold hover-scale">
+                <button id="cancelCreateRoom" class="flex-1 py-2.5 bg-slate-700 hover:bg-slate-600 rounded-lg font-bold transition">
                     إلغاء
                 </button>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Main App -->
-    <div id="mainApp" class="hidden h-screen flex flex-col">
-        <!-- Header -->
-        <header class="glass-effect border-b border-slate-700 relative z-50">
-            <div class="px-4 py-3 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <button onclick="toggleSidebar()" class="lg:hidden text-slate-300 hover:text-white">
-                        <i class="fas fa-bars text-xl"></i>
-                    </button>
-                    <div class="flex items-center gap-3">
-                        <div class="p-2 rounded-xl gradient-bg">
-                            <i class="fas fa-comments text-xl text-white"></i>
-                        </div>
-                        <div>
-                            <h1 class="text-xl font-bold gradient-text">شات اويلي</h1>
-                            <p id="currentUserInfo" class="text-xs text-slate-400"></p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="flex items-center gap-2">
-                    <button id="privateChatBtn" onclick="togglePrivateChatPanel()" class="relative px-4 py-2 bg-purple-500/20 text-purple-300 rounded-lg text-sm font-semibold hover:bg-purple-500/30 transition">
-                        <i class="fas fa-envelope ml-1"></i>الخاص
-                        <span id="privateUnreadBadge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center pulse-badge">0</span>
-                    </button>
-                    <button id="ownerPanelBtn" onclick="openOwnerPanel()" class="hidden px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg text-sm font-semibold hover-scale">
-                        <i class="fas fa-crown ml-1"></i>لوحة المالك
-                    </button>
-                    <button onclick="logout()" class="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg text-sm font-semibold hover:bg-red-500/30 transition">
-                        <i class="fas fa-sign-out-alt ml-1"></i>خروج
-                    </button>
-                </div>
-            </div>
-        </header>
-
-        <div class="flex-1 flex overflow-hidden">
-            <!-- Sidebar -->
-            <aside id="sidebar" class="sidebar-mobile lg:translate-x-0 w-80 glass-effect border-l border-slate-700 flex flex-col fixed lg:relative inset-y-0 right-0 z-40 mt-[61px] lg:mt-0">
-                <div class="p-4 border-b border-slate-700">
-                    <div class="flex items-center justify-between mb-3">
-                        <h2 class="font-bold text-slate-300">الدول والغرف</h2>
-                        <div class="flex items-center gap-2">
-                            <button id="addCountryBtn" onclick="openAddCountryModal()" class="hidden text-purple-400 hover:text-purple-300 text-sm">
-                                <i class="fas fa-plus-circle"></i>
-                            </button>
-                            <button onclick="closeSidebar()" class="lg:hidden text-slate-400 hover:text-white text-sm back-btn p-2 rounded-lg">
-                                <i class="fas fa-arrow-right"></i>
-                                <span class="mr-1">رجوع</span>
-                            </button>
-                        </div>
-                    </div>
-                    <div id="currentRoomInfo" class="bg-slate-800/50 rounded-lg p-3 text-sm">
-                        <div class="text-slate-400">اختر غرفة للبدء</div>
-                    </div>
-                </div>
-
-                <div id="countriesList" class="flex-1 overflow-y-auto scrollbar-custom p-3 space-y-2"></div>
-            </aside>
-
-            <!-- Chat Area -->
-            <main class="flex-1 flex flex-col bg-slate-900 relative">
-                <!-- Room Header -->
-                <div id="roomHeader" class="hidden glass-effect border-b border-slate-700 px-4 py-3">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div>
-                                <h2 id="roomName" class="font-bold text-lg"></h2>
-                                <p id="roomCountry" class="text-xs text-slate-400"></p>
-                            </div>
-                        </div>
-                        <div id="roomExpiry" class="text-xs text-slate-400 bg-slate-800 px-3 py-1 rounded-full"></div>
-                    </div>
-                </div>
-
-                <!-- Messages Area -->
-                <div id="messagesArea" class="flex-1 overflow-y-auto scrollbar-custom p-4 space-y-3">
-                    <div class="flex items-center justify-center h-full">
-                        <div class="text-center text-slate-500">
-                            <i class="fas fa-comments text-6xl mb-4 opacity-20"></i>
-                            <p>اختر دولة وغرفة لبدء المحادثة</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Message Input -->
-                <div id="messageInputArea" class="hidden glass-effect border-t border-slate-700 p-4">
-                    <div class="flex gap-2">
-                        <input type="text" id="messageInput" placeholder="اكتب رسالتك..." class="flex-1 bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 transition" onkeypress="if(event.key==='Enter') sendMessage()">
-                        <button onclick="sendMessage()" class="gradient-bg text-white px-6 py-3 rounded-xl font-semibold hover-scale">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Toggle Online Users Button -->
-                <button id="toggleOnlineBtn" onclick="toggleOnlineUsers()" class="toggle-online-btn hidden gradient-bg text-white px-3 py-4 rounded-r-xl shadow-lg hover:shadow-xl hover-scale">
-                    <i class="fas fa-users text-lg"></i>
-                    <span id="onlineCountBadge" class="badge bg-green-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center pulse-badge">0</span>
-                </button>
-
-                <!-- Online Users Sliding Panel -->
-                <div id="onlineUsersOverlay" onclick="toggleOnlineUsers()"></div>
-                <div id="onlineUsersPanel" class="glass-effect border-l border-slate-700 flex flex-col">
-                    <div class="p-4 border-b border-slate-700">
-                        <div class="flex items-center justify-between mb-3">
-                            <h3 class="font-bold text-slate-300 flex items-center gap-2">
-                                <i class="fas fa-users text-purple-400"></i>
-                                المتواجدون
-                            </h3>
-                            <button onclick="toggleOnlineUsers()" class="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-700/50 transition">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                        <div class="flex items-center justify-between text-xs">
-                            <span class="text-slate-400">في هذه الغرفة</span>
-                            <span class="bg-green-500/20 text-green-400 px-2 py-1 rounded-full font-semibold">
-                                <i class="fas fa-circle text-[8px] ml-1 pulse-online"></i>
-                                <span id="onlineUsersCount">0</span> متصل
-                            </span>
-                        </div>
-                    </div>
-                    <div id="onlineUsersList" class="flex-1 overflow-y-auto scrollbar-custom p-3 space-y-2"></div>
-                </div>
-
-                <!-- Private Chat Panel -->
-                <div id="privateChatPanel" class="hidden absolute inset-0 bg-slate-900 flex flex-col z-10">
-                    <div class="glass-effect border-b border-slate-700 p-4">
-                        <div class="flex items-center justify-between mb-3">
-                            <h2 class="font-bold text-lg gradient-text">
-                                <i class="fas fa-envelope ml-2"></i>الرسائل الخاصة
-                            </h2>
-                            <button onclick="togglePrivateChatPanel()" class="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-700/50 transition">
-                                <i class="fas fa-times text-xl"></i>
-                            </button>
-                        </div>
-                        <div id="privateChatTabs" class="flex gap-2 overflow-x-auto scrollbar-custom pb-2"></div>
-                    </div>
-                    <div id="privateChatContent" class="flex-1 flex flex-col overflow-hidden">
-                        <div class="flex-1 flex items-center justify-center text-slate-500">
-                            <div class="text-center">
-                                <i class="fas fa-comment-dots text-5xl mb-3 opacity-20"></i>
-                                <p>اختر محادثة أو ابدأ محادثة جديدة</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </main>
-
-            <!-- Members Sidebar - Desktop Only -->
-            <aside id="membersSidebar" class="hidden lg:block w-64 glass-effect border-r border-slate-700 p-4 overflow-y-auto scrollbar-custom">
-                <h3 class="font-bold mb-4 text-slate-300 flex items-center justify-between">
-                    <span>الأعضاء المتصلون</span>
-                    <span id="onlineCount" class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full">0</span>
-                </h3>
-                <div id="membersList" class="space-y-2"></div>
-            </aside>
+<!-- Owner Panel Modal -->
+<div id="ownerPanelModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop overflow-y-auto py-8">
+    <div class="bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-4xl mx-4 border border-amber-500/20">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-2xl font-bold flex items-center gap-2">
+                <i class="fas fa-crown text-amber-400"></i>لوحة تحكم المالك
+            </h3>
+            <button id="closeOwnerPanel" class="p-2 hover:bg-slate-700 rounded-lg transition">
+                <i class="fas fa-times text-xl"></i>
+            </button>
         </div>
-    </div>
 
-    <!-- Owner Panel Modal -->
-    <div id="ownerPanel" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4">
-        <div class="glass-effect rounded-2xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto scrollbar-custom">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-2xl font-bold gradient-text">
-                    <i class="fas fa-crown ml-2"></i>لوحة تحكم المالك
-                </h2>
-                <button onclick="closeOwnerPanel()" class="text-slate-400 hover:text-white">
-                    <i class="fas fa-times text-xl"></i>
+        <div class="grid md:grid-cols-2 gap-6">
+            <!-- Create Room Button -->
+            <div class="bg-slate-700/50 p-4 rounded-xl border border-slate-600">
+                <h4 class="font-bold mb-3 flex items-center gap-2">
+                    <i class="fas fa-door-open text-green-400"></i>إدارة الغرف
+                </h4>
+                <button id="ownerCreateRoomBtn" class="w-full py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 rounded-lg font-semibold text-sm transition mb-2">
+                    <i class="fas fa-plus ml-1"></i>إنشاء غرفة جديدة
+                </button>
+                <button id="clearMessagesBtn" class="w-full py-2.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 rounded-lg font-semibold text-sm transition">
+                    <i class="fas fa-trash-alt ml-1"></i>مسح الرسائل للجميع
                 </button>
             </div>
 
-            <div class="grid md:grid-cols-2 gap-4 mb-6">
-                <button onclick="openChangeOwnerName()" class="glass-effect p-4 rounded-xl hover-scale text-right">
-                    <i class="fas fa-user-edit text-2xl text-yellow-400 mb-2"></i>
-                    <h3 class="font-bold mb-1">تغيير اسم المالك</h3>
-                    <p class="text-xs text-slate-400">تغيير الاسم الظاهر للمالك</p>
-                </button>
-                <button onclick="openManageCountries()" class="glass-effect p-4 rounded-xl hover-scale text-right">
-                    <i class="fas fa-globe text-2xl text-purple-400 mb-2"></i>
-                    <h3 class="font-bold mb-1">إدارة الدول</h3>
-                    <p class="text-xs text-slate-400">إضافة وحذف الدول</p>
-                </button>
-                <button onclick="openManageRooms()" class="glass-effect p-4 rounded-xl hover-scale text-right">
-                    <i class="fas fa-door-open text-2xl text-blue-400 mb-2"></i>
-                    <h3 class="font-bold mb-1">إدارة الغرف</h3>
-                    <p class="text-xs text-slate-400">إضافة وحذف الغرف وتحديد الصلاحيات</p>
-                </button>
-                <button onclick="openManageUsers()" class="glass-effect p-4 rounded-xl hover-scale text-right">
-                    <i class="fas fa-users text-2xl text-green-400 mb-2"></i>
-                    <h3 class="font-bold mb-1">إدارة الأعضاء</h3>
-                    <p class="text-xs text-slate-400">إنشاء رموز دخول وحظر الأعضاء</p>
-                </button>
-                <button onclick="openWelcomeMessageModal()" class="glass-effect p-4 rounded-xl hover-scale text-right">
-                    <i class="fas fa-message text-2xl text-amber-400 mb-2"></i>
-                    <h3 class="font-bold mb-1">رسالة الترحيب</h3>
-                    <p class="text-xs text-slate-400">تعديل رسالة الترحيب</p>
+            <!-- Welcome Ticker Control -->
+            <div class="bg-slate-700/50 p-4 rounded-xl border border-slate-600">
+                <h4 class="font-bold mb-3 flex items-center gap-2">
+                    <i class="fas fa-bullhorn text-blue-400"></i>الشريط الترحيبي
+                </h4>
+                <textarea id="tickerInput" rows="3" placeholder="ادخل النص الترحيبي" maxlength="200"
+                    class="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-white text-sm mb-2"></textarea>
+                <button id="updateTickerBtn" class="w-full py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold text-sm transition">
+                    تحديث الشريط
                 </button>
             </div>
 
-            <div class="border-t border-slate-700 pt-4">
-                <h3 class="font-bold mb-3 text-slate-300">إحصائيات النظام</h3>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div class="bg-slate-800/50 rounded-lg p-3 text-center">
-                        <div id="statCountries" class="text-2xl font-bold gradient-text">0</div>
-                        <div class="text-xs text-slate-400">الدول</div>
-                    </div>
-                    <div class="bg-slate-800/50 rounded-lg p-3 text-center">
-                        <div id="statRooms" class="text-2xl font-bold gradient-text">0</div>
-                        <div class="text-xs text-slate-400">الغرف</div>
-                    </div>
-                    <div id="statUsers" class="bg-slate-800/50 rounded-lg p-3 text-center">
-                        <div class="text-2xl font-bold gradient-text">0</div>
-                        <div class="text-xs text-slate-400">الأعضاء</div>
-                    </div>
-                    <div id="statMessages" class="bg-slate-800/50 rounded-lg p-3 text-center">
-                        <div class="text-2xl font-bold gradient-text">0</div>
-                        <div class="text-xs text-slate-400">الرسائل</div>
-                    </div>
-                </div>
+            <!-- Banned Users -->
+            <div class="bg-slate-700/50 p-4 rounded-xl border border-slate-600">
+                <h4 class="font-bold mb-3 flex items-center gap-2">
+                    <i class="fas fa-user-slash text-red-400"></i>المحظورين
+                </h4>
+                <div id="bannedUsersList" class="space-y-2 max-h-48 overflow-y-auto scrollbar-hide text-sm"></div>
+            </div>
+
+            <!-- Muted Users -->
+            <div class="bg-slate-700/50 p-4 rounded-xl border border-slate-600">
+                <h4 class="font-bold mb-3 flex items-center gap-2">
+                    <i class="fas fa-volume-mute text-yellow-400"></i>المكتومين
+                </h4>
+                <div id="mutedUsersList" class="space-y-2 max-h-48 overflow-y-auto scrollbar-hide text-sm"></div>
+            </div>
+
+            <!-- Banned IPs -->
+            <div class="bg-slate-700/50 p-4 rounded-xl border border-slate-600">
+                <h4 class="font-bold mb-3 flex items-center gap-2">
+                    <i class="fas fa-ban text-red-400"></i>الـ IPs المحظورة
+                </h4>
+                <div id="bannedIPsList" class="space-y-2 max-h-48 overflow-y-auto scrollbar-hide text-sm"></div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Generic Modal -->
-    <div id="genericModal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4">
-        <div class="glass-effect rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto scrollbar-custom">
-            <div class="flex items-center justify-between mb-4">
-                <h2 id="genericTitle" class="text-xl font-bold gradient-text"></h2>
-                <button onclick="closeGenericModal()" class="text-slate-400 hover:text-white">
-                    <i class="fas fa-times text-xl"></i>
+<!-- Manage Members Modal -->
+<div id="manageMembersModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop overflow-y-auto py-8">
+    <div class="bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-3xl mx-4 border border-purple-500/20">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-2xl font-bold flex items-center gap-2">
+                <i class="fas fa-users-cog text-purple-400"></i>إدارة أعضاء الغرفة
+            </h3>
+            <button id="closeManageMembers" class="p-2 hover:bg-slate-700 rounded-lg transition">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <!-- Add Member Form -->
+        <div class="bg-slate-700/50 p-4 rounded-xl border border-slate-600 mb-6">
+            <h4 class="font-bold mb-3 flex items-center gap-2">
+                <i class="fas fa-user-plus text-green-400"></i>إضافة عضو جديد
+            </h4>
+            <div class="grid md:grid-cols-3 gap-3 mb-3">
+                <input id="newMemberName" type="text" placeholder="اسم العضو" maxlength="20"
+                    class="px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-white text-sm">
+                <select id="newMemberRank" class="px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-white text-sm">
+                    <option value="user">عضو</option>
+                    <option value="root">روت</option>
+                    <option value="super">سوبر</option>
+                    <option value="master">ماستر</option>
+                </select>
+                <button id="addMemberBtn" class="py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 rounded-lg font-semibold text-sm transition">
+                    <i class="fas fa-plus ml-1"></i>إضافة
                 </button>
             </div>
-            <div id="genericContent"></div>
+            <p class="text-xs text-slate-400">سيتم إنشاء كود تلقائي مكون من 6 أرقام</p>
+        </div>
+
+        <!-- Members List -->
+        <div class="bg-slate-700/50 p-4 rounded-xl border border-slate-600">
+            <h4 class="font-bold mb-3 flex items-center gap-2">
+                <i class="fas fa-list text-blue-400"></i>قائمة الأعضاء
+            </h4>
+            <div id="membersListContainer" class="space-y-2 max-h-96 overflow-y-auto scrollbar-hide"></div>
         </div>
     </div>
+</div>
 
-    <!-- User Actions Modal -->
-    <div id="userActionsModal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4">
-        <div class="glass-effect rounded-2xl p-6 max-w-sm w-full">
-            <div class="text-center mb-6">
-                <div id="userActionsAvatar" class="inline-block w-20 h-20 rounded-full mb-3 flex items-center justify-center text-3xl"></div>
-                <h3 id="userActionsName" class="text-xl font-bold mb-1"></h3>
-                <p id="userActionsRank" class="text-sm text-slate-400"></p>
+<!-- User Action Modal -->
+<div id="userActionModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
+    <div class="bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-sm mx-4 border border-slate-600">
+        <h3 class="text-lg font-bold mb-4" id="actionUserName"></h3>
+        <div class="space-y-2" id="userActions"></div>
+        <button id="closeUserAction" class="w-full mt-4 py-2.5 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold transition">
+            إغلاق
+        </button>
+    </div>
+</div>
+
+<!-- Private Chat Modal -->
+<div id="privateChatModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
+    <div class="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-2xl mx-4 border border-blue-500/20 flex flex-col" style="height: 600px;">
+        <div class="p-4 border-b border-slate-700/50 flex items-center justify-between bg-slate-800/70">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-envelope text-blue-400"></i>
+                <h3 class="text-lg font-bold" id="privateChatTitle">محادثة خاصة</h3>
             </div>
-            <div class="space-y-2">
-                <button onclick="openPrivateChatFromModal()" class="w-full gradient-bg text-white py-3 rounded-xl font-semibold hover-scale">
-                    <i class="fas fa-comment-dots ml-2"></i>تحدث خاص
-                </button>
-                <button onclick="closeUserActionsModal()" class="w-full bg-slate-700 text-white py-3 rounded-xl font-semibold hover-scale">
-                    إغلاق
+            <button id="closePrivateChat" class="p-2 hover:bg-slate-700 rounded-lg transition">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div id="privateMessagesArea" class="flex-1 overflow-y-auto scrollbar-hide p-4 space-y-3 bg-slate-900/30">
+        </div>
+        
+        <div class="p-4 border-t border-slate-700/50 bg-slate-800/70">
+            <div class="flex gap-2">
+                <input id="privateMessageInput" type="text" placeholder="اكتب رسالة خاصة..." maxlength="500"
+                    class="flex-1 px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-white placeholder-slate-500">
+                <button id="sendPrivateBtn" class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 rounded-lg font-bold transition">
+                    <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
         </div>
     </div>
+</div>
 
-    <script>
-        // Constants
-        const OWNER_PASSWORD = '19951995';
-        const RANKS = {
-            owner: { name: 'المالك', color: 'owner-gradient', icon: 'fa-crown', badge: 'gradient-bg', protected: true },
-            master: { name: 'ماستر', color: 'text-red-400', icon: 'fa-star', badge: 'master-badge' },
-            superadmin: { name: 'سوبر ادمن', color: 'text-purple-400', icon: 'fa-shield-halved', badge: 'superadmin-badge' },
-            admin: { name: 'ادمن', color: 'text-blue-400', icon: 'fa-shield', badge: 'admin-badge' },
-            minbar: { name: 'منبر', color: 'text-green-400', icon: 'fa-microphone', badge: 'minbar-badge' },
-            member: { name: 'عضو', color: 'text-slate-400', icon: 'fa-user', badge: 'member-badge' },
-            guest: { name: 'زائر', color: 'text-slate-500', icon: 'fa-user-secret', badge: 'guest-badge' }
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getDatabase, ref, set, push, onValue, remove, update, get, child, onDisconnect } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+
+// Firebase Config
+const firebaseConfig = {
+    apiKey: "AIzaSyAGpES78mV7-jgEQzi63R0TONGKfUQHFHc",
+    authDomain: "hashed-cht.firebaseapp.com",
+    databaseURL: "https://hashed-cht-default-rtdb.firebaseio.com",
+    projectId: "hashed-cht",
+    storageBucket: "hashed-cht.firebasestorage.app",
+    messagingSenderId: "442699332645",
+    appId: "1:442699332645:web:4ad8e351a1f4fb7c7453cc"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// App State
+let currentUser = null;
+let currentCountry = null;
+let currentRoom = null;
+let currentPrivateChat = null;
+let userRank = 'user';
+let isOwner = false;
+let loginType = 'member';
+let countries = {};
+let rooms = {};
+let messages = {};
+let privateChats = {};
+let onlineUsers = {};
+let bannedUsers = {};
+let bannedIPs = {};
+let mutedUsers = {};
+let roomMembers = {};
+let userIP = 'unknown';
+let deviceId = localStorage.getItem('chatDeviceId') || generateDeviceId();
+
+// Owner code - not displayed anywhere in UI
+const OWNER_CODE = '19951995';
+const RANKS = {
+    owner: { name: 'مالك', color: 'glow-owner', canKick: true, canBan: true, canMute: true, canIPBan: true, canManageMembers: true },
+    master: { name: 'ماستر', color: 'rank-master', canKick: true, canBan: true, canMute: true, canIPBan: false, canManageMembers: false },
+    super: { name: 'سوبر', color: 'rank-super', canKick: false, canBan: false, canMute: true, canIPBan: false, canManageMembers: false },
+    root: { name: 'روت', color: 'rank-root', canKick: false, canBan: false, canMute: true, canIPBan: false, canManageMembers: false },
+    user: { name: 'عضو', color: 'rank-user', canKick: false, canBan: false, canMute: false, canIPBan: false, canManageMembers: false },
+    guest: { name: 'زائر', color: 'rank-guest', canKick: false, canBan: false, canMute: false, canIPBan: false, canManageMembers: false }
+};
+
+function generateDeviceId() {
+    const id = 'dev_' + Math.random().toString(36).substr(2, 16) + Date.now().toString(36);
+    localStorage.setItem('chatDeviceId', id);
+    return id;
+}
+
+function generateMemberCode() {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+// Get user IP
+fetch('https://api.ipify.org?format=json')
+    .then(res => res.json())
+    .then(data => { userIP = data.ip; })
+    .catch(() => { userIP = 'unknown_' + Math.random().toString(36).substr(2, 9); });
+
+// DOM Elements
+const loginScreen = document.getElementById('loginScreen');
+const mainApp = document.getElementById('mainApp');
+const usernameInput = document.getElementById('usernameInput');
+const ownerCodeInput = document.getElementById('ownerCodeInput');
+const loginBtn = document.getElementById('loginBtn');
+const guestBtn = document.getElementById('guestBtn');
+const memberBtn = document.getElementById('memberBtn');
+const ownerBtn = document.getElementById('ownerBtn');
+const usernameField = document.getElementById('usernameField');
+const codeField = document.getElementById('codeField');
+const userInfo = document.getElementById('userInfo');
+const drawerUserInfo = document.getElementById('drawerUserInfo');
+const hamburgerBtn = document.getElementById('hamburgerBtn');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
+const sidebarDrawer = document.getElementById('sidebarDrawer');
+const closeSidebar = document.getElementById('closeSidebar');
+const drawerOwnerPanelBtn = document.getElementById('drawerOwnerPanelBtn');
+const drawerLogoutBtn = document.getElementById('drawerLogoutBtn');
+const countriesList = document.getElementById('countriesList');
+const roomsBar = document.getElementById('roomsBar');
+const usersList = document.getElementById('usersList');
+const roomUsersList = document.getElementById('roomUsersList');
+const userCount = document.getElementById('userCount');
+const roomUserCountBadge = document.getElementById('roomUserCountBadge');
+const currentRoomName = document.getElementById('currentRoomName');
+const currentCountryName = document.getElementById('currentCountryName');
+const selectedCountryName = document.getElementById('selectedCountryName');
+const roomUserCount = document.getElementById('roomUserCount');
+const manageMembersBtn = document.getElementById('manageMembersBtn');
+const messagesArea = document.getElementById('messagesArea');
+const messageInputArea = document.getElementById('messageInputArea');
+const messageInput = document.getElementById('messageInput');
+const sendBtn = document.getElementById('sendBtn');
+const createRoomModal = document.getElementById('createRoomModal');
+const newRoomName = document.getElementById('newRoomName');
+const newRoomCountry = document.getElementById('newRoomCountry');
+const confirmCreateRoom = document.getElementById('confirmCreateRoom');
+const cancelCreateRoom = document.getElementById('cancelCreateRoom');
+const ownerPanelModal = document.getElementById('ownerPanelModal');
+const closeOwnerPanel = document.getElementById('closeOwnerPanel');
+const ownerCreateRoomBtn = document.getElementById('ownerCreateRoomBtn');
+const clearMessagesBtn = document.getElementById('clearMessagesBtn');
+const tickerInput = document.getElementById('tickerInput');
+const updateTickerBtn = document.getElementById('updateTickerBtn');
+const welcomeTicker = document.getElementById('welcomeTicker');
+const bannedUsersList = document.getElementById('bannedUsersList');
+const mutedUsersList = document.getElementById('mutedUsersList');
+const bannedIPsList = document.getElementById('bannedIPsList');
+const userActionModal = document.getElementById('userActionModal');
+const actionUserName = document.getElementById('actionUserName');
+const userActions = document.getElementById('userActions');
+const closeUserAction = document.getElementById('closeUserAction');
+const manageMembersModal = document.getElementById('manageMembersModal');
+const closeManageMembers = document.getElementById('closeManageMembers');
+const newMemberName = document.getElementById('newMemberName');
+const newMemberRank = document.getElementById('newMemberRank');
+const addMemberBtn = document.getElementById('addMemberBtn');
+const membersListContainer = document.getElementById('membersListContainer');
+const privateChatModal = document.getElementById('privateChatModal');
+const closePrivateChat = document.getElementById('closePrivateChat');
+const privateChatTitle = document.getElementById('privateChatTitle');
+const privateMessagesArea = document.getElementById('privateMessagesArea');
+const privateMessageInput = document.getElementById('privateMessageInput');
+const sendPrivateBtn = document.getElementById('sendPrivateBtn');
+
+// Login Type Selection
+guestBtn.addEventListener('click', () => {
+    loginType = 'guest';
+    guestBtn.classList.add('active');
+    memberBtn.classList.remove('active');
+    ownerBtn.classList.remove('active');
+    usernameField.classList.add('hidden');
+    codeField.classList.add('hidden');
+});
+
+memberBtn.addEventListener('click', () => {
+    loginType = 'member';
+    memberBtn.classList.add('active');
+    guestBtn.classList.remove('active');
+    ownerBtn.classList.remove('active');
+    usernameField.classList.remove('hidden');
+    codeField.classList.remove('hidden');
+    ownerCodeInput.placeholder = 'كود العضو';
+});
+
+ownerBtn.addEventListener('click', () => {
+    loginType = 'owner';
+    ownerBtn.classList.add('active');
+    guestBtn.classList.remove('active');
+    memberBtn.classList.remove('active');
+    usernameField.classList.remove('hidden');
+    codeField.classList.remove('hidden');
+    ownerCodeInput.placeholder = 'كود المالك';
+});
+
+function generateGuestName() {
+    return 'زائر_' + Math.random().toString(36).substr(2, 6).toUpperCase();
+}
+
+function getRankDisplay(rank, username, clickable = false) {
+    const rankData = RANKS[rank];
+    if (!rankData) return username;
+    
+    const clickClass = clickable ? 'username-click' : '';
+    const clickAttr = clickable ? `onclick="openPrivateChat('${username}')"` : '';
+    
+    if (rank === 'owner') {
+        return `<span class="glow-owner" ${clickAttr}><i class="fas fa-crown"></i> ${rankData.name} <i class="fas fa-check-circle"></i></span> <span class="${clickClass}" ${clickAttr}>${username}</span>`;
+    } else if (rank === 'guest') {
+        return `<span class="${rankData.color}"><i class="fas fa-user"></i></span> <span class="${clickClass}" ${clickAttr}>${username}</span>`;
+    } else {
+        return `<span class="${rankData.color}"><i class="fas fa-user-check"></i> ${rankData.name}</span> <span class="${clickClass}" ${clickAttr}>${username}</span>`;
+    }
+}
+
+// Sidebar Functions
+function openSidebar() {
+    sidebarOverlay.classList.remove('hidden');
+    setTimeout(() => {
+        sidebarDrawer.classList.remove('translate-x-full');
+    }, 10);
+}
+
+function closeSidebarFn() {
+    sidebarDrawer.classList.add('translate-x-full');
+    setTimeout(() => {
+        sidebarOverlay.classList.add('hidden');
+    }, 300);
+}
+
+hamburgerBtn.addEventListener('click', openSidebar);
+closeSidebar.addEventListener('click', closeSidebarFn);
+sidebarOverlay.addEventListener('click', (e) => {
+    if (e.target === sidebarOverlay) closeSidebarFn();
+});
+
+// Initialize Default Countries
+async function initDefaultCountries() {
+    const defaultCountries = [
+        { id: 'iraq', name: 'العراق', flag: '🇮🇶' },
+        { id: 'saudi', name: 'السعودية', flag: '🇸🇦' },
+        { id: 'egypt', name: 'مصر', flag: '🇪🇬' },
+        { id: 'uae', name: 'الإمارات', flag: '🇦🇪' }
+    ];
+    
+    const countriesRef = ref(db, 'countries');
+    const snapshot = await get(countriesRef);
+    
+    if (!snapshot.exists()) {
+        for (const country of defaultCountries) {
+            await set(ref(db, `countries/${country.id}`), country);
+        }
+    }
+}
+
+// Login
+loginBtn.addEventListener('click', async () => {
+    let username = '';
+    let code = ownerCodeInput.value.trim();
+    
+    if (loginType === 'guest') {
+        username = generateGuestName();
+        userRank = 'guest';
+    } else if (loginType === 'member') {
+        username = usernameInput.value.trim();
+        if (!username || username.length < 2) {
+            alert('يرجى ادخال اسم مستخدم صحيح');
+            return;
+        }
+        if (!code) {
+            alert('الكود مطلوب للعضو');
+            return;
+        }
+        
+        // Check member in Firebase
+        const memberSnapshot = await get(ref(db, 'members'));
+        const allMembers = memberSnapshot.val() || {};
+        let memberFound = null;
+        let memberRoom = null;
+        
+        for (const roomId in allMembers) {
+            if (allMembers[roomId][username]) {
+                memberFound = allMembers[roomId][username];
+                memberRoom = roomId;
+                break;
+            }
+        }
+        
+        if (!memberFound) {
+            alert('هذا الاسم غير مسجل');
+            return;
+        }
+        
+        if (memberFound.code !== code) {
+            alert('هذا الاسم محجوز بكود خاص');
+            return;
+        }
+        
+        // Check device binding
+        if (memberFound.deviceId && memberFound.deviceId !== deviceId) {
+            alert('هذا الاسم مسجل من جهاز آخر');
+            return;
+        }
+        
+        // Bind device on first login
+        if (!memberFound.deviceId) {
+            await update(ref(db, `members/${memberRoom}/${username}`), { deviceId: deviceId });
+        }
+        
+        userRank = memberFound.rank;
+    } else if (loginType === 'owner') {
+        username = usernameInput.value.trim();
+        if (!username || username.length < 2) {
+            alert('يرجى ادخال اسم مستخدم صحيح');
+            return;
+        }
+        if (code !== OWNER_CODE) {
+            alert('كود المالك غير صحيح');
+            return;
+        }
+        userRank = 'owner';
+        isOwner = true;
+    }
+    
+    // Check if banned
+    const bannedSnapshot = await get(child(ref(db), `bannedUsers/${username}`));
+    if (bannedSnapshot.exists()) {
+        alert('أنت محظور من الدردشة');
+        return;
+    }
+    
+    const bannedIPSnapshot = await get(child(ref(db), `bannedIPs/${userIP.replace(/\./g, '_')}`));
+    if (bannedIPSnapshot.exists()) {
+        alert('عنوان IP الخاص بك محظور');
+        return;
+    }
+    
+    currentUser = username;
+    
+    const userDisplay = getRankDisplay(userRank, username);
+    userInfo.innerHTML = userDisplay;
+    drawerUserInfo.innerHTML = userDisplay;
+    
+    // Show owner panel button
+    if (isOwner) {
+        drawerOwnerPanelBtn.classList.remove('hidden');
+    }
+    
+    // Add user to online
+    const userRef = ref(db, `onlineUsers/${username}`);
+    await set(userRef, {
+        username,
+        rank: userRank,
+        ip: userIP,
+        deviceId,
+        timestamp: Date.now()
+    });
+    
+    // Remove on disconnect
+    onDisconnect(userRef).remove();
+    
+    loginScreen.classList.add('hidden');
+    mainApp.classList.remove('hidden');
+    
+    setupListeners();
+});
+
+// Logout
+drawerLogoutBtn.addEventListener('click', async () => {
+    if (currentUser) {
+        await remove(ref(db, `onlineUsers/${currentUser}`));
+    }
+    location.reload();
+});
+
+// Setup Firebase Listeners
+function setupListeners() {
+    // Countries
+    onValue(ref(db, 'countries'), (snapshot) => {
+        countries = snapshot.val() || {};
+        renderCountries();
+        populateCountrySelect();
+    });
+    
+    // Rooms
+    onValue(ref(db, 'rooms'), (snapshot) => {
+        rooms = snapshot.val() || {};
+        if (currentCountry) renderRoomsBar();
+    });
+    
+    // Messages
+    onValue(ref(db, 'messages'), (snapshot) => {
+        messages = snapshot.val() || {};
+        if (currentRoom) renderMessages();
+    });
+    
+    // Private Chats
+    onValue(ref(db, 'private_chats'), (snapshot) => {
+        privateChats = snapshot.val() || {};
+        if (currentPrivateChat) renderPrivateMessages();
+    });
+    
+    // Online Users
+    onValue(ref(db, 'onlineUsers'), (snapshot) => {
+        onlineUsers = snapshot.val() || {};
+        renderUsers();
+        renderRoomUsers();
+    });
+    
+    // Members
+    onValue(ref(db, 'members'), (snapshot) => {
+        roomMembers = snapshot.val() || {};
+        if (currentRoom && !manageMembersModal.classList.contains('hidden')) {
+            renderMembersListForOwner();
+        }
+    });
+    
+    // Banned Users
+    onValue(ref(db, 'bannedUsers'), (snapshot) => {
+        bannedUsers = snapshot.val() || {};
+        renderBannedUsers();
+    });
+    
+    // Muted Users
+    onValue(ref(db, 'mutedUsers'), (snapshot) => {
+        mutedUsers = snapshot.val() || {};
+        renderMutedUsers();
+        checkUserMuteStatus();
+    });
+    
+    // Banned IPs
+    onValue(ref(db, 'bannedIPs'), (snapshot) => {
+        bannedIPs = snapshot.val() || {};
+        renderBannedIPs();
+    });
+    
+    // Welcome Ticker
+    onValue(ref(db, 'settings/welcomeTicker'), (snapshot) => {
+        const ticker = snapshot.val();
+        if (ticker) {
+            welcomeTicker.textContent = ticker;
+            tickerInput.value = ticker;
+        }
+    });
+}
+
+// Render Countries
+function renderCountries() {
+    countriesList.innerHTML = '';
+    Object.values(countries).forEach(country => {
+        const btn = document.createElement('button');
+        btn.className = `w-full text-right px-4 py-2.5 rounded-xl transition text-sm font-semibold ${currentCountry?.id === country.id ? 'bg-blue-600 shadow-lg' : 'bg-slate-700/50 hover:bg-slate-700'}`;
+        btn.innerHTML = `<span class="text-xl ml-2">${country.flag}</span>${country.name}`;
+        btn.onclick = () => {
+            selectCountry(country);
+            closeSidebarFn();
         };
+        countriesList.appendChild(btn);
+    });
+}
 
-        // State
-        let currentUser = null;
-        let currentRoom = null;
-        let currentCountry = null;
-        let selectedRole = null;
-        let selectedUserForAction = null;
-        let activePrivateChat = null;
-        let privateChatMessages = {};
-        let openCountries = new Set();
-        let onlineUsersPanelOpen = false;
-        let onlineUsers = [];
-        let onlineUpdateInterval = null;
-        let db = {
-            countries: [],
-            rooms: [],
-            users: [],
-            messages: [],
-            privateMessages: [],
-            bannedUsers: [],
-            welcomeMessage: 'مرحباً بك في شات اويلي! اختر طريقة الدخول المناسبة - الزوار يستطيعون المشاركة بالكامل',
-            ownerName: 'المالك'
-        };
+// Select Country
+function selectCountry(country) {
+    currentCountry = country;
+    currentRoom = null;
+    currentCountryName.textContent = country.name;
+    selectedCountryName.textContent = `${country.flag} ${country.name}`;
+    renderCountries();
+    renderRoomsBar();
+    messagesArea.innerHTML = '<div class="text-center text-slate-500 mt-20"><i class="fas fa-comments text-6xl mb-4 opacity-30"></i><p>اختر غرفة لبدء الدردشة</p></div>';
+    messageInputArea.classList.add('hidden');
+    document.getElementById('roomActions').classList.add('hidden');
+    manageMembersBtn.classList.add('hidden');
+}
 
-        // Initialize
-        function init() {
-            loadData();
-            if (db.countries.length === 0) {
-                initDefaultData();
-            }
-            updateWelcomeMessage();
-            checkExpiredRooms();
-            loadPrivateMessages();
-            setInterval(updatePrivateUnreadCount, 1000);
+// Render Rooms Bar
+function renderRoomsBar() {
+    if (!currentCountry) {
+        roomsBar.innerHTML = '<p class="text-slate-500 text-sm py-2">اختر دولة لعرض الغرف</p>';
+        return;
+    }
+    roomsBar.innerHTML = '';
+    const countryRooms = Object.values(rooms).filter(r => r.countryId === currentCountry.id);
+    
+    if (countryRooms.length === 0) {
+        roomsBar.innerHTML = '<p class="text-slate-500 text-sm py-2">لا توجد غرف بعد</p>';
+        return;
+    }
+    
+    countryRooms.forEach(room => {
+        const roomUsers = Object.values(onlineUsers).filter(u => u.currentRoom === room.id).length;
+        const btn = document.createElement('button');
+        btn.className = `flex-shrink-0 px-4 py-2 rounded-xl transition text-sm font-semibold ${currentRoom?.id === room.id ? 'room-active' : 'bg-slate-700/50 hover:bg-slate-700'}`;
+        btn.innerHTML = `
+            <div class="flex items-center gap-2">
+                <i class="fas fa-hashtag text-cyan-400"></i>
+                <span>${room.name}</span>
+                <span class="text-xs bg-slate-600 px-2 py-0.5 rounded-full">${roomUsers}</span>
+            </div>
+        `;
+        btn.onclick = () => selectRoom(room);
+        roomsBar.appendChild(btn);
+    });
+}
+
+// Select Room
+async function selectRoom(room) {
+    currentRoom = room;
+    currentRoomName.textContent = room.name;
+    document.getElementById('roomActions').classList.remove('hidden');
+    messageInputArea.classList.remove('hidden');
+    
+    // Show manage members button for owner
+    if (isOwner && RANKS[userRank].canManageMembers) {
+        manageMembersBtn.classList.remove('hidden');
+    }
+    
+    // Update user's current room
+    await update(ref(db, `onlineUsers/${currentUser}`), { currentRoom: room.id });
+    
+    renderRoomsBar();
+    renderMessages();
+    renderRoomUsers();
+    
+    // Update room user count
+    const roomUsers = Object.values(onlineUsers).filter(u => u.currentRoom === room.id).length;
+    roomUserCount.innerHTML = `<i class="fas fa-user ml-1"></i>${roomUsers}`;
+}
+
+// Render Messages
+function renderMessages() {
+    if (!currentRoom) return;
+    const roomMessages = Object.values(messages).filter(m => m.roomId === currentRoom.id);
+    messagesArea.innerHTML = '';
+    
+    if (roomMessages.length === 0) {
+        messagesArea.innerHTML = '<div class="text-center text-slate-500 mt-20"><i class="fas fa-message text-6xl mb-4 opacity-30"></i><p>لا توجد رسائل بعد، كن أول من يرسل</p></div>';
+        return;
+    }
+    
+    roomMessages.sort((a, b) => a.timestamp - b.timestamp);
+    
+    roomMessages.forEach(msg => {
+        const isOwn = msg.username === currentUser;
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message-appear flex ${isOwn ? 'justify-end' : 'justify-start'}`;
+        
+        const rankDisplay = getRankDisplay(msg.rank, msg.username, !isOwn);
+        
+        msgDiv.innerHTML = `
+            <div class="max-w-md ${isOwn ? 'bg-gradient-to-r from-blue-600 to-cyan-600' : 'bg-slate-700/70'} rounded-2xl px-4 py-2.5 shadow-lg">
+                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                    ${rankDisplay}
+                    <span class="text-xs opacity-70">${new Date(msg.timestamp).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
+                <p class="text-sm leading-relaxed break-words">${msg.text}</p>
+            </div>
+        `;
+        messagesArea.appendChild(msgDiv);
+    });
+    
+    setTimeout(() => {
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+    }, 50);
+}
+
+// Check User Mute Status
+async function checkUserMuteStatus() {
+    if (!currentUser) return;
+    const mutedSnapshot = await get(child(ref(db), `mutedUsers/${currentUser}`));
+    if (mutedSnapshot.exists()) {
+        const muteData = mutedSnapshot.val();
+        const now = Date.now();
+        const muteUntil = muteData.until || now;
+        
+        if (now < muteUntil) {
+            const remaining = Math.ceil((muteUntil - now) / 1000 / 60);
+            messageInput.disabled = true;
+            messageInput.placeholder = `مكتوم لمدة ${remaining} دقيقة`;
+            sendBtn.disabled = true;
+            sendBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        } else {
+            // Mute expired, remove it
+            await remove(ref(db, `mutedUsers/${currentUser}`));
+            messageInput.disabled = false;
+            messageInput.placeholder = 'اكتب رسالتك هنا...';
+            sendBtn.disabled = false;
+            sendBtn.classList.remove('opacity-50', 'cursor-not-allowed');
         }
+    } else {
+        messageInput.disabled = false;
+        messageInput.placeholder = 'اكتب رسالتك هنا...';
+        sendBtn.disabled = false;
+        sendBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+}
 
-        function initDefaultData() {
-            db.countries = [
-                { id: 'sa', name: 'السعودية', icon: '🇸🇦' },
-                { id: 'ae', name: 'الإمارات', icon: '🇦🇪' },
-                { id: 'eg', name: 'مصر', icon: '🇪🇬' },
-                { id: 'kw', name: 'الكويت', icon: '🇰🇼' }
-            ];
-            
-            const expiry = new Date();
-            expiry.setDate(expiry.getDate() + 30);
-            
-            db.rooms = [
-                { id: 'r1', countryId: 'sa', name: 'العامة', master: null, expiry: expiry.toISOString(), created: new Date().toISOString() },
-                { id: 'r2', countryId: 'ae', name: 'العامة', master: null, expiry: expiry.toISOString(), created: new Date().toISOString() },
-                { id: 'r3', countryId: 'eg', name: 'العامة', master: null, expiry: expiry.toISOString(), created: new Date().toISOString() }
-            ];
-            
-            saveData();
+// Send Message
+async function sendMessage() {
+    const text = messageInput.value.trim();
+    if (!text || !currentRoom) return;
+    
+    // Check if muted
+    const mutedSnapshot = await get(child(ref(db), `mutedUsers/${currentUser}`));
+    if (mutedSnapshot.exists()) {
+        const muteData = mutedSnapshot.val();
+        const now = Date.now();
+        const muteUntil = muteData.until || now;
+        
+        if (now < muteUntil) {
+            const remaining = Math.ceil((muteUntil - now) / 1000 / 60);
+            alert(`أنت مكتوم لمدة ${remaining} دقيقة`);
+            messageInput.value = '';
+            return;
         }
+    }
+    
+    const message = {
+        username: currentUser,
+        rank: userRank,
+        text,
+        roomId: currentRoom.id,
+        timestamp: Date.now()
+    };
+    
+    await push(ref(db, 'messages'), message);
+    messageInput.value = '';
+    
+    // Auto scroll to bottom
+    setTimeout(() => {
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+    }, 100);
+}
 
-        function loadData() {
-            const saved = localStorage.getItem('olychat_db');
-            if (saved) {
-                const loaded = JSON.parse(saved);
-                db = { ...db, ...loaded };
-                if (!db.privateMessages) db.privateMessages = [];
-                if (!db.ownerName) db.ownerName = 'المالك';
-            }
-        }
+sendBtn.addEventListener('click', sendMessage);
+messageInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+});
 
-        function saveData() {
-            localStorage.setItem('olychat_db', JSON.stringify(db));
-        }
+// Render All Users
+function renderUsers() {
+    const users = Object.values(onlineUsers);
+    userCount.textContent = users.length;
+    usersList.innerHTML = '';
+    
+    users.forEach(user => {
+        const div = document.createElement('div');
+        div.className = 'flex items-center justify-between px-3 py-2 bg-slate-700/30 hover:bg-slate-700/50 rounded-lg transition';
+        
+        const isMuted = mutedUsers[user.username];
+        const userDisplay = getRankDisplay(user.rank, user.username, user.username !== currentUser);
+        
+        div.innerHTML = `
+            <div class="flex items-center gap-2 flex-1">
+                <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span class="text-sm">${userDisplay}</span>
+                ${isMuted ? '<span class="mute-badge text-xs bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded-full"><i class="fas fa-volume-mute"></i></span>' : ''}
+            </div>
+            ${((isOwner && RANKS.owner.canKick) || (RANKS[userRank].canMute)) && user.username !== currentUser ? '<button onclick="showUserActionsByName(\'' + user.username + '\')" class="p-1 hover:bg-slate-600 rounded"><i class="fas fa-ellipsis-v text-slate-500 text-xs"></i></button>' : ''}
+        `;
+        
+        usersList.appendChild(div);
+    });
+}
 
-        function updateWelcomeMessage() {
-            document.getElementById('welcomeMessage').textContent = db.welcomeMessage;
-        }
+// Render Room Users
+function renderRoomUsers() {
+    if (!currentRoom) {
+        roomUsersList.innerHTML = '<p class="text-slate-500 text-sm text-center py-2">لم تدخل غرفة بعد</p>';
+        roomUserCountBadge.textContent = '0';
+        return;
+    }
+    
+    const roomUsers = Object.values(onlineUsers).filter(u => u.currentRoom === currentRoom.id);
+    roomUserCountBadge.textContent = roomUsers.length;
+    roomUsersList.innerHTML = '';
+    
+    if (roomUsers.length === 0) {
+        roomUsersList.innerHTML = '<p class="text-slate-500 text-sm text-center py-2">لا أحد في الغرفة</p>';
+        return;
+    }
+    
+    roomUsers.forEach(user => {
+        const div = document.createElement('div');
+        div.className = 'flex items-center justify-between px-3 py-2 bg-slate-700/30 hover:bg-slate-700/50 rounded-lg transition';
+        
+        const isMuted = mutedUsers[user.username];
+        const userDisplay = getRankDisplay(user.rank, user.username, user.username !== currentUser);
+        
+        div.innerHTML = `
+            <div class="flex items-center gap-2 flex-1">
+                <div class="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
+                <span class="text-sm">${userDisplay}</span>
+                ${isMuted ? '<span class="mute-badge text-xs bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded-full"><i class="fas fa-volume-mute"></i></span>' : ''}
+            </div>
+            ${((isOwner && RANKS.owner.canKick) || (RANKS[userRank].canMute)) && user.username !== currentUser ? '<button onclick="showUserActionsByName(\'' + user.username + '\')" class="p-1 hover:bg-slate-600 rounded"><i class="fas fa-ellipsis-v text-slate-500 text-xs"></i></button>' : ''}
+        `;
+        
+        roomUsersList.appendChild(div);
+    });
+}
 
-        function checkExpiredRooms() {
-            const now = new Date();
-            db.rooms = db.rooms.filter(room => new Date(room.expiry) > now);
-            saveData();
-        }
+// Show User Actions
+window.showUserActionsByName = (username) => {
+    const user = onlineUsers[username];
+    if (user) showUserActions(user);
+};
 
-        // Auth Functions
-        function selectRole(role) {
-            selectedRole = role;
-            if (role === 'guest') {
-                document.getElementById('passwordInput').style.display = 'none';
-                document.getElementById('usernameInput').placeholder = 'اسم المستخدم';
-                document.getElementById('loginTitle').textContent = 'دخول كزائر - مشاركة كاملة';
-                document.getElementById('ownerNameHint').classList.add('hidden');
-            } else if (role === 'owner') {
-                document.getElementById('passwordInput').style.display = 'block';
-                document.getElementById('usernameInput').placeholder = 'اسم المالك';
-                document.getElementById('loginTitle').textContent = 'دخول المالك';
-                document.getElementById('ownerNameHint').classList.remove('hidden');
-                
-                const savedOwnerName = localStorage.getItem('olychat_ownerName');
-                if (savedOwnerName) {
-                    document.getElementById('usernameInput').value = savedOwnerName;
-                }
-            } else {
-                document.getElementById('passwordInput').style.display = 'block';
-                document.getElementById('usernameInput').placeholder = 'اسم المستخدم';
-                document.getElementById('loginTitle').textContent = 'دخول كعضو';
-                document.getElementById('ownerNameHint').classList.add('hidden');
-            }
-            document.getElementById('welcomeModal').classList.add('hidden');
-            document.getElementById('loginModal').classList.remove('hidden');
-            document.getElementById('loginError').classList.add('hidden');
-        }
+function showUserActions(user) {
+    actionUserName.textContent = user.username;
+    userActions.innerHTML = '';
+    
+    const rank = RANKS[userRank];
+    
+    // Private chat button for everyone
+    if (user.username !== currentUser) {
+        addActionButton('محادثة خاصة', 'fa-envelope', 'bg-blue-600 hover:bg-blue-700', () => openPrivateChat(user.username));
+    }
+    
+    // Owner can kick and ban
+    if (isOwner && rank.canKick) {
+        addActionButton('طرد', 'fa-sign-out-alt', 'bg-orange-600 hover:bg-orange-700', () => kickUser(user.username));
+    }
+    if (isOwner && rank.canBan) {
+        addActionButton('حظر', 'fa-user-slash', 'bg-red-600 hover:bg-red-700', () => banUser(user.username));
+    }
+    
+    // Super and Root can mute for 5 minutes
+    if (rank.canMute && (rank.name === 'سوبر' || rank.name === 'روت' || isOwner)) {
+        addActionButton('كتم 5 دقائق', 'fa-volume-mute', 'bg-yellow-600 hover:bg-yellow-700', () => muteUser(user.username, 5));
+    }
+    
+    // Owner and Master can unmute
+    if ((isOwner || userRank === 'master') && rank.canMute) {
+        addActionButton('فك الكتم', 'fa-volume-up', 'bg-green-600 hover:bg-green-700', () => unmuteUser(user.username));
+    }
+    
+    if (isOwner && rank.canIPBan) {
+        addActionButton('حظر IP', 'fa-ban', 'bg-red-800 hover:bg-red-900', () => banIP(user.ip, user.username));
+    }
+    
+    userActionModal.classList.remove('hidden');
+}
 
-        function closeLoginModal() {
-            document.getElementById('loginModal').classList.add('hidden');
-            document.getElementById('welcomeModal').classList.remove('hidden');
-        }
+function addActionButton(text, icon, classes, onclick) {
+    const btn = document.createElement('button');
+    btn.className = `w-full py-2.5 ${classes} rounded-lg font-semibold text-sm transition flex items-center justify-center gap-2`;
+    btn.innerHTML = `<i class="fas ${icon}"></i>${text}`;
+    btn.onclick = () => { onclick(); userActionModal.classList.add('hidden'); };
+    userActions.appendChild(btn);
+}
 
-        function handleLogin() {
-            const username = document.getElementById('usernameInput').value.trim();
-            const password = document.getElementById('passwordInput').value.trim();
-            const errorDiv = document.getElementById('loginError');
+closeUserAction.addEventListener('click', () => userActionModal.classList.add('hidden'));
 
-            if (!username) {
-                showError('الرجاء إدخال اسم المستخدم');
-                return;
-            }
+// Moderation Actions
+async function kickUser(username) {
+    await remove(ref(db, `onlineUsers/${username}`));
+    alert(`تم طرد ${username}`);
+}
 
-            if (db.bannedUsers.includes(username)) {
-                showError('هذا المستخدم محظور من الدخول');
-                return;
-            }
+async function muteUser(username, minutes = 5) {
+    const muteUntil = Date.now() + (minutes * 60 * 1000);
+    await set(ref(db, `mutedUsers/${username}`), { timestamp: Date.now(), until: muteUntil, duration: minutes });
+    alert(`تم كتم ${username} لمدة ${minutes} دقائق`);
+}
 
-            if (selectedRole === 'owner') {
-                if (password !== OWNER_PASSWORD) {
-                    showError('الرمز السري للمالك غير صحيح');
-                    return;
-                }
-                db.ownerName = username;
-                localStorage.setItem('olychat_ownerName', username);
-                saveData();
-                currentUser = { username, role: 'owner', rank: 'owner' };
-            } else if (selectedRole === 'member') {
-                const user = db.users.find(u => u.username === username && u.password === password);
-                if (!user) {
-                    showError('اسم المستخدم أو الرمز السري غير صحيح');
-                    return;
-                }
-                currentUser = { username, role: 'member', rank: user.rank, userId: user.id };
-            } else {
-                currentUser = { username, role: 'guest', rank: 'guest' };
-            }
+async function unmuteUser(username) {
+    await remove(ref(db, `mutedUsers/${username}`));
+    alert(`تم فك كتم ${username}`);
+}
 
-            localStorage.setItem('olychat_currentUser', JSON.stringify(currentUser));
-            startApp();
-        }
+async function banUser(username) {
+    await set(ref(db, `bannedUsers/${username}`), { timestamp: Date.now() });
+    await remove(ref(db, `onlineUsers/${username}`));
+    alert(`تم حظر ${username}`);
+}
 
-        function showError(msg) {
-            const errorDiv = document.getElementById('loginError');
-            errorDiv.textContent = msg;
-            errorDiv.classList.remove('hidden');
-        }
+async function banIP(ip, username) {
+    const ipKey = ip.replace(/\./g, '_');
+    await set(ref(db, `bannedIPs/${ipKey}`), { username, timestamp: Date.now() });
+    await remove(ref(db, `onlineUsers/${username}`));
+    alert(`تم حظر IP: ${ip}`);
+}
 
-        function logout() {
-            removeUserFromOnline();
-            currentUser = null;
-            currentRoom = null;
-            currentCountry = null;
-            localStorage.removeItem('olychat_currentUser');
-            document.getElementById('mainApp').classList.add('hidden');
-            document.getElementById('welcomeModal').classList.remove('hidden');
-            document.getElementById('usernameInput').value = '';
-            document.getElementById('passwordInput').value = '';
-            if (onlineUpdateInterval) {
-                clearInterval(onlineUpdateInterval);
-                onlineUpdateInterval = null;
-            }
-        }
+// Owner Create Room Button - Only visible to owner
+ownerCreateRoomBtn.addEventListener('click', () => {
+    if (!isOwner) return;
+    ownerPanelModal.classList.add('hidden');
+    createRoomModal.classList.remove('hidden');
+    populateCountrySelect();
+});
 
-        function startApp() {
-            document.getElementById('loginModal').classList.add('hidden');
-            document.getElementById('mainApp').classList.remove('hidden');
-            
-            updateUserInfo();
-            renderCountries();
-            updateSidebar();
-            loadPrivateMessages();
-            
-            if (currentUser.role === 'owner') {
-                document.getElementById('ownerPanelBtn').classList.remove('hidden');
-                document.getElementById('addCountryBtn').classList.remove('hidden');
-            }
-        }
+cancelCreateRoom.addEventListener('click', () => {
+    createRoomModal.classList.add('hidden');
+    newRoomName.value = '';
+});
 
-        function updateUserInfo() {
-            const rank = RANKS[currentUser.rank];
-            const info = document.getElementById('currentUserInfo');
-            
-            if (currentUser.rank === 'owner') {
-                info.innerHTML = `<span class="owner-gradient"><i class="fas fa-crown ml-1"></i>${currentUser.username} <i class="fas fa-check-circle text-xs"></i></span><span class="text-slate-500"> - محمي</span>`;
-            } else {
-                info.innerHTML = `<span class="${rank.color}"><i class="fas ${rank.icon} ml-1 text-xs"></i>${currentUser.username}</span> - ${rank.name}`;
-            }
-        }
+confirmCreateRoom.addEventListener('click', async () => {
+    if (!isOwner) {
+        alert('فقط المالك يمكنه إنشاء غرف');
+        return;
+    }
+    const roomName = newRoomName.value.trim();
+    const countryId = newRoomCountry.value;
+    
+    if (!roomName || roomName.length < 2) {
+        alert('يرجى ادخال اسم غرفة صحيح');
+        return;
+    }
+    
+    const roomId = `room_${Date.now()}`;
+    await set(ref(db, `rooms/${roomId}`), {
+        id: roomId,
+        name: roomName,
+        countryId,
+        createdBy: currentUser,
+        timestamp: Date.now()
+    });
+    
+    createRoomModal.classList.add('hidden');
+    newRoomName.value = '';
+    alert('تم إنشاء الغرفة بنجاح');
+});
 
-        // Online Users Management
-        function toggleOnlineUsers() {
-            onlineUsersPanelOpen = !onlineUsersPanelOpen;
-            const panel = document.getElementById('onlineUsersPanel');
-            const overlay = document.getElementById('onlineUsersOverlay');
-            const btn = document.getElementById('toggleOnlineBtn');
-            
-            if (onlineUsersPanelOpen) {
-                panel.classList.add('open');
-                overlay.classList.add('open');
-                btn.classList.add('shifted');
-                renderOnlineUsers();
-            } else {
-                panel.classList.remove('open');
-                overlay.classList.remove('open');
-                btn.classList.remove('shifted');
-            }
-        }
+function populateCountrySelect() {
+    newRoomCountry.innerHTML = '';
+    Object.values(countries).forEach(country => {
+        const option = document.createElement('option');
+        option.value = country.id;
+        option.textContent = `${country.flag} ${country.name}`;
+        newRoomCountry.appendChild(option);
+    });
+}
 
-        function addUserToOnline() {
-            if (!currentRoom || !currentUser) return;
-            
-            const existingIndex = onlineUsers.findIndex(u => u.username === currentUser.username && u.roomId === currentRoom.id);
-            if (existingIndex === -1) {
-                onlineUsers.push({
-                    username: currentUser.username,
-                    rank: currentUser.rank,
-                    roomId: currentRoom.id,
-                    joinedAt: new Date().toISOString()
-                });
-            }
-            updateOnlineUsersDisplay();
-        }
+// Clear Messages
+clearMessagesBtn.addEventListener('click', async () => {
+    if (confirm('هل أنت متأكد من مسح جميع الرسائل؟ لا يمكن التراجع عن هذا الإجراء.')) {
+        await remove(ref(db, 'messages'));
+        alert('تم مسح جميع الرسائل');
+        ownerPanelModal.classList.add('hidden');
+    }
+});
 
-        function removeUserFromOnline() {
-            if (!currentUser) return;
-            onlineUsers = onlineUsers.filter(u => u.username !== currentUser.username);
-            updateOnlineUsersDisplay();
-        }
+// Owner Panel
+drawerOwnerPanelBtn.addEventListener('click', () => {
+    if (isOwner) {
+        ownerPanelModal.classList.remove('hidden');
+        closeSidebarFn();
+    }
+});
 
-        function updateOnlineUsersDisplay() {
-            if (!currentRoom) return;
-            
-            const roomUsers = onlineUsers.filter(u => u.roomId === currentRoom.id);
-            const count = roomUsers.length;
-            
-            document.getElementById('onlineCount').textContent = count;
-            document.getElementById('onlineCountBadge').textContent = count;
-            document.getElementById('onlineUsersCount').textContent = count;
-            
-            if (onlineUsersPanelOpen) {
-                renderOnlineUsers();
-            }
-            renderMembers();
-        }
+closeOwnerPanel.addEventListener('click', () => {
+    ownerPanelModal.classList.add('hidden');
+});
 
-        function renderOnlineUsers() {
-            const list = document.getElementById('onlineUsersList');
-            if (!currentRoom) return;
-            
-            const roomUsers = onlineUsers
-                .filter(u => u.roomId === currentRoom.id)
-                .sort((a, b) => {
-                    const rankOrder = { owner: 0, master: 1, superadmin: 2, admin: 3, minbar: 4, member: 5, guest: 6 };
-                    return rankOrder[a.rank] - rankOrder[b.rank];
-                });
-            
-            if (roomUsers.length === 0) {
-                list.innerHTML = '<div class="text-center text-slate-500 py-8"><i class="fas fa-users text-4xl mb-2 opacity-20"></i><p>لا يوجد متواجدون</p></div>';
-                return;
-            }
-            
-            list.innerHTML = roomUsers.map(user => {
-                const rank = RANKS[user.rank];
-                let displayName = '';
-                
-                if (user.rank === 'owner') {
-                    displayName = `<span class="owner-gradient"><i class="fas fa-crown text-xs ml-1"></i>${user.username} <i class="fas fa-check-circle text-[10px]"></i></span>`;
-                } else {
-                    displayName = `<span class="${rank.color}"><i class="fas ${rank.icon} text-xs ml-1"></i>${user.username}</span>`;
-                }
-                
-                const isCurrentUser = user.username === currentUser.username;
-                
-                return `
-                    <div class="glass-effect rounded-xl p-3 hover:bg-slate-800/50 transition ${!isCurrentUser ? 'cursor-pointer hover-scale' : ''}" ${!isCurrentUser ? `onclick="showUserActions('${user.username}', '${user.rank}'); toggleOnlineUsers();"` : ''}>
-                        <div class="flex items-center justify-between mb-2">
-                            <div class="flex items-center gap-2">
-                                <div class="w-10 h-10 rounded-full ${rank.badge} flex items-center justify-center">
-                                    <i class="fas ${rank.icon} text-white"></i>
-                                </div>
-                                <div>
-                                    <div class="font-semibold text-sm">${displayName}</div>
-                                    <div class="text-xs text-slate-500">${rank.name}</div>
-                                </div>
-                            </div>
-                            <div class="flex flex-col items-end gap-1">
-                                <div class="flex items-center gap-1 text-xs">
-                                    <span class="w-2 h-2 bg-green-500 rounded-full pulse-online"></span>
-                                    <span class="text-green-400">متصل</span>
-                                </div>
-                                ${isCurrentUser ? '<span class="text-xs text-purple-400">أنت</span>' : ''}
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
+updateTickerBtn.addEventListener('click', async () => {
+    const ticker = tickerInput.value.trim();
+    if (ticker) {
+        await set(ref(db, 'settings/welcomeTicker'), ticker);
+        alert('تم تحديث الشريط الترحيبي');
+    }
+});
 
-        // Countries & Rooms
-        function renderCountries() {
-            const list = document.getElementById('countriesList');
-            list.innerHTML = '';
-            
-            db.countries.forEach(country => {
-                const rooms = db.rooms.filter(r => r.countryId === country.id);
-                const isOpen = openCountries.has(country.id);
-                const countryDiv = document.createElement('div');
-                countryDiv.className = 'glass-effect rounded-xl overflow-hidden';
-                countryDiv.innerHTML = `
-                    <div onclick="toggleCountry('${country.id}')" class="p-3 cursor-pointer hover:bg-slate-800/50 transition flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <span class="text-2xl">${country.icon}</span>
-                            <span class="font-semibold">${country.name}</span>
-                            <span class="text-xs bg-slate-700 px-2 py-0.5 rounded-full">${rooms.length}</span>
-                        </div>
-                        <i class="fas fa-chevron-down text-xs text-slate-400 country-arrow ${isOpen ? 'rotated' : ''}" data-country="${country.id}"></i>
-                    </div>
-                    <div id="rooms-${country.id}" class="rooms-container bg-slate-800/30 p-2 space-y-1 ${isOpen ? '' : 'hidden'}"></div>
-                `;
-                list.appendChild(countryDiv);
-                renderRoomsForCountry(country.id);
-            });
-        }
+// Manage Members
+manageMembersBtn.addEventListener('click', () => {
+    if (isOwner && currentRoom) {
+        manageMembersModal.classList.remove('hidden');
+        renderMembersListForOwner();
+    }
+});
 
-        function renderRoomsForCountry(countryId) {
-            const container = document.getElementById(`rooms-${countryId}`);
-            const rooms = db.rooms.filter(r => r.countryId === countryId);
-            container.innerHTML = '';
-            
-            rooms.forEach(room => {
-                const expiry = new Date(room.expiry);
-                const daysLeft = Math.ceil((expiry - new Date()) / (1000 * 60 * 60 * 24));
-                const isExpired = daysLeft < 0;
-                
-                const roomBtn = document.createElement('button');
-                roomBtn.onclick = () => joinRoom(room.id);
-                roomBtn.className = `w-full text-right p-2 rounded-lg hover:bg-slate-700/50 transition text-sm ${isExpired ? 'opacity-50' : ''}`;
-                roomBtn.innerHTML = `
-                    <div class="flex items-center justify-between">
-                        <span class="flex items-center gap-2">
-                            <i class="fas fa-hashtag text-xs text-purple-400"></i>
-                            ${room.name}
-                        </span>
-                        ${room.master ? '<i class="fas fa-star text-xs text-red-400" title="لها ماستر"></i>' : ''}
-                    </div>
-                    <div class="text-xs text-slate-500 mt-1">تنتهي خلال ${daysLeft > 0 ? daysLeft : 0} يوم</div>
-                `;
-                container.appendChild(roomBtn);
-            });
-        }
+closeManageMembers.addEventListener('click', () => {
+    manageMembersModal.classList.add('hidden');
+    newMemberName.value = '';
+});
 
-        function toggleCountry(countryId) {
-            const roomsDiv = document.getElementById(`rooms-${countryId}`);
-            const arrow = document.querySelector(`.country-arrow[data-country="${countryId}"]`);
-            const isOpen = openCountries.has(countryId);
-            
-            if (isOpen) {
-                openCountries.delete(countryId);
-                roomsDiv.classList.remove('opening');
-                roomsDiv.classList.add('closing');
-                arrow.classList.remove('rotated');
-                
-                setTimeout(() => {
-                    roomsDiv.classList.add('hidden');
-                    roomsDiv.classList.remove('closing');
-                }, 400);
-            } else {
-                openCountries.add(countryId);
-                roomsDiv.classList.remove('hidden');
-                roomsDiv.classList.add('opening');
-                arrow.classList.add('rotated');
-                
-                setTimeout(() => {
-                    roomsDiv.classList.remove('opening');
-                }, 400);
-            }
-        }
+addMemberBtn.addEventListener('click', async () => {
+    const memberName = newMemberName.value.trim();
+    const memberRank = newMemberRank.value;
+    
+    if (!memberName || memberName.length < 2) {
+        alert('يرجى ادخال اسم صحيح');
+        return;
+    }
+    
+    if (!currentRoom) {
+        alert('لا توجد غرفة محددة');
+        return;
+    }
+    
+    const code = generateMemberCode();
+    await set(ref(db, `members/${currentRoom.id}/${memberName}`), {
+        rank: memberRank,
+        code: code,
+        deviceId: null,
+        createdAt: Date.now(),
+        createdBy: currentUser
+    });
+    
+    newMemberName.value = '';
+    alert(`تم إضافة العضو بنجاح\nالاسم: ${memberName}\nالرتبة: ${RANKS[memberRank].name}\nالكود: ${code}`);
+});
 
-        function joinRoom(roomId) {
-            const room = db.rooms.find(r => r.id === roomId);
-            if (!room) return;
-            
-            const expiry = new Date(room.expiry);
-            if (expiry < new Date()) {
-                alert('هذه الغرفة منتهية الصلاحية');
-                return;
-            }
-            
-            removeUserFromOnline();
-            
-            currentRoom = room;
-            currentCountry = db.countries.find(c => c.id === room.countryId);
-            
-            document.getElementById('roomHeader').classList.remove('hidden');
-            document.getElementById('messageInputArea').classList.remove('hidden');
-            document.getElementById('membersSidebar').classList.remove('hidden');
-            document.getElementById('toggleOnlineBtn').classList.remove('hidden');
-            
-            document.getElementById('roomName').textContent = room.name;
-            document.getElementById('roomCountry').innerHTML = `${currentCountry.icon} ${currentCountry.name}`;
-            
-            const daysLeft = Math.ceil((expiry - new Date()) / (1000 * 60 * 60 * 24));
-            document.getElementById('roomExpiry').innerHTML = `<i class="fas fa-clock ml-1"></i>تنتهي خلال ${daysLeft} يوم`;
-            
-            document.getElementById('currentRoomInfo').innerHTML = `
-                <div class="font-semibold text-purple-400">${room.name}</div>
-                <div class="text-xs text-slate-400">${currentCountry.icon} ${currentCountry.name}</div>
-            `;
-            
-            addUserToOnline();
-            renderMessages();
-            renderMembers();
-            closeSidebar();
-            closePrivateChatPanel();
-            
-            if (onlineUpdateInterval) clearInterval(onlineUpdateInterval);
-            onlineUpdateInterval = setInterval(updateOnlineUsersDisplay, 3000);
-        }
-
-        // Messages
-        function sendMessage() {
-            const input = document.getElementById('messageInput');
-            const text = input.value.trim();
-            if (!text || !currentRoom) return;
-            
-            const message = {
-                id: Date.now().toString(),
-                roomId: currentRoom.id,
-                username: currentUser.username,
-                rank: currentUser.rank,
-                text,
-                timestamp: new Date().toISOString()
-            };
-            
-            db.messages.push(message);
-            saveData();
-            input.value = '';
-            renderMessages();
-        }
-
-        function renderMessages() {
-            const area = document.getElementById('messagesArea');
-            if (!currentRoom) return;
-            
-            const messages = db.messages.filter(m => m.roomId === currentRoom.id);
-            
-            if (messages.length === 0) {
-                area.innerHTML = `
-                    <div class="flex items-center justify-center h-full">
-                        <div class="text-center text-slate-500">
-                            <i class="fas fa-comments text-6xl mb-4 opacity-20"></i>
-                            <p>لا توجد رسائل بعد. كن أول من يبدأ المحادثة!</p>
-                        </div>
-                    </div>
-                `;
-                return;
-            }
-            
-            area.innerHTML = messages.map(msg => {
-                const rank = RANKS[msg.rank];
-                const time = new Date(msg.timestamp).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
-                
-                let usernameDisplay = '';
-                if (msg.rank === 'owner') {
-                    usernameDisplay = `<span class="owner-gradient cursor-pointer" onclick="showUserActions('${msg.username}', '${msg.rank}')"><i class="fas fa-crown text-xs ml-1"></i>${msg.username} <i class="fas fa-check-circle text-xs"></i></span>`;
-                } else {
-                    usernameDisplay = `<span class="${rank.color} cursor-pointer" onclick="showUserActions('${msg.username}', '${msg.rank}')"><i class="fas ${rank.icon} text-xs ml-1"></i>${msg.username}</span>`;
-                }
-                
-                return `
-                    <div class="chat-bubble flex gap-3">
-                        <div class="flex-shrink-0 w-10 h-10 rounded-full ${rank.badge} flex items-center justify-center cursor-pointer" onclick="showUserActions('${msg.username}', '${msg.rank}')">
-                            <i class="fas ${rank.icon} text-white text-sm"></i>
-                        </div>
-                        <div class="flex-1 glass-effect rounded-xl p-3">
-                            <div class="flex items-center justify-between mb-1">
-                                <div class="text-sm font-semibold">${usernameDisplay}</div>
-                                <div class="text-xs text-slate-500">${time}</div>
-                            </div>
-                            <div class="text-slate-300">${msg.text}</div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-            
-            area.scrollTop = area.scrollHeight;
-        }
-
-        // Members - Desktop sidebar
-        function renderMembers() {
-            const list = document.getElementById('membersList');
-            if (!currentRoom) return;
-            
-            const roomUsers = onlineUsers.filter(u => u.roomId === currentRoom.id);
-            
-            document.getElementById('onlineCount').textContent = roomUsers.length;
-            
-            list.innerHTML = roomUsers.map(member => {
-                const rank = RANKS[member.rank];
-                let display = '';
-                
-                if (member.rank === 'owner') {
-                    display = `<span class="owner-gradient"><i class="fas fa-crown text-xs ml-1"></i>${member.username} <i class="fas fa-check-circle text-xs"></i></span>`;
-                } else {
-                    display = `<span class="${rank.color}"><i class="fas ${rank.icon} text-xs ml-1"></i>${member.username}</span>`;
-                }
-                
-                const canPrivateChat = member.username !== currentUser.username;
-                
-                return `
-                    <div class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-800/50 transition ${canPrivateChat ? 'cursor-pointer' : ''}" ${canPrivateChat ? `onclick="showUserActions('${member.username}', '${member.rank}')"` : ''}>
-                        <div class="flex items-center gap-2">
-                            <div class="w-2 h-2 bg-green-500 rounded-full pulse-online"></div>
-                            <span class="text-sm">${display}</span>
-                        </div>
-                        <span class="text-xs px-2 py-0.5 rounded ${rank.badge} text-white">${rank.name}</span>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // Private Chat Functions
-        function showUserActions(username, rank) {
-            if (username === currentUser.username) return;
-            
-            selectedUserForAction = { username, rank };
-            const rankData = RANKS[rank];
-            
-            document.getElementById('userActionsAvatar').className = `inline-block w-20 h-20 rounded-full mb-3 flex items-center justify-center text-3xl ${rankData.badge}`;
-            document.getElementById('userActionsAvatar').innerHTML = `<i class="fas ${rankData.icon} text-white"></i>`;
-            document.getElementById('userActionsName').textContent = username;
-            document.getElementById('userActionsRank').textContent = rankData.name;
-            document.getElementById('userActionsModal').classList.remove('hidden');
-        }
-
-        function closeUserActionsModal() {
-            document.getElementById('userActionsModal').classList.add('hidden');
-            selectedUserForAction = null;
-        }
-
-        function openPrivateChatFromModal() {
-            if (!selectedUserForAction) return;
-            openPrivateChat(selectedUserForAction.username);
-            closeUserActionsModal();
-        }
-
-        function loadPrivateMessages() {
-            privateChatMessages = {};
-            db.privateMessages.forEach(msg => {
-                const key = getPrivateChatKey(msg.from, msg.to);
-                if (!privateChatMessages[key]) privateChatMessages[key] = [];
-                privateChatMessages[key].push(msg);
-            });
-        }
-
-        function getPrivateChatKey(user1, user2) {
-            return [user1, user2].sort().join('_');
-        }
-
-        function openPrivateChat(username) {
-            activePrivateChat = username;
-            document.getElementById('privateChatPanel').classList.remove('hidden');
-            renderPrivateChatTabs();
-            renderPrivateChatMessages();
-            markPrivateMessagesAsRead(username);
-        }
-
-        function togglePrivateChatPanel() {
-            document.getElementById('privateChatPanel').classList.toggle('hidden');
-            if (!document.getElementById('privateChatPanel').classList.contains('hidden')) {
-                renderPrivateChatTabs();
-                if (activePrivateChat) {
-                    renderPrivateChatMessages();
-                }
-            }
-        }
-
-        function closePrivateChatPanel() {
-            document.getElementById('privateChatPanel').classList.add('hidden');
-        }
-
-        function renderPrivateChatTabs() {
-            const tabsContainer = document.getElementById('privateChatTabs');
-            const chats = new Set();
-            
-            db.privateMessages.forEach(msg => {
-                if (msg.from === currentUser.username || msg.to === currentUser.username) {
-                    const otherUser = msg.from === currentUser.username ? msg.to : msg.from;
-                    chats.add(otherUser);
-                }
-            });
-            
-            if (activePrivateChat && !chats.has(activePrivateChat)) {
-                chats.add(activePrivateChat);
-            }
-            
-            if (chats.size === 0) {
-                tabsContainer.innerHTML = '<div class="text-slate-500 text-sm px-3 py-2">لا توجد محادثات خاصة</div>';
-                return;
-            }
-            
-            tabsContainer.innerHTML = Array.from(chats).map(username => {
-                const key = getPrivateChatKey(currentUser.username, username);
-                const messages = privateChatMessages[key] || [];
-                const unreadCount = messages.filter(m => m.to === currentUser.username && !m.read).length;
-                const isActive = activePrivateChat === username;
-                
-                return `
-                    <button onclick="switchPrivateChat('${username}')" class="private-chat-tab ${isActive ? 'active' : 'bg-slate-800'} px-4 py-2 rounded-lg text-sm font-semibold hover-scale flex items-center gap-2 whitespace-nowrap">
-                        <span>${username}</span>
-                        ${unreadCount > 0 ? `<span class="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">${unreadCount}</span>` : ''}
-                    </button>
-                `;
-            }).join('');
-        }
-
-        function switchPrivateChat(username) {
-            activePrivateChat = username;
-            renderPrivateChatTabs();
-            renderPrivateChatMessages();
-            markPrivateMessagesAsRead(username);
-        }
-
-        function renderPrivateChatMessages() {
-            const content = document.getElementById('privateChatContent');
-            
-            if (!activePrivateChat) {
-                content.innerHTML = `
-                    <div class="flex-1 flex items-center justify-center text-slate-500">
-                        <div class="text-center">
-                            <i class="fas fa-comment-dots text-5xl mb-3 opacity-20"></i>
-                            <p>اختر محادثة أو ابدأ محادثة جديدة</p>
-                        </div>
-                    </div>
-                `;
-                return;
-            }
-            
-            const key = getPrivateChatKey(currentUser.username, activePrivateChat);
-            const messages = privateChatMessages[key] || [];
-            
-            const messagesHtml = messages.length === 0 ? `
-                <div class="flex-1 flex items-center justify-center text-slate-500">
-                    <div class="text-center">
-                        <i class="fas fa-comment text-5xl mb-3 opacity-20"></i>
-                        <p>ابدأ المحادثة مع ${activePrivateChat}</p>
+function renderMembersListForOwner() {
+    if (!currentRoom) return;
+    
+    const members = roomMembers[currentRoom.id] || {};
+    membersListContainer.innerHTML = '';
+    
+    const memberNames = Object.keys(members);
+    if (memberNames.length === 0) {
+        membersListContainer.innerHTML = '<p class="text-slate-500 text-center py-4">لا يوجد أعضاء مسجلين في هذه الغرفة</p>';
+        return;
+    }
+    
+    memberNames.forEach(name => {
+        const member = members[name];
+        const div = document.createElement('div');
+        div.className = 'bg-slate-800 p-3 rounded-lg border border-slate-600';
+        
+        const rankDisplay = `<span class="${RANKS[member.rank].color}">${RANKS[member.rank].name}</span>`;
+        const deviceStatus = member.deviceId ? '<span class="text-green-400 text-xs"><i class="fas fa-link"></i> مربوط</span>' : '<span class="text-slate-500 text-xs"><i class="fas fa-unlink"></i> غير مربوط</span>';
+        
+        div.innerHTML = `
+            <div class="flex items-start justify-between gap-3 mb-2">
+                <div class="flex-1">
+                    <div class="font-bold mb-1">${name}</div>
+                    <div class="text-xs text-slate-400 flex items-center gap-2 flex-wrap">
+                        <span>${rankDisplay}</span>
+                        <span>•</span>
+                        <span>الكود: <span class="text-yellow-400 font-mono">${member.code}</span></span>
+                        <span>•</span>
+                        ${deviceStatus}
                     </div>
                 </div>
-            ` : `
-                <div class="flex-1 overflow-y-auto scrollbar-custom p-4 space-y-3" id="privateMessagesArea">
-                    ${messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)).map(msg => {
-                        const isOwn = msg.from === currentUser.username;
-                        const rank = RANKS[msg.fromRank];
-                        const time = new Date(msg.timestamp).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
-                        
-                        let fromDisplay = '';
-                        if (msg.fromRank === 'owner') {
-                            fromDisplay = `<span class="owner-gradient"><i class="fas fa-crown text-xs ml-1"></i>${msg.from} <i class="fas fa-check-circle text-xs"></i></span>`;
-                        } else {
-                            fromDisplay = `<span class="${rank.color}"><i class="fas ${rank.icon} text-xs ml-1"></i>${msg.from}</span>`;
-                        }
-                        
-                        return `
-                            <div class="chat-bubble flex gap-2 ${isOwn ? 'flex-row-reverse' : ''}">
-                                <div class="flex-shrink-0 w-8 h-8 rounded-full ${rank.badge} flex items-center justify-center">
-                                    <i class="fas ${rank.icon} text-white text-xs"></i>
-                                </div>
-                                <div class="max-w-md">
-                                    <div class="${isOwn ? 'gradient-bg text-white' : 'glass-effect'} rounded-xl p-3">
-                                        <div class="text-sm mb-1 ${isOwn ? 'text-white/90' : 'text-slate-400'}">${isOwn ? 'أنت' : fromDisplay}</div>
-                                        <div class="${isOwn ? 'text-white' : 'text-slate-300'}">${msg.text}</div>
-                                        <div class="text-xs mt-1 ${isOwn ? 'text-white/70' : 'text-slate-500'}">${time}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-            `;
-            
-            content.innerHTML = `
-                ${messagesHtml}
-                <div class="glass-effect border-t border-slate-700 p-4">
-                    <div class="flex gap-2">
-                        <input type="text" id="privateMessageInput" placeholder="اكتب رسالتك الخاصة..." class="flex-1 bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 transition" onkeypress="if(event.key==='Enter') sendPrivateMessage()">
-                        <button onclick="sendPrivateMessage()" class="gradient-bg text-white px-6 py-3 rounded-xl font-semibold hover-scale">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            setTimeout(() => {
-                const msgArea = document.getElementById('privateMessagesArea');
-                if (msgArea) msgArea.scrollTop = msgArea.scrollHeight;
-            }, 100);
-        }
+            </div>
+            <div class="flex gap-2 mt-2">
+                <select onchange="changeMemberRank('${currentRoom.id}', '${name}', this.value)" class="flex-1 px-2 py-1.5 bg-slate-700 border border-slate-600 rounded text-xs outline-none">
+                    <option value="user" ${member.rank === 'user' ? 'selected' : ''}>عضو</option>
+                    <option value="root" ${member.rank === 'root' ? 'selected' : ''}>روت</option>
+                    <option value="super" ${member.rank === 'super' ? 'selected' : ''}>سوبر</option>
+                    <option value="master" ${member.rank === 'master' ? 'selected' : ''}>ماستر</option>
+                </select>
+                <button onclick="copyMemberCode('${member.code}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 rounded text-xs font-semibold transition">
+                    <i class="fas fa-copy"></i>
+                </button>
+                <button onclick="deleteMember('${currentRoom.id}', '${name}')" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 rounded text-xs font-semibold transition">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `;
+        membersListContainer.appendChild(div);
+    });
+}
 
-        function sendPrivateMessage() {
-            const input = document.getElementById('privateMessageInput');
-            const text = input.value.trim();
-            if (!text || !activePrivateChat) return;
-            
-            const message = {
-                id: Date.now().toString(),
-                from: currentUser.username,
-                fromRank: currentUser.rank,
-                to: activePrivateChat,
-                text,
-                timestamp: new Date().toISOString(),
-                read: false
-            };
-            
-            db.privateMessages.push(message);
-            const key = getPrivateChatKey(currentUser.username, activePrivateChat);
-            if (!privateChatMessages[key]) privateChatMessages[key] = [];
-            privateChatMessages[key].push(message);
-            
-            saveData();
-            input.value = '';
-            renderPrivateChatMessages();
-            renderPrivateChatTabs();
-        }
+// Private Chat System
+window.openPrivateChat = (username) => {
+    if (username === currentUser) return;
+    currentPrivateChat = username;
+    privateChatTitle.textContent = `محادثة مع ${username}`;
+    privateChatModal.classList.remove('hidden');
+    userActionModal.classList.add('hidden');
+    renderPrivateMessages();
+};
 
-        function markPrivateMessagesAsRead(username) {
-            const key = getPrivateChatKey(currentUser.username, username);
-            const messages = privateChatMessages[key] || [];
-            
-            messages.forEach(msg => {
-                if (msg.to === currentUser.username) {
-                    msg.read = true;
-                }
-            });
-            
-            db.privateMessages.forEach(msg => {
-                if (msg.to === currentUser.username && 
-                    (msg.from === username || msg.to === username)) {
-                    msg.read = true;
-                }
-            });
-            
-            saveData();
-            updatePrivateUnreadCount();
-        }
+closePrivateChat.addEventListener('click', () => {
+    privateChatModal.classList.add('hidden');
+    currentPrivateChat = null;
+});
 
-        function updatePrivateUnreadCount() {
-            if (!currentUser) return;
-            
-            const unreadCount = db.privateMessages.filter(msg => 
-                msg.to === currentUser.username && !msg.read
-            ).length;
-            
-            const badge = document.getElementById('privateUnreadBadge');
-            if (unreadCount > 0) {
-                badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
-                badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
-            }
-        }
+function getPrivateChatId(user1, user2) {
+    return [user1, user2].sort().join('_');
+}
 
-        // Owner Panel Functions
-        function openOwnerPanel() {
-            document.getElementById('ownerPanel').classList.remove('hidden');
-            updateStats();
-        }
+async function sendPrivateMessage() {
+    const text = privateMessageInput.value.trim();
+    if (!text || !currentPrivateChat) return;
+    
+    const chatId = getPrivateChatId(currentUser, currentPrivateChat);
+    const message = {
+        from: currentUser,
+        to: currentPrivateChat,
+        text,
+        timestamp: Date.now()
+    };
+    
+    await push(ref(db, `private_chats/${chatId}`), message);
+    privateMessageInput.value = '';
+}
 
-        function closeOwnerPanel() {
-            document.getElementById('ownerPanel').classList.add('hidden');
-        }
+sendPrivateBtn.addEventListener('click', sendPrivateMessage);
+privateMessageInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendPrivateMessage();
+    }
+});
 
-        function updateStats() {
-            document.getElementById('statCountries').textContent = db.countries.length;
-            document.getElementById('statRooms').textContent = db.rooms.length;
-            document.getElementById('statUsers').textContent = db.users.length;
-            document.getElementById('statMessages').textContent = db.messages.length;
-        }
+function renderPrivateMessages() {
+    if (!currentPrivateChat) return;
+    
+    const chatId = getPrivateChatId(currentUser, currentPrivateChat);
+    const chatMessages = privateChats[chatId] || {};
+    
+    privateMessagesArea.innerHTML = '';
+    const allMessages = Object.values(chatMessages);
+    
+    if (allMessages.length === 0) {
+        privateMessagesArea.innerHTML = '<div class="text-center text-slate-500 mt-20"><i class="fas fa-envelope text-4xl mb-4 opacity-30"></i><p>ابدأ المحادثة</p></div>';
+        return;
+    }
+    
+    allMessages.sort((a, b) => a.timestamp - b.timestamp);
+    
+    allMessages.forEach(msg => {
+        const isOwn = msg.from === currentUser;
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message-appear flex ${isOwn ? 'justify-end' : 'justify-start'}`;
+        
+        msgDiv.innerHTML = `
+            <div class="max-w-xs ${isOwn ? 'bg-gradient-to-r from-blue-600 to-cyan-600' : 'bg-slate-700/70'} rounded-2xl px-4 py-2.5 shadow-lg">
+                <p class="text-sm break-words">${msg.text}</p>
+                <span class="text-xs opacity-70 mt-1 block">${new Date(msg.timestamp).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}</span>
+            </div>
+        `;
+        privateMessagesArea.appendChild(msgDiv);
+    });
+    
+    privateMessagesArea.scrollTop = privateMessagesArea.scrollHeight;
+}
 
-        function openChangeOwnerName() {
-            const content = `
-                <div class="space-y-4">
-                    <div class="bg-slate-800/50 rounded-lg p-4 mb-4">
-                        <div class="text-sm text-slate-400 mb-2">الاسم الحالي:</div>
-                        <div class="text-lg font-bold owner-gradient">
-                            <i class="fas fa-crown ml-1"></i>${db.ownerName} <i class="fas fa-check-circle text-xs"></i>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm text-slate-400 mb-2">الاسم الجديد:</label>
-                        <input type="text" id="newOwnerNameInput" value="${db.ownerName}" placeholder="أدخل الاسم الجديد" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-purple-500 transition">
-                    </div>
-                    <div class="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 text-sm text-amber-300">
-                        <i class="fas fa-info-circle ml-1"></i>
-                        سيظهر الاسم الجديد مع التاج والعلامة المتحركة في جميع الرسائل
-                    </div>
-                    <button onclick="saveOwnerName()" class="w-full gradient-bg py-3 rounded-lg text-white font-semibold hover-scale">
-                        <i class="fas fa-save ml-2"></i>حفظ الاسم
-                    </button>
-                </div>
-            `;
-            showGenericModal('تغيير اسم المالك', content);
-        }
+// Render Admin Lists
+function renderBannedUsers() {
+    bannedUsersList.innerHTML = '';
+    const banned = Object.keys(bannedUsers);
+    if (banned.length === 0) {
+        bannedUsersList.innerHTML = '<p class="text-slate-500 text-center py-2">لا يوجد محظورين</p>';
+        return;
+    }
+    banned.forEach(username => {
+        const div = document.createElement('div');
+        div.className = 'flex items-center justify-between bg-slate-800 p-2 rounded-lg';
+        div.innerHTML = `
+            <span>${username}</span>
+            <button class="px-3 py-1 bg-green-600 hover:bg-green-700 rounded text-xs font-semibold" onclick="unbanUser('${username}')">
+                فك الحظر
+            </button>
+        `;
+        bannedUsersList.appendChild(div);
+    });
+}
 
-        function saveOwnerName() {
-            const newName = document.getElementById('newOwnerNameInput').value.trim();
-            
-            if (!newName) {
-                alert('الرجاء إدخال اسم صحيح');
-                return;
-            }
-            
-            if (db.bannedUsers.includes(newName)) {
-                alert('هذا الاسم محظور');
-                return;
-            }
-            
-            const oldName = db.ownerName;
-            db.ownerName = newName;
-            
-            if (currentUser && currentUser.role === 'owner') {
-                currentUser.username = newName;
-                localStorage.setItem('olychat_currentUser', JSON.stringify(currentUser));
-                updateUserInfo();
-            }
-            
-            db.messages.forEach(msg => {
-                if (msg.username === oldName && msg.rank === 'owner') {
-                    msg.username = newName;
-                }
-            });
-            
-            db.privateMessages.forEach(msg => {
-                if (msg.from === oldName && msg.fromRank === 'owner') {
-                    msg.from = newName;
-                }
-                if (msg.to === oldName) {
-                    msg.to = newName;
-                }
-            });
-            
-            localStorage.setItem('olychat_ownerName', newName);
-            saveData();
-            closeGenericModal();
-            
-            if (currentRoom) {
-                renderMessages();
-                renderMembers();
-            }
-            
-            alert('تم تغيير اسم المالك بنجاح');
-        }
+function renderMutedUsers() {
+    mutedUsersList.innerHTML = '';
+    const muted = Object.entries(mutedUsers);
+    if (muted.length === 0) {
+        mutedUsersList.innerHTML = '<p class="text-slate-500 text-center py-2">لا يوجد مكتومين</p>';
+        return;
+    }
+    muted.forEach(([username, data]) => {
+        const div = document.createElement('div');
+        div.className = 'flex items-center justify-between bg-slate-800 p-2 rounded-lg';
+        const remaining = data.until ? Math.ceil((data.until - Date.now()) / 1000 / 60) : 0;
+        div.innerHTML = `
+            <div>
+                <span>${username}</span>
+                ${remaining > 0 ? `<span class="text-xs text-yellow-400 block">${remaining} دقيقة متبقية</span>` : ''}
+            </div>
+            <button class="px-3 py-1 bg-green-600 hover:bg-green-700 rounded text-xs font-semibold" onclick="unmuteUserGlobal('${username}')">
+                فك الكتم
+            </button>
+        `;
+        mutedUsersList.appendChild(div);
+    });
+}
 
-        function openManageCountries() {
-            const content = `
-                <div class="space-y-4">
-                    <div class="flex gap-2">
-                        <input type="text" id="newCountryName" placeholder="اسم الدولة" class="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white">
-                        <input type="text" id="newCountryIcon" placeholder="🇸🇦" class="w-20 bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white text-center">
-                        <button onclick="addCountry()" class="gradient-bg px-6 py-2 rounded-lg text-white font-semibold">إضافة</button>
-                    </div>
-                    <div id="countriesManageList" class="space-y-2 max-h-96 overflow-y-auto scrollbar-custom"></div>
-                </div>
-            `;
-            showGenericModal('إدارة الدول', content);
-            renderCountriesManage();
-        }
+function renderBannedIPs() {
+    bannedIPsList.innerHTML = '';
+    const ips = Object.keys(bannedIPs);
+    if (ips.length === 0) {
+        bannedIPsList.innerHTML = '<p class="text-slate-500 text-center py-2">لا يوجد IPs محظورة</p>';
+        return;
+    }
+    ips.forEach(ipKey => {
+        const ip = ipKey.replace(/_/g, '.');
+        const data = bannedIPs[ipKey];
+        const div = document.createElement('div');
+        div.className = 'flex items-center justify-between bg-slate-800 p-2 rounded-lg';
+        div.innerHTML = `
+            <span class="text-xs">${ip} (${data.username || 'غير معروف'})</span>
+            <button class="px-3 py-1 bg-green-600 hover:bg-green-700 rounded text-xs font-semibold" onclick="unbanIP('${ipKey}')">
+                فك الحظر
+            </button>
+        `;
+        bannedIPsList.appendChild(div);
+    });
+}
 
-        function renderCountriesManage() {
-            const list = document.getElementById('countriesManageList');
-            list.innerHTML = db.countries.map(c => `
-                <div class="flex items-center justify-between bg-slate-800/50 p-3 rounded-lg">
-                    <span>${c.icon} ${c.name}</span>
-                    <button onclick="deleteCountry('${c.id}')" class="text-red-400 hover:text-red-300">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            `).join('');
-        }
+// Global functions for onclick
+window.unbanUser = async (username) => {
+    await remove(ref(db, `bannedUsers/${username}`));
+};
 
-        function addCountry() {
-            const name = document.getElementById('newCountryName').value.trim();
-            const icon = document.getElementById('newCountryIcon').value.trim();
-            if (!name || !icon) return alert('الرجاء إدخال الاسم والأيقونة');
-            
-            db.countries.push({ id: Date.now().toString(), name, icon });
-            saveData();
-            renderCountries();
-            renderCountriesManage();
-            document.getElementById('newCountryName').value = '';
-            document.getElementById('newCountryIcon').value = '';
-        }
+window.unmuteUserGlobal = async (username) => {
+    await remove(ref(db, `mutedUsers/${username}`));
+};
 
-        function deleteCountry(id) {
-            if (!confirm('هل أنت متأكد من حذف هذه الدولة وجميع غرفها؟')) return;
-            db.countries = db.countries.filter(c => c.id !== id);
-            db.rooms = db.rooms.filter(r => r.countryId !== id);
-            saveData();
-            renderCountriesManage();
-        }
+window.unbanIP = async (ipKey) => {
+    await remove(ref(db, `bannedIPs/${ipKey}`));
+};
 
-        function openManageRooms() {
-            const content = `
-                <div class="space-y-4">
-                    <div class="grid md:grid-cols-2 gap-2">
-                        <select id="roomCountrySelect" class="bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white">
-                            ${db.countries.map(c => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join('')}
-                        </select>
-                        <input type="text" id="newRoomName" placeholder="اسم الغرفة" class="bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white">
-                        <input type="number" id="roomExpiryDays" placeholder="مدة الصلاحية بالأيام" value="30" min="1" class="bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white">
-                        <button onclick="addRoom()" class="gradient-bg px-6 py-2 rounded-lg text-white font-semibold">إضافة غرفة</button>
-                    </div>
-                    <div id="roomsManageList" class="space-y-2 max-h-96 overflow-y-auto scrollbar-custom"></div>
-                </div>
-            `;
-            showGenericModal('إدارة الغرف', content);
-            renderRoomsManage();
-        }
+window.changeMemberRank = async (roomId, username, newRank) => {
+    await update(ref(db, `members/${roomId}/${username}`), { rank: newRank });
+    alert(`تم تغيير رتبة ${username} إلى ${RANKS[newRank].name}`);
+};
 
-        function renderRoomsManage() {
-            const list = document.getElementById('roomsManageList');
-            list.innerHTML = db.rooms.map(r => {
-                const country = db.countries.find(c => c.id === r.countryId);
-                const expiry = new Date(r.expiry);
-                const daysLeft = Math.ceil((expiry - new Date()) / (1000 * 60 * 60 * 24));
-                return `
-                    <div class="bg-slate-800/50 p-3 rounded-lg">
-                        <div class="flex items-center justify-between mb-2">
-                            <div>
-                                <div class="font-semibold">${country?.icon} ${country?.name} - #${r.name}</div>
-                                <div class="text-xs text-slate-400">تنتهي خلال ${daysLeft} يوم</div>
-                            </div>
-                            <div class="flex gap-2">
-                                <button onclick="assignMaster('${r.id}')" class="text-blue-400 hover:text-blue-300 text-sm">
-                                    <i class="fas fa-user-shield"></i>
-                                </button>
-                                <button onclick="deleteRoom('${r.id}')" class="text-red-400 hover:text-red-300">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                        ${r.master ? `<div class="text-xs text-red-400"><i class="fas fa-star ml-1"></i>الماستر: ${r.master}</div>` : ''}
-                    </div>
-                `;
-            }).join('');
-        }
+window.deleteMember = async (roomId, username) => {
+    if (confirm(`هل أنت متأكد من حذف العضو ${username}؟`)) {
+        await remove(ref(db, `members/${roomId}/${username}`));
+    }
+};
 
-        function addRoom() {
-            const countryId = document.getElementById('roomCountrySelect').value;
-            const name = document.getElementById('newRoomName').value.trim();
-            const days = parseInt(document.getElementById('roomExpiryDays').value);
-            
-            if (!name || !days) return alert('الرجاء ملء جميع الحقول');
-            
-            const expiry = new Date();
-            expiry.setDate(expiry.getDate() + days);
-            
-            db.rooms.push({
-                id: Date.now().toString(),
-                countryId,
-                name,
-                master: null,
-                expiry: expiry.toISOString(),
-                created: new Date().toISOString()
-            });
-            
-            saveData();
-            renderCountries();
-            renderRoomsManage();
-            document.getElementById('newRoomName').value = '';
-        }
+window.copyMemberCode = (code) => {
+    navigator.clipboard.writeText(code).then(() => {
+        alert('تم نسخ الكود: ' + code);
+    });
+};
 
-        function deleteRoom(id) {
-            if (!confirm('هل أنت متأكد من حذف هذه الغرفة؟')) return;
-            db.rooms = db.rooms.filter(r => r.id !== id);
-            saveData();
-            renderCountries();
-            renderRoomsManage();
-        }
+// Close modals on backdrop click
+[createRoomModal, ownerPanelModal, userActionModal, manageMembersModal, privateChatModal].forEach(modal => {
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.classList.add('hidden');
+    });
+});
 
-        function assignMaster(roomId) {
-            const username = prompt('أدخل اسم المستخدم للماستر:');
-            if (!username) return;
-            
-            const room = db.rooms.find(r => r.id === roomId);
-            room.master = username;
-            saveData();
-            renderRoomsManage();
-        }
+// Initialize
+initDefaultCountries();
 
-        function openManageUsers() {
-            const content = `
-                <div class="space-y-4">
-                    <div class="grid md:grid-cols-3 gap-2">
-                        <input type="text" id="newUserUsername" placeholder="اسم المستخدم" class="bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white">
-                        <input type="text" id="newUserPassword" placeholder="الرمز السري" class="bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white">
-                        <select id="newUserRank" class="bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white">
-                            <option value="member">عضو</option>
-                            <option value="minbar">منبر</option>
-                            <option value="admin">ادمن</option>
-                            <option value="superadmin">سوبر ادمن</option>
-                            <option value="master">ماستر</option>
-                        </select>
-                        <button onclick="addUser()" class="md:col-span-3 gradient-bg px-6 py-2 rounded-lg text-white font-semibold">إضافة عضو</button>
-                    </div>
-                    <h4 class="font-bold text-slate-300">الأعضاء المسجلون</h4>
-                    <div id="usersManageList" class="space-y-2 max-h-64 overflow-y-auto scrollbar-custom"></div>
-                    <h4 class="font-bold text-slate-300">المحظورون</h4>
-                    <div class="flex gap-2">
-                        <input type="text" id="banUsername" placeholder="اسم المستخدم للحظر" class="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white">
-                        <button onclick="banUser()" class="bg-red-500/20 text-red-400 px-6 py-2 rounded-lg font-semibold">حظر</button>
-                    </div>
-                    <div id="bannedManageList" class="space-y-2"></div>
-                </div>
-            `;
-            showGenericModal('إدارة الأعضاء', content);
-            renderUsersManage();
-        }
+// Check mute status periodically
+setInterval(checkUserMuteStatus, 60000);
 
-        function renderUsersManage() {
-            const list = document.getElementById('usersManageList');
-            const bannedList = document.getElementById('bannedManageList');
-            
-            list.innerHTML = db.users.map(u => {
-                const rank = RANKS[u.rank];
-                return `
-                    <div class="flex items-center justify-between bg-slate-800/50 p-3 rounded-lg">
-                        <div>
-                            <div class="font-semibold">${u.username}</div>
-                            <div class="text-xs ${rank.color}">${rank.name}</div>
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="deleteUser('${u.id}')" class="text-red-400 hover:text-red-300">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join('') || '<p class="text-slate-500 text-center">لا يوجد أعضاء مسجلون</p>';
-            
-            bannedList.innerHTML = db.bannedUsers.map(username => `
-                <div class="flex items-center justify-between bg-red-500/10 p-2 rounded-lg">
-                    <span class="text-sm">${username}</span>
-                    <button onclick="unbanUser('${username}')" class="text-green-400 hover:text-green-300 text-sm">إلغاء الحظر</button>
-                </div>
-            `).join('') || '<p class="text-slate-500 text-center text-sm">لا يوجد محظورون</p>';
-        }
+// Handle disconnect
+window.addEventListener('beforeunload', async () => {
+    if (currentUser) {
+        await remove(ref(db, `onlineUsers/${currentUser}`));
+    }
+});
+</script>
 
-        function addUser() {
-            const username = document.getElementById('newUserUsername').value.trim();
-            const password = document.getElementById('newUserPassword').value.trim();
-            const rank = document.getElementById('newUserRank').value;
-            
-            if (!username || !password) return alert('الرجاء ملء جميع الحقول');
-            if (db.users.find(u => u.username === username)) return alert('اسم المستخدم موجود بالفعل');
-            
-            db.users.push({ id: Date.now().toString(), username, password, rank });
-            saveData();
-            renderUsersManage();
-            document.getElementById('newUserUsername').value = '';
-            document.getElementById('newUserPassword').value = '';
-        }
+// Scroll to bottom on new message
+function scrollToBottom() {
+    const el = document.getElementById('messagesArea');
+    if(el) el.scrollTop = el.scrollHeight;
+}
 
-        function deleteUser(id) {
-            if (!confirm('هل أنت متأكد من حذف هذا العضو؟')) return;
-            db.users = db.users.filter(u => u.id !== id);
-            saveData();
-            renderUsersManage();
-        }
 
-        function banUser() {
-            const username = document.getElementById('banUsername').value.trim();
-            if (!username) return;
-            if (!db.bannedUsers.includes(username)) {
-                db.bannedUsers.push(username);
-                saveData();
-                renderUsersManage();
-                document.getElementById('banUsername').value = '';
-            }
-        }
+<script>
+function renderMessage(msg) {
+    const div = document.createElement('div');
+    div.className = 'message-appear bg-slate-700/50 p-3 rounded-xl';
+    let icon = '';
+    if(msg.private) {
+        icon = '<span class="private-msg-icon">💌</span>';
+    }
+    div.innerHTML = `<div class="flex items-start gap-2">
+        <div class="flex-1">
+            <div class="font-bold text-sm mb-1">${msg.username} ${icon}</div>
+            <div class="text-slate-200">${msg.text}</div>
+        </div>
+    </div>`;
+    document.getElementById('messagesArea').appendChild(div);
+    scrollToBottom();
+}
 
-        function unbanUser(username) {
-            db.bannedUsers = db.bannedUsers.filter(u => u !== username);
-            saveData();
-            renderUsersManage();
-        }
 
-        function openWelcomeMessageModal() {
-            const content = `
-                <div class="space-y-4">
-                    <textarea id="welcomeMessageInput" rows="4" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white" placeholder="أدخل رسالة الترحيب">${db.welcomeMessage}</textarea>
-                    <button onclick="saveWelcomeMessage()" class="w-full gradient-bg py-3 rounded-lg text-white font-semibold">حفظ الرسالة</button>
-                </div>
-            `;
-            showGenericModal('تعديل رسالة الترحيب', content);
-        }
+<script>
+function updateRoomUsers(users) {
+    const list = document.getElementById('roomUsersList');
+    const badge = document.getElementById('roomUserCountBadge');
+    if(!list) return;
+    list.innerHTML = '';
+    users.forEach(user => {
+        const userDiv = document.createElement('div');
+        userDiv.className = 'flex items-center gap-2 p-2 bg-slate-700/30 rounded-lg text-sm';
+        userDiv.innerHTML = `<i class="fas fa-circle text-green-400 text-xs"></i><span>${user.name}</span>`;
+        list.appendChild(userDiv);
+    });
+    if(badge) badge.textContent = users.length;
+}
 
-        function saveWelcomeMessage() {
-            const msg = document.getElementById('welcomeMessageInput').value.trim();
-            if (msg) {
-                db.welcomeMessage = msg;
-                saveData();
-                updateWelcomeMessage();
-                closeGenericModal();
-                alert('تم حفظ رسالة الترحيب بنجاح');
-            }
-        }
+// مثال: لما تدخل الروم استدعي الدالة
+// updateRoomUsers([{name: 'أحمد'}, {name: 'سارة'}]);
+</script>
 
-        // UI Helpers
-        function showGenericModal(title, content) {
-            document.getElementById('genericTitle').textContent = title;
-            document.getElementById('genericContent').innerHTML = content;
-            document.getElementById('genericModal').classList.remove('hidden');
-        }
 
-        function closeGenericModal() {
-            document.getElementById('genericModal').classList.add('hidden');
-        }
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+  import { getDatabase, ref, onValue, set, onDisconnect, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('open');
-        }
+  // عدّل هذا بالكونفق حقك من Firebase Console
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    databaseURL: "YOUR_DATABASE_URL",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
 
-        function closeSidebar() {
-            document.getElementById('sidebar').classList.remove('open');
-        }
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
 
-        function openAddCountryModal() {
-            openManageCountries();
-        }
+  let currentUser = null;
+  let currentRoom = null;
 
-        function updateSidebar() {
-            // Update sidebar state if needed
-        }
+  // لما المستخدم يدخل
+  window.joinRoom = function(roomId, username, rank='user') {
+    currentRoom = roomId;
+    currentUser = {
+      name: username,
+      rank: rank,
+      joinedAt: Date.now()
+    };
+    
+    // اضافة المستخدم للروم
+    const userRef = ref(db, `rooms/${roomId}/users/${username}`);
+    set(userRef, currentUser);
+    
+    // حذف المستخدم اذا طلع
+    onDisconnect(userRef).remove();
+    
+    // الاستماع للمتواجدين
+    const usersRef = ref(db, `rooms/${roomId}/users`);
+    onValue(usersRef, (snapshot) => {
+      const usersObj = snapshot.val() || {};
+      const usersList = Object.values(usersObj);
+      updateRoomUsers(usersList);
+    });
+  }
 
-        // Auto-login if session exists
-        window.addEventListener('load', () => {
-            init();
-            const saved = localStorage.getItem('olychat_currentUser');
-            if (saved) {
-                currentUser = JSON.parse(saved);
-                startApp();
-            }
-        });
+  // لما يطلع من الروم
+  window.leaveRoom = function() {
+    if(currentRoom && currentUser) {
+      const userRef = ref(db, `rooms/${currentRoom}/users/${currentUser.name}`);
+      set(userRef, null);
+    }
+  }
+</script>
 
-        // Cleanup expired rooms periodically
-        setInterval(checkExpiredRooms, 60000);
-    </script>
+
+<script>
+// === وضع التجربة Demo Mode ===
+// احذف هذا الجزء اذا ربطت Firebase حقيقي
+let demoUsers = [
+  {name: 'أحمد', rank: 'owner'},
+  {name: 'سارة', rank: 'user'},
+  {name: 'محمد', rank: 'user'}
+];
+
+// شغل هذا عشان تشوف القائمة شغالة
+setTimeout(() => {
+  if(typeof updateRoomUsers === 'function') {
+    updateRoomUsers(demoUsers);
+  }
+}, 1000);
+
+// محاكاة دخول شخص جديد بعد 3 ثواني
+setTimeout(() => {
+  demoUsers.push({name: 'نورا', rank: 'user'});
+  updateRoomUsers(demoUsers);
+}, 3000);
+
+// محاكاة خروج شخص بعد 6 ثواني
+setTimeout(() => {
+  demoUsers = demoUsers.filter(u => u.name !== 'سارة');
+  updateRoomUsers(demoUsers);
+}, 6000);
+</script>
+
 </body>
-</html> 
 </html>
