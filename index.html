@@ -357,6 +357,8 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
     animation: pulse 1.5s ease-in-out infinite;
 }
 
+
+.owner-name { color: #ef4444; font-weight: bold; text-shadow: 0 0 10px rgba(239,68,68,0.5); }
 </style>
 </head>
 <body class="text-white overflow-hidden h-screen">
@@ -466,6 +468,31 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
             <button id="drawerOwnerPanelBtn" class="hidden w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl text-sm font-bold shadow-lg hover:shadow-amber-500/50 transition">
                 <i class="fas fa-crown ml-1"></i>لوحة المالك
             </button>
+
+            <!-- قسم تنظيف الرسائل - يظهر فقط اذا زر المالك ظاهر -->
+            <div id="ownerCleanupBox" style="display:none;" class="mt-3 p-4 bg-gradient-to-r from-red-900/40 to-orange-900/40 rounded-xl border-2 border-red-500/50 shadow-lg">
+              <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center">
+                  <i class="fas fa-database text-red-400 ml-2"></i>
+                  <span class="text-sm text-gray-200 font-bold">رسائل الروم:</span>
+                </div>
+                <span id="msgCountBox" class="text-2xl font-bold text-red-400">0</span>
+              </div>
+              
+              <button id="cleanOldBtnBox" class="w-full bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white py-2.5 rounded-lg mb-2 text-sm font-bold transition-all shadow-md active:scale-95">
+                <i class="fas fa-broom ml-2"></i>تنظيف قديم - خلي 100
+              </button>
+              
+              <button id="deleteAllBtnBox" class="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white py-2.5 rounded-lg text-sm font-bold transition-all shadow-md active:scale-95">
+                <i class="fas fa-trash-alt ml-2"></i>حذف كل الرسائل
+              </button>
+              
+              <div class="text-xs text-gray-400 mt-3 text-center flex items-center justify-center">
+                <i class="fas fa-shield-alt ml-1 text-green-400"></i>
+                <span>تنظيف تلقائي مفعل</span>
+              </div>
+            </div>
+
             <button id="drawerLogoutBtn" class="w-full py-2.5 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 rounded-xl text-sm font-semibold transition">
                 <i class="fas fa-sign-out-alt ml-1"></i>تسجيل خروج
             </button>
@@ -1979,6 +2006,266 @@ setTimeout(() => {
   demoUsers = demoUsers.filter(u => u.name !== 'سارة');
   updateRoomUsers(demoUsers);
 }, 6000);
+</script>
+
+
+<script type="module">
+  import { getDatabase, ref, query, orderByChild, limitToLast, get, remove, onChildAdded } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+  
+  const db = getDatabase();
+  
+  // حذف الرسائل القديمة - يخلي آخر 100 رسالة بس
+  window.cleanOldMessages = async function(roomId, keepCount = 100) {
+    const msgRef = ref(db, `rooms/${roomId}/messages`);
+    const snapshot = await get(msgRef);
+    const msgs = snapshot.val();
+    if(!msgs) return;
+    
+    const msgKeys = Object.keys(msgs);
+    if(msgKeys.length <= keepCount) return;
+    
+    // رتب حسب الوقت واحذف القديم
+    const sorted = Object.entries(msgs).sort((a,b) => (a[1].timestamp || 0) - (b[1].timestamp || 0));
+    const toDelete = sorted.slice(0, msgKeys.length - keepCount);
+    
+    for(const [key] of toDelete) {
+      await remove(ref(db, `rooms/${roomId}/messages/${key}`));
+    }
+    console.log(`حذفت ${toDelete.length} رسالة قديمة`);
+  }
+  
+  // حذف تلقائي كل ما تزيد الرسائل
+  window.autoCleanMessages = function(roomId) {
+    const msgRef = ref(db, `rooms/${roomId}/messages`);
+    onChildAdded(msgRef, async () => {
+      const snap = await get(msgRef);
+      const count = snap.size || 0;
+      if(count > 120) { // اذا صارت اكثر من 120
+        cleanOldMessages(roomId, 100); // خلي 100 بس
+      }
+    });
+  }
+  
+  // زر حذف كل الرسائل - للمالك فقط
+  window.deleteAllMessages = async function(roomId) {
+    if(localStorage.getItem('userRank') !== 'owner') {
+      alert('بس المالك يقدر يحذف الكل');
+      return;
+    }
+    if(confirm('متأكد تبي تحذف كل الرسائل؟')) {
+      await remove(ref(db, `rooms/${roomId}/messages`));
+      alert('تم الحذف');
+    }
+  }
+</script>
+
+
+<!-- زر تنظيف الرسائل للمالك -->
+<div id="cleanupBtn" class="admin-only hidden fixed bottom-20 left-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-lg cursor-pointer z-50 text-sm">
+  <i class="fas fa-trash ml-2"></i>تنظيف المحادثة
+</div>
+
+<script>
+// تشغيل الحذف التلقائي + اظهار زر التنظيف للمالك
+document.addEventListener('DOMContentLoaded', () => {
+  // شغل التنظيف التلقائي لكل الرومات
+  const roomId = localStorage.getItem('currentRoom') || 'main';
+  setTimeout(() => {
+    if(typeof autoCleanMessages === 'function') {
+      autoCleanMessages(roomId);
+    }
+  }, 2000);
+  
+  // اظهر زر التنظيف للمالك فقط
+  const checkOwner = setInterval(() => {
+    const rank = localStorage.getItem('userRank');
+    if(rank === 'owner') {
+      document.getElementById('cleanupBtn')?.classList.remove('hidden');
+      clearInterval(checkOwner);
+    }
+  }, 500);
+  
+  // حدث الزر
+  document.getElementById('cleanupBtn')?.addEventListener('click', () => {
+    const roomId = localStorage.getItem('currentRoom') || 'main';
+    const choice = confirm('تحب تحذف الكل ولا تخلي آخر 100 رسالة؟\n\nموافق = حذف الكل\nإلغاء = خلي 100');
+    if(choice) {
+      deleteAllMessages(roomId);
+    } else {
+      cleanOldMessages(roomId, 100);
+      alert('تم تنظيف الرسائل القديمة، خلينا آخر 100');
+    }
+  });
+});
+</script>
+
+
+<script>
+// مراقبة تغيير الرتبة واظهار الزر فوراً
+function checkAndShowCleanupBtn() {
+  const btn = document.getElementById('cleanupBtn');
+  const rank = localStorage.getItem('userRank');
+  if(btn) {
+    if(rank === 'owner') {
+      btn.classList.remove('hidden');
+      btn.style.display = 'block';
+    } else {
+      btn.classList.add('hidden');
+    }
+  }
+}
+
+// شغلها كل ثانية + بعد الدخول
+setInterval(checkAndShowCleanupBtn, 1000);
+document.addEventListener('DOMContentLoaded', checkAndShowCleanupBtn);
+
+// بعد ما يدخل اليوزر، شغل التنظيف التلقائي
+window.addEventListener('storage', (e) => {
+  if(e.key === 'userRank' && e.newValue === 'owner') {
+    checkAndShowCleanupBtn();
+    const roomId = localStorage.getItem('currentRoom') || 'main';
+    if(typeof autoCleanMessages === 'function') autoCleanMessages(roomId);
+  }
+});
+</script>
+
+
+<script>
+// ===== نظام تنظيف الرسائل - ما يلمس زر لوحة المالك =====
+(function() {
+  // نفحص اذا زر لوحة المالك ظاهر = معناها المستخدم مالك
+  function shouldShowCleanup() {
+    const ownerBtn = document.getElementById('drawerOwnerPanelBtn');
+    if(ownerBtn && !ownerBtn.classList.contains('hidden')) {
+      return true; // الزر ظاهر = مالك
+    }
+    return false;
+  }
+
+  // اظهار/اخفاء صندوق التنظيف فقط
+  function toggleCleanupBox() {
+    const box = document.getElementById('ownerCleanupBox');
+    if (box) {
+      if (shouldShowCleanup()) {
+        box.style.display = 'block';
+        updateMsgCounter();
+      } else {
+        box.style.display = 'none';
+      }
+    }
+  }
+  
+  // تشغيل عند تحميل الصفحة وكل ثانيتين
+  document.addEventListener('DOMContentLoaded', toggleCleanupBox);
+  setInterval(toggleCleanupBox, 2000);
+
+  // عداد الرسائل
+  function updateMsgCounter() {
+    const roomId = localStorage.getItem('currentRoom') || localStorage.getItem('selectedRoom') || localStorage.getItem('room') || 'main';
+    if (typeof db !== 'undefined') {
+      try {
+        db.ref(`rooms/${roomId}/messages`).once('value', snap => {
+          const count = snap.numChildren();
+          const el = document.getElementById('msgCountBox');
+          if(el) {
+            el.textContent = count;
+            if(count > 100) {
+              el.classList.add('text-yellow-400');
+              el.classList.remove('text-red-400');
+            } else {
+              el.classList.remove('text-yellow-400');
+              el.classList.add('text-red-400');
+            }
+          }
+        });
+      } catch(e) {}
+    }
+  }
+  
+  setInterval(() => {
+    if(shouldShowCleanup()) updateMsgCounter();
+  }, 5000);
+
+  // ازرار التنظيف
+  setTimeout(() => {
+    const cleanBtn = document.getElementById('cleanOldBtnBox');
+    const deleteBtn = document.getElementById('deleteAllBtnBox');
+    
+    if(cleanBtn) {
+      cleanBtn.onclick = function() {
+        const roomId = localStorage.getItem('currentRoom') || localStorage.getItem('selectedRoom') || localStorage.getItem('room') || 'main';
+        if(confirm('راح نخلي آخر 100 رسالة ونمسح الباقي؟')) {
+          cleanOldMsgs(roomId, 100);
+        }
+      };
+    }
+
+    if(deleteBtn) {
+      deleteBtn.onclick = function() {
+        const roomId = localStorage.getItem('currentRoom') || localStorage.getItem('selectedRoom') || localStorage.getItem('room') || 'main';
+        if(confirm('⚠️ تحذير: راح تحذف كل الرسائل نهائياً!')) {
+          deleteAllMsgs(roomId);
+        }
+      };
+    }
+  }, 2000);
+
+  // تنظيف تلقائي
+  function autoClean() {
+    if (!shouldShowCleanup() || typeof db === 'undefined') return;
+    const roomId = localStorage.getItem('currentRoom') || localStorage.getItem('selectedRoom') || localStorage.getItem('room') || 'main';
+    db.ref(`rooms/${roomId}/messages`).once('value').then(snapshot => {
+      const total = snapshot.numChildren();
+      if (total > 120) {
+        const excess = total - 100;
+        const updates = {};
+        let count = 0;
+        snapshot.forEach(child => {
+          if (count < excess) {
+            updates[child.key] = null;
+            count++;
+          }
+        });
+        db.ref(`rooms/${roomId}/messages`).update(updates);
+      }
+    }).catch(e => {});
+  }
+
+  setInterval(autoClean, 120000);
+
+  function deleteAllMsgs(roomId) {
+    if (typeof db === 'undefined') return alert('قاعدة البيانات غير متصلة');
+    db.ref(`rooms/${roomId}/messages`).remove().then(() => {
+      alert('✅ تم حذف جميع الرسائل');
+      updateMsgCounter();
+    });
+  }
+
+  function cleanOldMsgs(roomId, keep = 100) {
+    if (typeof db === 'undefined') return alert('قاعدة البيانات غير متصلة');
+    const ref = db.ref(`rooms/${roomId}/messages`);
+    ref.orderByChild('timestamp').once('value').then(snapshot => {
+      const total = snapshot.numChildren();
+      if (total <= keep) {
+        alert('الرسائل أقل من ' + keep);
+        return;
+      }
+      const toDelete = total - keep;
+      let count = 0;
+      const updates = {};
+      snapshot.forEach(child => {
+        if (count < toDelete) {
+          updates[child.key] = null;
+          count++;
+        }
+      });
+      ref.update(updates).then(() => {
+        alert(`✅ تم حذف ${toDelete} رسالة قديمة`);
+        updateMsgCounter();
+      });
+    });
+  }
+})();
 </script>
 
 </body>
