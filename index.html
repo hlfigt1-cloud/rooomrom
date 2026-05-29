@@ -31,41 +31,53 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
     gap: 0.25rem;
 }
 
-/* Master - Red (for boys) */
+/* Master - Red */
 .rank-master {
     color: #ff0000;
     font-weight: 800;
     text-shadow: 0 0 8px rgba(255,0,0,0.6), 0 0 16px rgba(255,0,0,0.3);
 }
-
-/* Super - Pink (for girls) */
+/* Super - Pink */
 .rank-super {
     color: #ff69b4;
     font-weight: 800;
     text-shadow: 0 0 8px rgba(255,105,180,0.6), 0 0 16px rgba(255,105,180,0.3);
 }
-
 /* Super Admin - Blue */
 .rank-superadmin {
     color: #3b82f6;
     font-weight: 800;
     text-shadow: 0 0 8px rgba(59,130,246,0.6), 0 0 16px rgba(59,130,246,0.3);
 }
-
 /* Root - Green */
 .rank-root {
     color: #22c55e;
     font-weight: 800;
     text-shadow: 0 0 8px rgba(34,197,94,0.6), 0 0 16px rgba(34,197,94,0.3);
 }
-
+/* Royal - Gold */
+.rank-royal {
+    background: linear-gradient(90deg, #ffd700, #ffed4a, #ffd700, #c0c0c0, #ffd700);
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 900;
+    font-size: 1.15em;
+    animation: royalShine 2s linear infinite;
+    filter: drop-shadow(0 0 8px rgba(255,215,0,0.8));
+}
+@keyframes royalShine {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
 /* Member - Purple */
 .rank-user {
     color: #9333ea;
     font-weight: 700;
     text-shadow: 0 0 8px rgba(147,51,234,0.5), 0 0 16px rgba(147,51,234,0.2);
 }
-
 /* Guest */
 .rank-guest {
     color: #888888;
@@ -178,6 +190,70 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
 
 .owner-name { color: #ef4444; font-weight: bold; text-shadow: 0 0 10px rgba(239,68,68,0.5); }
 
+/* Notification Styles */
+.pm-notification {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #1e1b4b, #312e81);
+    border: 2px solid #6366f1;
+    border-radius: 16px;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 10px 40px rgba(99,102,241,0.5);
+    z-index: 99999;
+    animation: notifSlide 0.4s ease-out;
+    max-width: 90%;
+    pointer-events: auto;
+}
+@keyframes notifSlide {
+    from { opacity: 0; transform: translateX(-50%) translateY(-40px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+@keyframes notifFade {
+    from { opacity: 1; transform: translateX(-50%) translateY(0); }
+    to { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+}
+.pm-notification .notif-icon {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    animation: bellShake 0.8s ease-in-out infinite;
+    box-shadow: 0 0 15px rgba(239,68,68,0.5);
+}
+@keyframes bellShake {
+    0%, 100% { transform: rotate(0deg); }
+    15% { transform: rotate(12deg); }
+    30% { transform: rotate(-12deg); }
+    45% { transform: rotate(8deg); }
+    60% { transform: rotate(-8deg); }
+    75% { transform: rotate(4deg); }
+    90% { transform: rotate(-4deg); }
+}
+.pm-notification h4 {
+    color: #fff;
+    font-size: 15px;
+    font-weight: 800;
+    margin: 0;
+}
+.pm-notification p {
+    color: #a5b4fc;
+    font-size: 12px;
+    margin: 4px 0 0 0;
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 /* ===== PRIVATE CHAT BANNER ===== */
 .private-chat-banner {
     background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%);
@@ -220,12 +296,6 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
     border-radius: 16px;
     padding: 20px;
     margin-bottom: 16px;
-    box-shadow: 0 0 20px rgba(245,158,11,0.15);
-}
-
-.owner-profile-card:hover {
-    box-shadow: 0 0 30px rgba(245,158,11,0.25);
-    transition: box-shadow 0.3s ease;
 }
 
 .owner-avatar {
@@ -352,7 +422,7 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
 
         <!-- Sidebar Content -->
         <div class="flex-1 overflow-y-auto scrollbar-hide">
-            <!-- Owner Profile Section (Visible to Everyone) -->
+            <!-- Owner Profile Section (Visible to ALL users) -->
             <div id="ownerProfileSection" class="hidden p-4 border-b border-slate-700/50">
                 <div class="owner-profile-card">
                     <div class="flex items-center gap-4 mb-3">
@@ -440,6 +510,9 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
         </div>
     </div>
 </div>
+
+<!-- ==================== NOTIFICATION CONTAINER ==================== -->
+<div id="notificationContainer" style="position:fixed;top:0;left:0;right:0;z-index:99999;pointer-events:none;"></div>
 
 <!-- ==================== MAIN APP ==================== -->
 <div id="mainApp" class="hidden h-screen flex flex-col">
@@ -572,7 +645,6 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
                 <span class="perm-badge perm-mute"><i class="fas fa-volume-mute"></i> كتم</span>
                 <span class="perm-badge perm-ipban"><i class="fas fa-ban"></i> حظر IP</span>
                 <span class="perm-badge perm-pm"><i class="fas fa-envelope"></i> حظر محادثة خاصة</span>
-                <span class="perm-badge" style="background:rgba(245,158,11,0.2);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);"><i class="fas fa-user-cog"></i> تخصيص صلاحيات</span>
             </div>
         </div>
 
@@ -652,30 +724,27 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
         <div class="space-y-4">
             <!-- Avatar Upload -->
             <div class="text-center">
-                <div id="profileAvatarPreview" class="owner-avatar-placeholder mx-auto mb-3 cursor-pointer" onclick="document.getElementById('ownerAvatarInput').click()">
-                    <i class="fas fa-camera"></i>
+                <div id="profileAvatarPreview" class="owner-avatar-placeholder mx-auto mb-3">
+                    <i class="fas fa-crown"></i>
                 </div>
                 <input type="file" id="ownerAvatarInput" accept="image/*" class="hidden">
                 <button onclick="document.getElementById('ownerAvatarInput').click()" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-lg text-sm font-bold transition">
                     <i class="fas fa-camera ml-1"></i>اختيار صورة
                 </button>
-                <p class="text-xs text-slate-400 mt-2">اضغط على الصورة أو الزر لرفع صورة جديدة</p>
             </div>
 
             <!-- Bio -->
             <div>
-                <label class="block text-sm font-semibold mb-2 text-slate-300">نبذة عنك <span class="text-xs text-amber-400">(مرئية للجميع)</span></label>
+                <label class="block text-sm font-semibold mb-2 text-slate-300">نبذة عنك</label>
                 <textarea id="ownerBioInput" rows="3" placeholder="اكتب نبذة قصيرة عنك..." maxlength="200"
                     class="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition text-white placeholder-slate-500 text-sm"></textarea>
-                <p class="text-xs text-slate-400 mt-1">هذه النبذة ستظهر للجميع في الملف الشخصي</p>
             </div>
 
             <!-- Full Info -->
             <div>
-                <label class="block text-sm font-semibold mb-2 text-slate-300">معلومات كاملة <span class="text-xs text-amber-400">(مرئية للجميع)</span></label>
+                <label class="block text-sm font-semibold mb-2 text-slate-300">معلومات كاملة</label>
                 <textarea id="ownerFullInfoInput" rows="4" placeholder="اكتب معلوماتك الكاملة..." maxlength="500"
                     class="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition text-white placeholder-slate-500 text-sm"></textarea>
-                <p class="text-xs text-slate-400 mt-1">هذه المعلومات ستظهر للجميع في الملف الشخصي</p>
             </div>
 
             <button id="saveOwnerProfile" class="w-full py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 rounded-xl font-bold shadow-lg transition">
@@ -707,9 +776,8 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
                     class="px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-white text-sm">
                 <select id="newMemberRank" class="px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-white text-sm">
                     <option value="user">عضو (بنفسجي)</option>
-                    <option value="root">روت (أخضر)</option>
-                    <option value="super">سوبر (وردي)</option>
-                    <option value="superadmin">سوبر أدمن (أزرق)</option>
+                    <option value="root">روت (أحمر)</option>
+                    <option value="super">سوبر (أحمر)</option>
                     <option value="master">ماستر (أحمر)</option>
                 </select>
                 <button id="addMemberBtn" class="py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 rounded-lg font-semibold text-sm transition">
@@ -753,7 +821,7 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
                 <i class="fas fa-envelope"></i>
             </div>
             <div class="banner-text flex-1">
-                <h4><i class="fas fa-exclamation-triangle text-yellow-400 ml-1"></i>المحادثة الخاصة</h4>
+                <h4>المحادثة الخاصة</h4>
                 <p>محادثة مشفرة وآمنة بينك وبين الطرف الآخر</p>
             </div>
             <button id="closePrivateChat" class="p-2 hover:bg-white/10 rounded-lg transition">
@@ -829,86 +897,43 @@ const RANKS = {
     owner: { 
         name: 'مالك', 
         color: 'glow-owner', 
-        canKick: true, 
-        canBan: true, 
-        canMute: true, 
-        canIPBan: true, 
-        canManageMembers: true,
-        canBanPM: true,
-        canAssignPerms: true,
-        label: 'مالك الشات'
+        canKick: true, canBan: true, canMute: true, canIPBan: true, 
+        canManageMembers: true, canBanPM: true, label: 'مالك الشات'
+    },
+    royal: {
+        name: 'ملكي', color: 'rank-royal',
+        canKick: true, canBan: true, canMute: true, canIPBan: true,
+        canManageMembers: true, canBanPM: true, label: 'ملكي'
     },
     master: { 
-        name: 'ماستر', 
-        color: 'rank-master', 
-        canKick: true, 
-        canBan: true, 
-        canMute: true, 
-        canIPBan: false, 
-        canManageMembers: false,
-        canBanPM: false,
-        canAssignPerms: false,
-        label: 'مسؤول'
+        name: 'ماستر', color: 'rank-master', 
+        canKick: true, canBan: true, canMute: true, canIPBan: false, 
+        canManageMembers: false, canBanPM: false, label: 'مسؤول'
     },
     super: { 
-        name: 'سوبر', 
-        color: 'rank-super', 
-        canKick: false, 
-        canBan: false, 
-        canMute: true, 
-        canIPBan: false, 
-        canManageMembers: false,
-        canBanPM: false,
-        canAssignPerms: false,
-        label: 'مسؤول'
+        name: 'سوبر', color: 'rank-super', 
+        canKick: false, canBan: false, canMute: true, canIPBan: false, 
+        canManageMembers: false, canBanPM: false, label: 'مسؤول'
     },
     superadmin: { 
-        name: 'سوبر أدمن', 
-        color: 'rank-superadmin', 
-        canKick: true, 
-        canBan: true, 
-        canMute: true, 
-        canIPBan: false, 
-        canManageMembers: false,
-        canBanPM: true,
-        canAssignPerms: false,
-        label: 'سوبر أدمن'
+        name: 'سوبر أدمن', color: 'rank-superadmin', 
+        canKick: true, canBan: true, canMute: true, canIPBan: false, 
+        canManageMembers: false, canBanPM: true, label: 'سوبر أدمن'
     },
     root: { 
-        name: 'روت', 
-        color: 'rank-root', 
-        canKick: false, 
-        canBan: false, 
-        canMute: true, 
-        canIPBan: false, 
-        canManageMembers: false,
-        canBanPM: false,
-        canAssignPerms: false,
-        label: 'مسؤول'
+        name: 'روت', color: 'rank-root', 
+        canKick: false, canBan: false, canMute: true, canIPBan: false, 
+        canManageMembers: false, canBanPM: false, label: 'مسؤول'
     },
     user: { 
-        name: 'عضو', 
-        color: 'rank-user', 
-        canKick: false, 
-        canBan: false, 
-        canMute: false, 
-        canIPBan: false, 
-        canManageMembers: false,
-        canBanPM: false,
-        canAssignPerms: false,
-        label: 'عضو'
+        name: 'عضو', color: 'rank-user', 
+        canKick: false, canBan: false, canMute: false, canIPBan: false, 
+        canManageMembers: false, canBanPM: false, label: 'عضو'
     },
     guest: { 
-        name: 'زائر', 
-        color: 'rank-guest', 
-        canKick: false, 
-        canBan: false, 
-        canMute: false, 
-        canIPBan: false, 
-        canManageMembers: false,
-        canBanPM: false,
-        canAssignPerms: false,
-        label: 'زائر'
+        name: 'زائر', color: 'rank-guest', 
+        canKick: false, canBan: false, canMute: false, canIPBan: false, 
+        canManageMembers: false, canBanPM: false, label: 'زائر'
     }
 };
 
@@ -1065,15 +1090,8 @@ function getRankDisplay(rank, username, clickable = false) {
     } else if (rank === 'guest') {
         return `<span class="${rankData.color}"><i class="fas fa-user-secret"></i> ${rankData.name}</span> <span class="${clickClass}" ${clickAttr}>${username}</span>`;
     } else {
-        const iconMap = {
-            'master': 'fa-user-shield',
-            'super': 'fa-user-shield',
-            'superadmin': 'fa-user-shield',
-            'root': 'fa-user-shield',
-            'user': 'fa-user-check',
-            'guest': 'fa-user-secret'
-        };
-        const icon = iconMap[rank] || 'fa-user';
+        // All admin ranks now show in red, member in purple
+        const icon = (rank === 'master' || rank === 'super' || rank === 'root') ? 'fa-user-shield' : 'fa-user-check';
         return `<span class="${rankData.color}"><i class="fas ${icon}"></i> ${rankData.name}</span> <span class="${clickClass}" ${clickAttr}>${username}</span>`;
     }
 }
@@ -1212,14 +1230,14 @@ loginBtn.addEventListener('click', async () => {
     userInfo.innerHTML = userDisplay;
     drawerUserInfo.innerHTML = userDisplay;
     
-    // Show owner panel button and profile section
+    // Show owner panel button (owner only) and profile section (all users)
     if (isOwner) {
         drawerOwnerPanelBtn.classList.remove('hidden');
         document.getElementById('editOwnerProfileBtn').classList.remove('hidden');
     }
-    // Show owner profile section for ALL users (visible to everyone)
+    // Show owner profile to ALL users
     ownerProfileSection.classList.remove('hidden');
-    ownerProfileName.textContent = 'المالك';
+    ownerProfileName.textContent = ownerProfile.name || 'المالك';
     loadOwnerProfile();
     
     // Store rank in localStorage for cleanup button
@@ -1235,8 +1253,7 @@ loginBtn.addEventListener('click', async () => {
         timestamp: Date.now()
     });
     
-    // Remove on disconnect
-    onDisconnect(userRef).remove();
+    // No auto-remove - user stays in chat until explicit logout
     
     loginScreen.classList.add('hidden');
     mainApp.classList.remove('hidden');
@@ -1249,6 +1266,8 @@ drawerLogoutBtn.addEventListener('click', async () => {
     if (currentUser) {
         await remove(ref(db, `onlineUsers/${currentUser}`));
     }
+    localStorage.removeItem('chatDeviceId');
+    localStorage.removeItem('userRank');
     location.reload();
 });
 
@@ -1273,9 +1292,33 @@ function setupListeners() {
         if (currentRoom) renderMessages();
     });
     
-    // Private Chats
+    // Private Chats - with notifications
     onValue(ref(db, 'private_chats'), (snapshot) => {
-        privateChats = snapshot.val() || {};
+        const newChats = snapshot.val() || {};
+
+        if (currentUser) {
+            for (const [chatId, messages] of Object.entries(newChats)) {
+                if (!chatId.includes(currentUser)) continue;
+
+                const oldKeys = lastPMKeys[chatId] || {};
+                const newKeys = Object.keys(messages);
+
+                for (const key of newKeys) {
+                    if (!oldKeys[key]) {
+                        const msg = messages[key];
+                        if (msg.to === currentUser && msg.from !== currentUser) {
+                            if (currentPrivateChat !== msg.from) {
+                                showPMNotification(msg.from, msg.text);
+                            }
+                        }
+                    }
+                }
+
+                lastPMKeys[chatId] = messages;
+            }
+        }
+
+        privateChats = newChats;
         if (currentPrivateChat) renderPrivateMessages();
     });
     
@@ -1328,10 +1371,10 @@ function setupListeners() {
         }
     });
     
-    // Owner Profile
+    // Owner Profile - visible to ALL users
     onValue(ref(db, 'ownerProfile'), (snapshot) => {
         ownerProfile = snapshot.val() || {};
-        if (isOwner) updateOwnerProfileDisplay();
+        updateOwnerProfileDisplay();
     });
 }
 
@@ -1544,16 +1587,10 @@ function renderUsers() {
         const isMuted = mutedUsers[user.username];
         const userDisplay = getRankDisplay(user.rank, user.username, user.username !== currentUser);
         
-        // Show admin badges with correct colors
+        // Show admin badges for red-ranked users
         let adminBadge = '';
-        if (user.rank === 'master') {
+        if (user.rank === 'master' || user.rank === 'super' || user.rank === 'root') {
             adminBadge = '<span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full mr-1"><i class="fas fa-shield-alt"></i></span>';
-        } else if (user.rank === 'super') {
-            adminBadge = '<span class="text-xs bg-pink-500/20 text-pink-400 px-2 py-0.5 rounded-full mr-1"><i class="fas fa-shield-alt"></i></span>';
-        } else if (user.rank === 'superadmin') {
-            adminBadge = '<span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full mr-1"><i class="fas fa-shield-alt"></i></span>';
-        } else if (user.rank === 'root') {
-            adminBadge = '<span class="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full mr-1"><i class="fas fa-shield-alt"></i></span>';
         } else if (user.rank === 'user') {
             adminBadge = '<span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full mr-1"><i class="fas fa-user"></i></span>';
         }
@@ -1596,16 +1633,10 @@ function renderRoomUsers() {
         const isMuted = mutedUsers[user.username];
         const userDisplay = getRankDisplay(user.rank, user.username, user.username !== currentUser);
         
-        // Show admin badges with correct colors
+        // Show admin badges
         let adminBadge = '';
-        if (user.rank === 'master') {
+        if (user.rank === 'master' || user.rank === 'super' || user.rank === 'root') {
             adminBadge = '<span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full mr-1"><i class="fas fa-shield-alt"></i></span>';
-        } else if (user.rank === 'super') {
-            adminBadge = '<span class="text-xs bg-pink-500/20 text-pink-400 px-2 py-0.5 rounded-full mr-1"><i class="fas fa-shield-alt"></i></span>';
-        } else if (user.rank === 'superadmin') {
-            adminBadge = '<span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full mr-1"><i class="fas fa-shield-alt"></i></span>';
-        } else if (user.rank === 'root') {
-            adminBadge = '<span class="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full mr-1"><i class="fas fa-shield-alt"></i></span>';
         } else if (user.rank === 'user') {
             adminBadge = '<span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full mr-1"><i class="fas fa-user"></i></span>';
         }
@@ -1943,9 +1974,8 @@ function renderMembersListForOwner() {
             <div class="flex gap-2 mt-2">
                 <select onchange="changeMemberRank('${currentRoom.id}', '${name}', this.value)" class="flex-1 px-2 py-1.5 bg-slate-700 border border-slate-600 rounded text-xs outline-none">
                     <option value="user" ${member.rank === 'user' ? 'selected' : ''}>عضو (بنفسجي)</option>
-                    <option value="root" ${member.rank === 'root' ? 'selected' : ''}>روت (أخضر)</option>
-                    <option value="super" ${member.rank === 'super' ? 'selected' : ''}>سوبر (وردي)</option>
-                    <option value="superadmin" ${member.rank === 'superadmin' ? 'selected' : ''}>سوبر أدمن (أزرق)</option>
+                    <option value="root" ${member.rank === 'root' ? 'selected' : ''}>روت (أحمر)</option>
+                    <option value="super" ${member.rank === 'super' ? 'selected' : ''}>سوبر (أحمر)</option>
                     <option value="master" ${member.rank === 'master' ? 'selected' : ''}>ماستر (أحمر)</option>
                 </select>
                 <button onclick="copyMemberCode('${member.code}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 rounded text-xs font-semibold transition">
@@ -2061,15 +2091,11 @@ function renderPrivateMessages() {
 
 
 // ==================== OWNER PROFILE SYSTEM ====================
-// Load owner profile from Firebase (visible to all users)
+// Load owner profile from Firebase
 async function loadOwnerProfile() {
     const snapshot = await get(ref(db, 'ownerProfile'));
     if (snapshot.exists()) {
         ownerProfile = snapshot.val();
-        updateOwnerProfileDisplay();
-    } else {
-        // Show default state if no profile exists
-        ownerProfile = {};
         updateOwnerProfileDisplay();
     }
 }
@@ -2161,226 +2187,6 @@ saveOwnerProfile.addEventListener('click', async () => {
     ownerProfileModal.classList.add('hidden');
     alert('تم حفظ الملف الشخصي بنجاح');
 });
-
-
-// ==================== ASSIGN PERMISSIONS SYSTEM ====================
-const assignPermsModal = document.getElementById('assignPermsModal');
-const closeAssignPerms = document.getElementById('closeAssignPerms');
-const assignPermsUsername = document.getElementById('assignPermsUsername');
-const assignPermsRank = document.getElementById('assignPermsRank');
-const permKick = document.getElementById('permKick');
-const permBan = document.getElementById('permBan');
-const permMute = document.getElementById('permMute');
-const permIPBan = document.getElementById('permIPBan');
-const permBanPM = document.getElementById('permBanPM');
-const savePermsBtn = document.getElementById('savePermsBtn');
-
-let currentAssignUser = null;
-
-// Open assign permissions modal
-window.openAssignPerms = async (username) => {
-    if (!isOwner) return;
-    currentAssignUser = username;
-    assignPermsUsername.textContent = username;
-
-    // Get user's current rank
-    const user = onlineUsers[username];
-    const rank = user ? user.rank : 'user';
-    const rankData = RANKS[rank];
-    assignPermsRank.innerHTML = `<span class="${rankData.color}">${rankData.name}</span>`;
-
-    // Load current permissions from Firebase
-    const permsSnapshot = await get(ref(db, `userPermissions/${username}`));
-    const perms = permsSnapshot.val() || {};
-
-    permKick.checked = perms.canKick || false;
-    permBan.checked = perms.canBan || false;
-    permMute.checked = perms.canMute || false;
-    permIPBan.checked = perms.canIPBan || false;
-    permBanPM.checked = perms.canBanPM || false;
-
-    assignPermsModal.classList.remove('hidden');
-    userActionModal.classList.add('hidden');
-};
-
-closeAssignPerms.addEventListener('click', () => {
-    assignPermsModal.classList.add('hidden');
-    currentAssignUser = null;
-});
-
-savePermsBtn.addEventListener('click', async () => {
-    if (!currentAssignUser || !isOwner) return;
-
-    const perms = {
-        canKick: permKick.checked,
-        canBan: permBan.checked,
-        canMute: permMute.checked,
-        canIPBan: permIPBan.checked,
-        canBanPM: permBanPM.checked,
-        assignedBy: currentUser,
-        assignedAt: Date.now()
-    };
-
-    await set(ref(db, `userPermissions/${currentAssignUser}`), perms);
-
-    assignPermsModal.classList.add('hidden');
-    alert(`تم تحديث صلاحيات ${currentAssignUser} بنجاح`);
-    currentAssignUser = null;
-});
-
-assignPermsModal.addEventListener('click', (e) => {
-    if (e.target === assignPermsModal) assignPermsModal.classList.add('hidden');
-});
-
-// ==================== CHECK USER PERMISSIONS ====================
-async function getUserEffectivePermissions(username) {
-    const user = onlineUsers[username];
-    if (!user) return {};
-
-    const rank = user.rank;
-    const rankPerms = RANKS[rank] || {};
-
-    // If owner, return all permissions
-    if (rank === 'owner') {
-        return {
-            canKick: true, canBan: true, canMute: true, 
-            canIPBan: true, canManageMembers: true, canBanPM: true
-        };
-    }
-
-    // Check custom permissions
-    const permsSnapshot = await get(ref(db, `userPermissions/${username}`));
-    const customPerms = permsSnapshot.val() || {};
-
-    // Merge rank permissions with custom permissions
-    return {
-        canKick: customPerms.canKick || rankPerms.canKick || false,
-        canBan: customPerms.canBan || rankPerms.canBan || false,
-        canMute: customPerms.canMute || rankPerms.canMute || false,
-        canIPBan: customPerms.canIPBan || rankPerms.canIPBan || false,
-        canManageMembers: rankPerms.canManageMembers || false,
-        canBanPM: customPerms.canBanPM || rankPerms.canBanPM || false
-    };
-}
-
-// ==================== UPDATE USER ACTIONS WITH CUSTOM PERMISSIONS ====================
-// Override the showUserActions function to use custom permissions
-const originalShowUserActions = showUserActions;
-showUserActions = async function(user) {
-    actionUserName.textContent = user.username;
-    userActions.innerHTML = '';
-
-    const targetUser = onlineUsers[user.username];
-    const targetRank = targetUser ? targetUser.rank : 'user';
-
-    // Get current user's effective permissions
-    const myPerms = await getUserEffectivePermissions(currentUser);
-
-    // Show current user's permissions
-    userPermsDisplay.classList.remove('hidden');
-    userPermsDisplay.innerHTML = '<span class="text-xs text-slate-400 w-full mb-1">صلاحياتك:</span>';
-
-    if (myPerms.canKick) userPermsDisplay.innerHTML += '<span class="perm-badge perm-kick text-xs"><i class="fas fa-sign-out-alt"></i> طرد</span>';
-    if (myPerms.canBan) userPermsDisplay.innerHTML += '<span class="perm-badge perm-ban text-xs"><i class="fas fa-user-slash"></i> حظر</span>';
-    if (myPerms.canMute) userPermsDisplay.innerHTML += '<span class="perm-badge perm-mute text-xs"><i class="fas fa-volume-mute"></i> كتم</span>';
-    if (myPerms.canIPBan) userPermsDisplay.innerHTML += '<span class="perm-badge perm-ipban text-xs"><i class="fas fa-ban"></i> IP</span>';
-    if (myPerms.canBanPM) userPermsDisplay.innerHTML += '<span class="perm-badge perm-pm text-xs"><i class="fas fa-envelope"></i> خاص</span>';
-
-    // Private chat button for everyone (except if banned from PM)
-    if (user.username !== currentUser) {
-        const isBannedFromPM = bannedFromPM[user.username];
-        if (!isBannedFromPM) {
-            addActionButton('محادثة خاصة', 'fa-envelope', 'bg-blue-600 hover:bg-blue-700', () => openPrivateChat(user.username));
-        } else {
-            addActionButton('محادثة خاصة (محظور)', 'fa-envelope', 'bg-slate-600 cursor-not-allowed opacity-50', () => {
-                alert('هذا المستخدم محظور من المحادثات الخاصة');
-            });
-        }
-    }
-
-    // OWNER: Full control + assign permissions
-    if (isOwner) {
-        const sep = document.createElement('div');
-        sep.className = 'border-t border-slate-600 my-2';
-        sep.innerHTML = '<span class="text-xs text-amber-400 font-bold">صلاحيات المالك</span>';
-        userActions.appendChild(sep);
-
-        addActionButton('طرد من الشات', 'fa-sign-out-alt', 'bg-orange-600 hover:bg-orange-700', () => kickUser(user.username));
-        addActionButton('حظر نهائي', 'fa-user-slash', 'bg-red-600 hover:bg-red-700', () => banUser(user.username));
-
-        const muteDiv = document.createElement('div');
-        muteDiv.className = 'grid grid-cols-3 gap-2';
-        muteDiv.innerHTML = `
-            <button onclick="muteUserByName('${user.username}', 5)" class="py-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-xs font-bold transition">
-                <i class="fas fa-volume-mute"></i> 5 دق
-            </button>
-            <button onclick="muteUserByName('${user.username}', 15)" class="py-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-xs font-bold transition">
-                <i class="fas fa-volume-mute"></i> 15 دق
-            </button>
-            <button onclick="muteUserByName('${user.username}', 60)" class="py-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-xs font-bold transition">
-                <i class="fas fa-volume-mute"></i> ساعة
-            </button>
-        `;
-        userActions.appendChild(muteDiv);
-
-        if (mutedUsers[user.username]) {
-            addActionButton('فك الكتم', 'fa-volume-up', 'bg-green-600 hover:bg-green-700', () => unmuteUser(user.username));
-        }
-
-        if (user.ip && user.ip !== 'unknown') {
-            addActionButton(`حظر IP`, 'fa-ban', 'bg-red-800 hover:bg-red-900', () => banIP(user.ip, user.username));
-        }
-
-        const isBannedPM = bannedFromPM[user.username];
-        if (isBannedPM) {
-            addActionButton('فك حظر المحادثة الخاصة', 'fa-envelope-open', 'bg-indigo-600 hover:bg-indigo-700', () => unbanUserFromPM(user.username));
-        } else {
-            addActionButton('حظر من المحادثة الخاصة', 'fa-envelope', 'bg-blue-800 hover:bg-blue-900', () => banUserFromPM(user.username));
-        }
-
-        // NEW: Assign Permissions button
-        addActionButton('تخصيص صلاحيات', 'fa-user-cog', 'bg-amber-600 hover:bg-amber-700', () => openAssignPerms(user.username));
-    } 
-    // Users with custom permissions
-    else {
-        const hasAnyPerm = myPerms.canKick || myPerms.canBan || myPerms.canMute || myPerms.canIPBan || myPerms.canBanPM;
-
-        if (hasAnyPerm && user.username !== currentUser) {
-            const sep = document.createElement('div');
-            sep.className = 'border-t border-slate-600 my-2';
-            sep.innerHTML = '<span class="text-xs text-yellow-400 font-bold">صلاحياتك</span>';
-            userActions.appendChild(sep);
-
-            if (myPerms.canKick) {
-                addActionButton('طرد', 'fa-sign-out-alt', 'bg-orange-600 hover:bg-orange-700', () => kickUser(user.username));
-            }
-            if (myPerms.canBan) {
-                addActionButton('حظر نهائي', 'fa-user-slash', 'bg-red-600 hover:bg-red-700', () => banUser(user.username));
-            }
-            if (myPerms.canMute) {
-                addActionButton('كتم 5 دقائق', 'fa-volume-mute', 'bg-yellow-600 hover:bg-yellow-700', () => muteUser(user.username, 5));
-                addActionButton('كتم 15 دقيقة', 'fa-volume-mute', 'bg-yellow-600 hover:bg-yellow-700', () => muteUser(user.username, 15));
-                addActionButton('كتم ساعة', 'fa-volume-mute', 'bg-yellow-600 hover:bg-yellow-700', () => muteUser(user.username, 60));
-            }
-            if (myPerms.canIPBan && user.ip && user.ip !== 'unknown') {
-                addActionButton('حظر IP', 'fa-ban', 'bg-red-800 hover:bg-red-900', () => banIP(user.ip, user.username));
-            }
-            if (myPerms.canBanPM) {
-                const isBannedPM = bannedFromPM[user.username];
-                if (isBannedPM) {
-                    addActionButton('فك حظر الخاص', 'fa-envelope-open', 'bg-indigo-600 hover:bg-indigo-700', () => unbanUserFromPM(user.username));
-                } else {
-                    addActionButton('حظر من الخاص', 'fa-envelope', 'bg-blue-800 hover:bg-blue-900', () => banUserFromPM(user.username));
-                }
-            }
-        }
-    }
-
-    userActionModal.classList.remove('hidden');
-};
-
-// Update renderUsers and renderRoomUsers to show action buttons based on permissions
-// We need to update the condition for showing action buttons
 
 // ==================== RENDER ADMIN LISTS ====================
 function renderBannedUsers() {
@@ -2517,80 +2323,36 @@ initDefaultCountries();
 // Check mute status periodically
 setInterval(checkUserMuteStatus, 60000);
 
-// Handle disconnect
+// Heartbeat - keep user active
+setInterval(async () => {
+    if (currentUser) {
+        await update(ref(db, `onlineUsers/${currentUser}`), {
+            lastActive: Date.now()
+        });
+    }
+}, 30000);
+
+// Cleanup inactive users (after 10 minutes)
+setInterval(async () => {
+    const now = Date.now();
+    const snapshot = await get(ref(db, 'onlineUsers'));
+    const users = snapshot.val() || {};
+    for (const [name, data] of Object.entries(users)) {
+        if (data.lastActive && (now - data.lastActive > 600000)) {
+            await remove(ref(db, `onlineUsers/${name}`));
+        }
+    }
+}, 60000);
+
+// Handle disconnect - keep user in chat
 window.addEventListener('beforeunload', async () => {
     if (currentUser) {
-        await remove(ref(db, `onlineUsers/${currentUser}`));
+        await update(ref(db, `onlineUsers/${currentUser}`), {
+            lastActive: Date.now()
+        });
     }
 });
 </script>
-
-<!-- ==================== ASSIGN PERMISSIONS MODAL ==================== -->
-<div id="assignPermsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop overflow-y-auto py-8">
-    <div class="bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md mx-4 border border-amber-500/20">
-        <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-bold flex items-center gap-2">
-                <i class="fas fa-user-cog text-amber-400"></i>تخصيص صلاحيات العضو
-            </h3>
-            <button id="closeAssignPerms" class="p-2 hover:bg-slate-700 rounded-lg transition">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-        </div>
-
-        <div id="assignPermsUserInfo" class="mb-4 p-3 bg-slate-700/50 rounded-lg">
-            <p class="text-sm text-slate-300">العضو: <span id="assignPermsUsername" class="font-bold text-white"></span></p>
-            <p class="text-sm text-slate-300">الرتبة: <span id="assignPermsRank" class="font-bold"></span></p>
-        </div>
-
-        <div class="space-y-3">
-            <h4 class="font-bold text-sm text-amber-400 mb-2">اختر الصلاحيات:</h4>
-
-            <label class="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-700 transition">
-                <input type="checkbox" id="permKick" class="w-5 h-5 rounded border-slate-500 text-amber-500 focus:ring-amber-500">
-                <div class="flex-1">
-                    <span class="font-bold text-sm"><i class="fas fa-sign-out-alt text-orange-400 ml-1"></i>طرد</span>
-                    <p class="text-xs text-slate-400">إمكانية طرد الأعضاء من الشات</p>
-                </div>
-            </label>
-
-            <label class="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-700 transition">
-                <input type="checkbox" id="permBan" class="w-5 h-5 rounded border-slate-500 text-amber-500 focus:ring-amber-500">
-                <div class="flex-1">
-                    <span class="font-bold text-sm"><i class="fas fa-user-slash text-red-400 ml-1"></i>حظر</span>
-                    <p class="text-xs text-slate-400">إمكانية حظر الأعضاء نهائياً</p>
-                </div>
-            </label>
-
-            <label class="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-700 transition">
-                <input type="checkbox" id="permMute" class="w-5 h-5 rounded border-slate-500 text-amber-500 focus:ring-amber-500">
-                <div class="flex-1">
-                    <span class="font-bold text-sm"><i class="fas fa-volume-mute text-yellow-400 ml-1"></i>كتم</span>
-                    <p class="text-xs text-slate-400">إمكانية كتم الأعضاء مؤقتاً</p>
-                </div>
-            </label>
-
-            <label class="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-700 transition">
-                <input type="checkbox" id="permIPBan" class="w-5 h-5 rounded border-slate-500 text-amber-500 focus:ring-amber-500">
-                <div class="flex-1">
-                    <span class="font-bold text-sm"><i class="fas fa-ban text-red-500 ml-1"></i>حظر IP</span>
-                    <p class="text-xs text-slate-400">إمكانية حظر عنوان IP</p>
-                </div>
-            </label>
-
-            <label class="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-700 transition">
-                <input type="checkbox" id="permBanPM" class="w-5 h-5 rounded border-slate-500 text-amber-500 focus:ring-amber-500">
-                <div class="flex-1">
-                    <span class="font-bold text-sm"><i class="fas fa-envelope text-blue-400 ml-1"></i>حظر محادثة خاصة</span>
-                    <p class="text-xs text-slate-400">إمكانية حظر الأعضاء من المحادثات الخاصة</p>
-                </div>
-            </label>
-
-            <button id="savePermsBtn" class="w-full py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 rounded-xl font-bold shadow-lg transition mt-4">
-                <i class="fas fa-save ml-2"></i>حفظ الصلاحيات
-            </button>
-        </div>
-    </div>
-</div>
 
 </body>
 </html>
