@@ -776,9 +776,11 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
                     class="px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-white text-sm">
                 <select id="newMemberRank" class="px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-white text-sm">
                     <option value="user">عضو (بنفسجي)</option>
-                    <option value="root">روت (أحمر)</option>
-                    <option value="super">سوبر (أحمر)</option>
+                    <option value="root">روت (أخضر)</option>
+                    <option value="super">سوبر (وردي)</option>
+                    <option value="superadmin">سوبر أدمن (أزرق)</option>
                     <option value="master">ماستر (أحمر)</option>
+                    <option value="royal">ملكي (ذهبي براق)</option>
                 </select>
                 <button id="addMemberBtn" class="py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 rounded-lg font-semibold text-sm transition">
                     <i class="fas fa-plus ml-1"></i>إضافة
@@ -1090,8 +1092,16 @@ function getRankDisplay(rank, username, clickable = false) {
     } else if (rank === 'guest') {
         return `<span class="${rankData.color}"><i class="fas fa-user-secret"></i> ${rankData.name}</span> <span class="${clickClass}" ${clickAttr}>${username}</span>`;
     } else {
-        // All admin ranks now show in red, member in purple
-        const icon = (rank === 'master' || rank === 'super' || rank === 'root') ? 'fa-user-shield' : 'fa-user-check';
+        const iconMap = {
+            'royal': 'fa-gem',
+            'master': 'fa-user-shield',
+            'super': 'fa-user-shield',
+            'superadmin': 'fa-user-shield',
+            'root': 'fa-user-shield',
+            'user': 'fa-user-check',
+            'guest': 'fa-user-secret'
+        };
+        const icon = iconMap[rank] || 'fa-user';
         return `<span class="${rankData.color}"><i class="fas ${icon}"></i> ${rankData.name}</span> <span class="${clickClass}" ${clickAttr}>${username}</span>`;
     }
 }
@@ -1587,10 +1597,18 @@ function renderUsers() {
         const isMuted = mutedUsers[user.username];
         const userDisplay = getRankDisplay(user.rank, user.username, user.username !== currentUser);
         
-        // Show admin badges for red-ranked users
+        // Show admin badges with correct colors
         let adminBadge = '';
-        if (user.rank === 'master' || user.rank === 'super' || user.rank === 'root') {
+        if (user.rank === 'royal') {
+            adminBadge = '<span class="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded-full mr-1"><i class="fas fa-gem"></i></span>';
+        } else if (user.rank === 'master') {
             adminBadge = '<span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full mr-1"><i class="fas fa-shield-alt"></i></span>';
+        } else if (user.rank === 'super') {
+            adminBadge = '<span class="text-xs bg-pink-500/20 text-pink-400 px-2 py-0.5 rounded-full mr-1"><i class="fas fa-shield-alt"></i></span>';
+        } else if (user.rank === 'superadmin') {
+            adminBadge = '<span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full mr-1"><i class="fas fa-shield-alt"></i></span>';
+        } else if (user.rank === 'root') {
+            adminBadge = '<span class="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full mr-1"><i class="fas fa-shield-alt"></i></span>';
         } else if (user.rank === 'user') {
             adminBadge = '<span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full mr-1"><i class="fas fa-user"></i></span>';
         }
@@ -1974,9 +1992,11 @@ function renderMembersListForOwner() {
             <div class="flex gap-2 mt-2">
                 <select onchange="changeMemberRank('${currentRoom.id}', '${name}', this.value)" class="flex-1 px-2 py-1.5 bg-slate-700 border border-slate-600 rounded text-xs outline-none">
                     <option value="user" ${member.rank === 'user' ? 'selected' : ''}>عضو (بنفسجي)</option>
-                    <option value="root" ${member.rank === 'root' ? 'selected' : ''}>روت (أحمر)</option>
-                    <option value="super" ${member.rank === 'super' ? 'selected' : ''}>سوبر (أحمر)</option>
+                    <option value="root" ${member.rank === 'root' ? 'selected' : ''}>روت (أخضر)</option>
+                    <option value="super" ${member.rank === 'super' ? 'selected' : ''}>سوبر (وردي)</option>
+                    <option value="superadmin" ${member.rank === 'superadmin' ? 'selected' : ''}>سوبر أدمن (أزرق)</option>
                     <option value="master" ${member.rank === 'master' ? 'selected' : ''}>ماستر (أحمر)</option>
+                    <option value="royal" ${member.rank === 'royal' ? 'selected' : ''}>ملكي (ذهبي براق)</option>
                 </select>
                 <button onclick="copyMemberCode('${member.code}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 rounded text-xs font-semibold transition">
                     <i class="fas fa-copy"></i>
@@ -2148,6 +2168,87 @@ editOwnerProfileBtn.addEventListener('click', () => {
 closeOwnerProfile.addEventListener('click', () => {
     ownerProfileModal.classList.add('hidden');
 });
+
+// ==================== ASSIGN PERMISSIONS SYSTEM ====================
+const assignPermsModal = document.getElementById('assignPermsModal');
+const closeAssignPerms = document.getElementById('closeAssignPerms');
+const assignPermsUsername = document.getElementById('assignPermsUsername');
+const assignPermsRank = document.getElementById('assignPermsRank');
+const permKick = document.getElementById('permKick');
+const permBan = document.getElementById('permBan');
+const permMute = document.getElementById('permMute');
+const permIPBan = document.getElementById('permIPBan');
+const permBanPM = document.getElementById('permBanPM');
+const savePermsBtn = document.getElementById('savePermsBtn');
+let currentAssignUser = null;
+
+window.openAssignPerms = async (username) => {
+    if (!isOwner) return;
+    currentAssignUser = username;
+    assignPermsUsername.textContent = username;
+    const user = onlineUsers[username];
+    const rank = user ? user.rank : 'user';
+    const rankData = RANKS[rank] || RANKS['guest'];
+    assignPermsRank.innerHTML = `<span class="${rankData.color}">${rankData.name}</span>`;
+
+    const permsSnapshot = await get(ref(db, `userPermissions/${username}`));
+    const perms = permsSnapshot.val() || {};
+
+    permKick.checked = perms.canKick || false;
+    permBan.checked = perms.canBan || false;
+    permMute.checked = perms.canMute || false;
+    permIPBan.checked = perms.canIPBan || false;
+    permBanPM.checked = perms.canBanPM || false;
+
+    assignPermsModal.classList.remove('hidden');
+    userActionModal.classList.add('hidden');
+};
+
+closeAssignPerms.addEventListener('click', () => {
+    assignPermsModal.classList.add('hidden');
+    currentAssignUser = null;
+});
+
+savePermsBtn.addEventListener('click', async () => {
+    if (!currentAssignUser || !isOwner) return;
+    const perms = {
+        canKick: permKick.checked,
+        canBan: permBan.checked,
+        canMute: permMute.checked,
+        canIPBan: permIPBan.checked,
+        canBanPM: permBanPM.checked,
+        assignedBy: currentUser,
+        assignedAt: Date.now()
+    };
+    await set(ref(db, `userPermissions/${currentAssignUser}`), perms);
+    assignPermsModal.classList.add('hidden');
+    alert(`تم تحديث صلاحيات ${currentAssignUser}`);
+    currentAssignUser = null;
+});
+
+assignPermsModal.addEventListener('click', (e) => {
+    if (e.target === assignPermsModal) assignPermsModal.classList.add('hidden');
+});
+
+async function getUserEffectivePermissions(username) {
+    const user = onlineUsers[username];
+    if (!user) return {};
+    const rank = user.rank;
+    const rankPerms = RANKS[rank] || {};
+    if (rank === 'owner') {
+        return { canKick: true, canBan: true, canMute: true, canIPBan: true, canManageMembers: true, canBanPM: true };
+    }
+    const permsSnapshot = await get(ref(db, `userPermissions/${username}`));
+    const customPerms = permsSnapshot.val() || {};
+    return {
+        canKick: customPerms.canKick || rankPerms.canKick || false,
+        canBan: customPerms.canBan || rankPerms.canBan || false,
+        canMute: customPerms.canMute || rankPerms.canMute || false,
+        canIPBan: customPerms.canIPBan || rankPerms.canIPBan || false,
+        canManageMembers: rankPerms.canManageMembers || false,
+        canBanPM: customPerms.canBanPM || rankPerms.canBanPM || false
+    };
+}
 
 // Handle avatar image selection
 let selectedAvatarBase64 = null;
@@ -2353,6 +2454,65 @@ window.addEventListener('beforeunload', async () => {
     }
 });
 </script>
+
+<!-- ==================== ASSIGN PERMISSIONS MODAL ==================== -->
+<div id="assignPermsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop overflow-y-auto py-8">
+    <div class="bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md mx-4 border border-amber-500/20">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-bold flex items-center gap-2">
+                <i class="fas fa-user-cog text-amber-400"></i>تخصيص صلاحيات العضو
+            </h3>
+            <button id="closeAssignPerms" class="p-2 hover:bg-slate-700 rounded-lg transition">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div id="assignPermsUserInfo" class="mb-4 p-3 bg-slate-700/50 rounded-lg">
+            <p class="text-sm text-slate-300">العضو: <span id="assignPermsUsername" class="font-bold text-white"></span></p>
+            <p class="text-sm text-slate-300">الرتبة: <span id="assignPermsRank" class="font-bold"></span></p>
+        </div>
+        <div class="space-y-3">
+            <h4 class="font-bold text-sm text-amber-400 mb-2">اختر الصلاحيات:</h4>
+            <label class="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-700 transition">
+                <input type="checkbox" id="permKick" class="w-5 h-5 rounded border-slate-500 text-amber-500">
+                <div class="flex-1">
+                    <span class="font-bold text-sm"><i class="fas fa-sign-out-alt text-orange-400 ml-1"></i>طرد</span>
+                    <p class="text-xs text-slate-400">إمكانية طرد الأعضاء</p>
+                </div>
+            </label>
+            <label class="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-700 transition">
+                <input type="checkbox" id="permBan" class="w-5 h-5 rounded border-slate-500 text-amber-500">
+                <div class="flex-1">
+                    <span class="font-bold text-sm"><i class="fas fa-user-slash text-red-400 ml-1"></i>حظر</span>
+                    <p class="text-xs text-slate-400">إمكانية حظر الأعضاء نهائياً</p>
+                </div>
+            </label>
+            <label class="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-700 transition">
+                <input type="checkbox" id="permMute" class="w-5 h-5 rounded border-slate-500 text-amber-500">
+                <div class="flex-1">
+                    <span class="font-bold text-sm"><i class="fas fa-volume-mute text-yellow-400 ml-1"></i>كتم</span>
+                    <p class="text-xs text-slate-400">إمكانية كتم الأعضاء مؤقتاً</p>
+                </div>
+            </label>
+            <label class="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-700 transition">
+                <input type="checkbox" id="permIPBan" class="w-5 h-5 rounded border-slate-500 text-amber-500">
+                <div class="flex-1">
+                    <span class="font-bold text-sm"><i class="fas fa-ban text-red-500 ml-1"></i>حظر IP</span>
+                    <p class="text-xs text-slate-400">إمكانية حظر عنوان IP</p>
+                </div>
+            </label>
+            <label class="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-700 transition">
+                <input type="checkbox" id="permBanPM" class="w-5 h-5 rounded border-slate-500 text-amber-500">
+                <div class="flex-1">
+                    <span class="font-bold text-sm"><i class="fas fa-envelope text-blue-400 ml-1"></i>حظر محادثة خاصة</span>
+                    <p class="text-xs text-slate-400">إمكانية حظر من المحادثات الخاصة</p>
+                </div>
+            </label>
+            <button id="savePermsBtn" class="w-full py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 rounded-xl font-bold shadow-lg transition mt-4">
+                <i class="fas fa-save ml-2"></i>حفظ الصلاحيات
+            </button>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>
