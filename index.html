@@ -1289,8 +1289,18 @@ loginBtn.addEventListener('click', async () => {
         timestamp: Date.now()
     });
     
-    // Remove on disconnect
-    onDisconnect(userRef).remove();
+    // Set initial online status with timestamp
+    await set(userRef, {
+        username,
+        rank: userRank,
+        ip: userIP,
+        deviceId,
+        timestamp: Date.now(),
+        online: true
+    });
+
+    // Start heartbeat to keep user online
+    startUserHeartbeat(username);
     
     loginScreen.classList.add('hidden');
     mainApp.classList.remove('hidden');
@@ -1301,9 +1311,14 @@ loginBtn.addEventListener('click', async () => {
 // ==================== LOGOUT ====================
 drawerLogoutBtn.addEventListener('click', async () => {
     if (currentUser) {
-        await remove(ref(db, `onlineUsers/${currentUser}`));
+        // Mark as offline, will be removed after 5 seconds
+        await update(ref(db, `onlineUsers/${currentUser}`), { online: false, lastSeen: Date.now() });
+        if (heartbeatInterval) clearInterval(heartbeatInterval);
     }
-    location.reload();
+    // Wait 5 seconds then reload
+    setTimeout(() => {
+        location.reload();
+    }, 5000);
 });
 
 // ==================== SETUP FIREBASE LISTENERS ====================
@@ -1433,7 +1448,8 @@ function renderRoomsBar() {
     }
     
     countryRooms.forEach(room => {
-        const roomUsers = Object.values(onlineUsers).filter(u => u.currentRoom === room.id).length;
+        const now = Date.now();
+        const roomUsers = Object.values(onlineUsers).filter(u => u.currentRoom === room.id && u.timestamp && (now - u.timestamp < 5000)).length;
         const btn = document.createElement('button');
         btn.className = `flex-shrink-0 px-4 py-2 rounded-xl transition text-sm font-semibold ${currentRoom?.id === room.id ? 'room-active' : 'bg-slate-700/50 hover:bg-slate-700'}`;
         btn.innerHTML = `
@@ -1468,7 +1484,8 @@ async function selectRoom(room) {
     renderRoomUsers();
     
     // Update room user count
-    const roomUsers = Object.values(onlineUsers).filter(u => u.currentRoom === room.id).length;
+    const now_ts = Date.now();
+    const roomUsers = Object.values(onlineUsers).filter(u => u.currentRoom === room.id && u.timestamp && (now_ts - u.timestamp < 5000)).length;
     roomUserCount.innerHTML = `<i class="fas fa-user ml-1"></i>${roomUsers}`;
 }
 
@@ -1587,7 +1604,10 @@ messageInput.addEventListener('keypress', (e) => {
 
 // ==================== RENDER ALL USERS ====================
 function renderUsers() {
-    const users = Object.values(onlineUsers);
+    const now = Date.now();
+    // Filter out users who haven't updated in last 5 seconds (offline)
+    const allUsers = Object.values(onlineUsers);
+    const users = allUsers.filter(u => u.timestamp && (now - u.timestamp < 5000));
     userCount.textContent = users.length;
     usersList.innerHTML = '';
     
@@ -2155,7 +2175,7 @@ async function loadOwnerProfile() {
 
 // Update owner profile display in sidebar
 function updateOwnerProfileDisplay() {
-    if (!isOwner || !ownerProfile) return;
+    if (!ownerProfile) return;
     
     // Avatar
     if (ownerProfile.avatar) {
@@ -2608,12 +2628,41 @@ initDefaultCountries();
 // Check mute status periodically
 setInterval(checkUserMuteStatus, 60000);
 
-// Handle disconnect
+// Cleanup offline users every 5 seconds
+setInterval(cleanupOfflineUsers, 5000);
+
+// Handle disconnect - delayed removal
 window.addEventListener('beforeunload', async () => {
     if (currentUser) {
-        await remove(ref(db, `onlineUsers/${currentUser}`));
+        // Mark as offline, will be removed after 5 seconds by cleanup
+        await update(ref(db, `onlineUsers/${currentUser}`), { online: false, lastSeen: Date.now() });
     }
 });
+
+// Heartbeat function to keep user online
+let heartbeatInterval = null;
+function startUserHeartbeat(username) {
+    if (heartbeatInterval) clearInterval(heartbeatInterval);
+    heartbeatInterval = setInterval(async () => {
+        if (currentUser && currentUser === username) {
+            await update(ref(db, `onlineUsers/${username}`), { 
+                timestamp: Date.now(), 
+                online: true 
+            });
+        }
+    }, 3000); // Update every 3 seconds
+}
+
+// Cleanup offline users (remove users who haven't updated in 5+ seconds)
+function cleanupOfflineUsers() {
+    const now = Date.now();
+    const users = Object.values(onlineUsers);
+    users.forEach(user => {
+        if (user.timestamp && (now - user.timestamp > 5000)) {
+            remove(ref(db, `onlineUsers/${user.username}`));
+        }
+    });
+}
 </script>
 
 <!-- ==================== ASSIGN PERMISSIONS MODAL ==================== -->
