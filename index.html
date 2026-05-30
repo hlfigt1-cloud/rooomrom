@@ -1106,6 +1106,10 @@ function generateGuestName() {
 }
 
 function getRankDisplay(rank, username, clickable = false) {
+    // Safety check - if username or rank is missing, return placeholder
+    if (!username || username === 'undefined' || username === 'null') {
+        return '<span class="text-slate-500">مستخدم غير معروف</span>';
+    }
     const rankData = RANKS[rank];
     if (!rankData) return username;
     
@@ -1289,18 +1293,31 @@ loginBtn.addEventListener('click', async () => {
         timestamp: Date.now()
     });
     
-    // Set initial online status with timestamp
+    // Add user to online users list - stays until explicit logout
     await set(userRef, {
         username,
         rank: userRank,
         ip: userIP,
         deviceId,
-        timestamp: Date.now(),
-        online: true
+        timestamp: Date.now()
     });
 
-    // Start heartbeat to keep user online
-    startUserHeartbeat(username);
+    // Keep-alive: write to Firebase every 8 seconds to maintain connection
+    // This prevents Firebase from considering the session idle
+    if (window.chatKeepAlive) clearInterval(window.chatKeepAlive);
+    window.chatKeepAlive = setInterval(async () => {
+        if (currentUser) {
+            try {
+                await update(ref(db, `onlineUsers/${currentUser}`), { 
+                    lastActive: Date.now(),
+                    timestamp: Date.now() 
+                });
+            } catch (e) {
+                // Ignore errors - connection might be temporarily down
+                console.log('Keep-alive error:', e);
+            }
+        }
+    }, 8000);
     
     loginScreen.classList.add('hidden');
     mainApp.classList.remove('hidden');
@@ -1311,14 +1328,11 @@ loginBtn.addEventListener('click', async () => {
 // ==================== LOGOUT ====================
 drawerLogoutBtn.addEventListener('click', async () => {
     if (currentUser) {
-        // Mark as offline, will be removed after 5 seconds
-        await update(ref(db, `onlineUsers/${currentUser}`), { online: false, lastSeen: Date.now() });
-        if (heartbeatInterval) clearInterval(heartbeatInterval);
+        // Remove user from online list immediately on logout
+        await remove(ref(db, `onlineUsers/${currentUser}`));
     }
-    // Wait 5 seconds then reload
-    setTimeout(() => {
-        location.reload();
-    }, 5000);
+    if (window.chatKeepAlive) clearInterval(window.chatKeepAlive);
+    location.reload();
 });
 
 // ==================== SETUP FIREBASE LISTENERS ====================
@@ -1448,8 +1462,7 @@ function renderRoomsBar() {
     }
     
     countryRooms.forEach(room => {
-        const now = Date.now();
-        const roomUsers = Object.values(onlineUsers).filter(u => u.currentRoom === room.id && u.timestamp && (now - u.timestamp < 5000)).length;
+        const roomUsers = Object.values(onlineUsers).filter(u => u && u.currentRoom === room.id).length;
         const btn = document.createElement('button');
         btn.className = `flex-shrink-0 px-4 py-2 rounded-xl transition text-sm font-semibold ${currentRoom?.id === room.id ? 'room-active' : 'bg-slate-700/50 hover:bg-slate-700'}`;
         btn.innerHTML = `
@@ -1484,8 +1497,7 @@ async function selectRoom(room) {
     renderRoomUsers();
     
     // Update room user count
-    const now_ts = Date.now();
-    const roomUsers = Object.values(onlineUsers).filter(u => u.currentRoom === room.id && u.timestamp && (now_ts - u.timestamp < 5000)).length;
+    const roomUsers = Object.values(onlineUsers).filter(u => u && u.currentRoom === room.id).length;
     roomUserCount.innerHTML = `<i class="fas fa-user ml-1"></i>${roomUsers}`;
 }
 
@@ -1503,6 +1515,7 @@ function renderMessages() {
     roomMessages.sort((a, b) => a.timestamp - b.timestamp);
     
     roomMessages.forEach(msg => {
+        if (!msg || !msg.username) return;
         const isOwn = msg.username === currentUser;
         const msgDiv = document.createElement('div');
         msgDiv.className = `message-appear flex ${isOwn ? 'justify-end' : 'justify-start'}`;
@@ -1604,10 +1617,8 @@ messageInput.addEventListener('keypress', (e) => {
 
 // ==================== RENDER ALL USERS ====================
 function renderUsers() {
-    const now = Date.now();
-    // Filter out users who haven't updated in last 5 seconds (offline)
-    const allUsers = Object.values(onlineUsers);
-    const users = allUsers.filter(u => u.timestamp && (now - u.timestamp < 5000));
+    // Show ALL users in online list - they stay until explicit logout
+    const users = Object.values(onlineUsers);
     userCount.textContent = users.length;
     usersList.innerHTML = '';
     
@@ -1656,7 +1667,7 @@ function renderRoomUsers() {
         return;
     }
     
-    const roomUsers = Object.values(onlineUsers).filter(u => u.currentRoom === currentRoom.id);
+    const roomUsers = Object.values(onlineUsers).filter(u => u && u.currentRoom === currentRoom.id);
     roomUserCountBadge.textContent = roomUsers.length;
     roomUsersList.innerHTML = '';
     
@@ -1709,6 +1720,8 @@ window.showUserActionsByName = (username) => {
 };
 
 function showUserActions(user) {
+    // Safety check
+    if (!user || !user.username) return;
     actionUserName.textContent = user.username;
     userActions.innerHTML = '';
     
@@ -2061,7 +2074,7 @@ function renderMembersListForOwner() {
 
 // ==================== PRIVATE CHAT SYSTEM ====================
 window.openPrivateChat = async (username) => {
-    if (username === currentUser) return;
+    if (!username || username === 'undefined' || username === currentUser) return;
     
     // Check if current user is banned from PM
     const bannedPMSnapshot = await get(child(ref(db), `bannedFromPM/${currentUser}`));
@@ -2142,6 +2155,7 @@ function renderPrivateMessages() {
     allMessages.sort((a, b) => a.timestamp - b.timestamp);
     
     allMessages.forEach(msg => {
+        if (!msg || !msg.from) return;
         const isOwn = msg.from === currentUser;
         const msgDiv = document.createElement('div');
         msgDiv.className = `message-appear flex ${isOwn ? 'justify-end' : 'justify-start'}`;
@@ -2628,41 +2642,14 @@ initDefaultCountries();
 // Check mute status periodically
 setInterval(checkUserMuteStatus, 60000);
 
-// Cleanup offline users every 5 seconds
-setInterval(cleanupOfflineUsers, 5000);
+// No automatic cleanup - users stay until they logout
 
-// Handle disconnect - delayed removal
+// Handle page close - do NOT remove user automatically
+// User stays in online list until they click logout
 window.addEventListener('beforeunload', async () => {
-    if (currentUser) {
-        // Mark as offline, will be removed after 5 seconds by cleanup
-        await update(ref(db, `onlineUsers/${currentUser}`), { online: false, lastSeen: Date.now() });
-    }
+    if (window.chatKeepAlive) clearInterval(window.chatKeepAlive);
+    // Intentionally NOT removing user - they stay in online list until logout
 });
-
-// Heartbeat function to keep user online
-let heartbeatInterval = null;
-function startUserHeartbeat(username) {
-    if (heartbeatInterval) clearInterval(heartbeatInterval);
-    heartbeatInterval = setInterval(async () => {
-        if (currentUser && currentUser === username) {
-            await update(ref(db, `onlineUsers/${username}`), { 
-                timestamp: Date.now(), 
-                online: true 
-            });
-        }
-    }, 3000); // Update every 3 seconds
-}
-
-// Cleanup offline users (remove users who haven't updated in 5+ seconds)
-function cleanupOfflineUsers() {
-    const now = Date.now();
-    const users = Object.values(onlineUsers);
-    users.forEach(user => {
-        if (user.timestamp && (now - user.timestamp > 5000)) {
-            remove(ref(db, `onlineUsers/${user.username}`));
-        }
-    });
-}
 </script>
 
 <!-- ==================== ASSIGN PERMISSIONS MODAL ==================== -->
