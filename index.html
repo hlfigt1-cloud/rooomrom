@@ -14,7 +14,6 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* ===== RANK STYLES ===== */
-/* Owner - Rainbow Glow */
 .glow-owner {
     background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3, #ff0000);
     background-size: 400% 100%;
@@ -31,8 +30,6 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
     gap: 0.25rem;
 }
 
-
-/* Royal - Multi-color Shimmer Glow */
 .glow-royal {
     background: linear-gradient(90deg, #ffd700, #ff8c00, #ff4500, #ff1493, #9400d3, #00bfff, #ffd700);
     background-size: 300% 100%;
@@ -61,46 +58,14 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
     0%, 100% { transform: scale(1); text-shadow: 0 0 20px rgba(255,215,0,0.8); }
     50% { transform: scale(1.06); text-shadow: 0 0 40px rgba(255,215,0,1), 0 0 60px rgba(255,69,0,0.8); }
 }
-/* Master - Red (for boys) */
-.rank-master {
-    color: #ff0000;
-    font-weight: 800;
-    text-shadow: 0 0 8px rgba(255,0,0,0.6), 0 0 16px rgba(255,0,0,0.3);
-}
 
-/* Super - Pink (for girls) */
-.rank-super {
-    color: #ff69b4;
-    font-weight: 800;
-    text-shadow: 0 0 8px rgba(255,105,180,0.6), 0 0 16px rgba(255,105,180,0.3);
-}
-
-/* Super Admin - Blue */
-.rank-superadmin {
-    color: #3b82f6;
-    font-weight: 800;
-    text-shadow: 0 0 8px rgba(59,130,246,0.6), 0 0 16px rgba(59,130,246,0.3);
-}
-
-/* Root - Green */
-.rank-root {
-    color: #22c55e;
-    font-weight: 800;
-    text-shadow: 0 0 8px rgba(34,197,94,0.6), 0 0 16px rgba(34,197,94,0.3);
-}
-
-/* Member - Purple */
-.rank-user {
-    color: #9333ea;
-    font-weight: 700;
-    text-shadow: 0 0 8px rgba(147,51,234,0.5), 0 0 16px rgba(147,51,234,0.2);
-}
-
-/* Guest */
-.rank-guest {
-    color: #888888;
-    font-weight: 600;
-}
+.rank-master { color: #ff0000; font-weight: 800; text-shadow: 0 0 8px rgba(255,0,0,0.6), 0 0 16px rgba(255,0,0,0.3); }
+.rank-super { color: #ff69b4; font-weight: 800; text-shadow: 0 0 8px rgba(255,105,180,0.6), 0 0 16px rgba(255,105,180,0.3); }
+.rank-superadmin { color: #3b82f6; font-weight: 800; text-shadow: 0 0 8px rgba(59,130,246,0.6), 0 0 16px rgba(59,130,246,0.3); }
+.rank-root { color: #22c55e; font-weight: 800; text-shadow: 0 0 8px rgba(34,197,94,0.6), 0 0 16px rgba(34,197,94,0.3); }
+.rank-user { color: #9333ea; font-weight: 700; text-shadow: 0 0 8px rgba(147,51,234,0.5), 0 0 16px rgba(147,51,234,0.2); }
+.rank-guest { color: #888888; font-weight: 600; }
+.rank-expired { color: #666666; font-weight: 600; text-decoration: line-through; opacity: 0.6; }
 
 @keyframes rainbowFlow {
     0% { background-position: 0% 50%; filter: hue-rotate(0deg); }
@@ -113,9 +78,7 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
     50% { transform: scale(1.05); }
 }
 
-.message-appear {
-    animation: slideIn 0.3s ease-out;
-}
+.message-appear { animation: slideIn 0.3s ease-out; }
 
 @keyframes slideIn {
     from { opacity: 0; transform: translateY(10px); }
@@ -141,22 +104,13 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
     background: rgba(0, 0, 0, 0.7);
 }
 
-.sidebar-overlay {
-    transition: opacity 300ms ease;
-}
-
-.sidebar-drawer {
-    transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
-}
+.sidebar-overlay { transition: opacity 300ms ease; }
+.sidebar-drawer { transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1); }
 
 .login-type-btn {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
-.login-type-btn:hover {
-    transform: translateY(-2px);
-}
-
+.login-type-btn:hover { transform: translateY(-2px); }
 .login-type-btn.active {
     border-color: currentColor;
     box-shadow: 0 0 20px currentColor;
@@ -177,19 +131,13 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
     overflow-y: auto;
 }
 
-#messagesArea > div {
-    animation: slideIn 0.3s ease-out;
-}
+#messagesArea > div { animation: slideIn 0.3s ease-out; }
 
 .username-click {
     cursor: pointer;
     transition: all 0.2s;
 }
-
-.username-click:hover {
-    opacity: 0.8;
-    text-decoration: underline;
-}
+.username-click:hover { opacity: 0.8; text-decoration: underline; }
 
 .mute-badge {
     animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
@@ -217,30 +165,19 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
     align-items: center;
     gap: 12px;
 }
-
 .private-chat-banner .banner-icon {
-    width: 48px;
-    height: 48px;
+    width: 48px; height: 48px;
     background: linear-gradient(135deg, #6366f1, #8b5cf6);
     border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     font-size: 20px;
     box-shadow: 0 0 15px rgba(99,102,241,0.5);
 }
-
 .private-chat-banner .banner-text h4 {
-    color: #e0e7ff;
-    font-size: 16px;
-    font-weight: 800;
-    margin: 0;
+    color: #e0e7ff; font-size: 16px; font-weight: 800; margin: 0;
 }
-
 .private-chat-banner .banner-text p {
-    color: #a5b4fc;
-    font-size: 12px;
-    margin: 0;
+    color: #a5b4fc; font-size: 12px; margin: 0;
 }
 
 /* ===== OWNER PROFILE SECTION ===== */
@@ -252,52 +189,210 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
     margin-bottom: 16px;
     box-shadow: 0 0 20px rgba(245,158,11,0.15);
 }
-
 .owner-profile-card:hover {
     box-shadow: 0 0 30px rgba(245,158,11,0.25);
     transition: box-shadow 0.3s ease;
 }
-
 .owner-avatar {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    border: 3px solid #f59e0b;
+    width: 80px; height: 80px;
+    border-radius: 50%; border: 3px solid #f59e0b;
     object-fit: cover;
     box-shadow: 0 0 20px rgba(245,158,11,0.4);
 }
-
 .owner-avatar-placeholder {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    border: 3px solid #f59e0b;
+    width: 80px; height: 80px;
+    border-radius: 50%; border: 3px solid #f59e0b;
     background: linear-gradient(135deg, #f59e0b, #d97706);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 32px;
-    color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px; color: white;
     box-shadow: 0 0 20px rgba(245,158,11,0.4);
 }
 
 /* ===== PERMISSIONS BADGES ===== */
 .perm-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 700;
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 700;
 }
-
 .perm-kick { background: rgba(239,68,68,0.2); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
 .perm-ban { background: rgba(153,27,27,0.2); color: #f87171; border: 1px solid rgba(153,27,27,0.3); }
 .perm-mute { background: rgba(234,179,8,0.2); color: #eab308; border: 1px solid rgba(234,179,8,0.3); }
 .perm-ipban { background: rgba(127,29,29,0.2); color: #fca5a5; border: 1px solid rgba(127,29,29,0.3); }
 .perm-pm { background: rgba(59,130,246,0.2); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+
+/* ===== ROYAL ROOM STYLES ===== */
+.royal-room-badge {
+    background: linear-gradient(135deg, #ffd700, #ff8c00, #ff1493, #9400d3, #00bfff);
+    background-size: 300% 300%;
+    animation: royalRoomShimmer 3s ease infinite;
+    border: 2px solid rgba(255, 215, 0, 0.6);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.4), 0 0 30px rgba(255, 69, 0, 0.2);
+}
+
+@keyframes royalRoomShimmer {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.royal-room-name {
+    background: linear-gradient(90deg, #ffd700, #ff8c00, #ff1493, #9400d3, #00bfff, #00ff00, #ffd700);
+    background-size: 400% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: royalRoomNameFlow 4s linear infinite, royalRoomGlow 2s ease-in-out infinite;
+    font-weight: 900;
+    filter: drop-shadow(0 0 8px rgba(255,215,0,0.8)) drop-shadow(0 0 16px rgba(255,69,0,0.6));
+}
+
+@keyframes royalRoomNameFlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes royalRoomGlow {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(255,215,0,0.8)); }
+    50% { transform: scale(1.03); filter: drop-shadow(0 0 16px rgba(255,215,0,1)) drop-shadow(0 0 24px rgba(255,69,0,0.8)); }
+}
+
+.royal-room-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 2px solid rgba(255, 215, 0, 0.6);
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+    animation: royalRoomIconPulse 2s ease-in-out infinite;
+}
+
+@keyframes royalRoomIconPulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.4); transform: scale(1); }
+    50% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.8); transform: scale(1.05); }
+}
+
+/* ===== ROOM EXPIRY BADGE ===== */
+.room-expiry-badge {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 700;
+}
+.room-expiry-active {
+    background: rgba(34,197,94,0.2);
+    color: #22c55e;
+    border: 1px solid rgba(34,197,94,0.3);
+}
+.room-expiry-expired {
+    background: rgba(239,68,68,0.2);
+    color: #ef4444;
+    border: 1px solid rgba(239,68,68,0.3);
+}
+.room-expiry-warning {
+    background: rgba(234,179,8,0.2);
+    color: #eab308;
+    border: 1px solid rgba(234,179,8,0.3);
+}
+
+/* ===== COUNTRY ROOMS ACCORDION ===== */
+.country-rooms-section {
+    border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+}
+.country-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.country-header:hover {
+    background: rgba(59, 130, 246, 0.1);
+}
+.country-header.active {
+    background: rgba(59, 130, 246, 0.2);
+    border-right: 3px solid #3b82f6;
+}
+.country-rooms-list {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    background: rgba(15, 23, 42, 0.5);
+}
+.country-rooms-list.open {
+    max-height: 500px;
+    overflow-y: auto;
+}
+.room-item-btn {
+    width: 100%;
+    text-align: right;
+    padding: 10px 24px 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: background 0.2s;
+    border: none;
+    background: transparent;
+    color: white;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.3);
+}
+.room-item-btn:hover {
+    background: rgba(59, 130, 246, 0.15);
+}
+.room-item-btn.active-room {
+    background: rgba(59, 130, 246, 0.25);
+    border-right: 3px solid #3b82f6;
+}
+
+/* ===== IN-ROOM USERS PANEL ===== */
+.in-room-users-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.98);
+    border-right: 1px solid rgba(51, 65, 85, 0.5);
+    z-index: 35;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+}
+.in-room-users-panel.open {
+    transform: translateX(0);
+}
+.in-room-users-header {
+    padding: 16px;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.in-room-users-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+}
+.in-room-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 34;
+    display: none;
+}
+.in-room-overlay.show {
+    display: block;
+}
+
+/* ===== EXPIRY DATE INPUT ===== */
+input[type="date"] {
+    color-scheme: dark;
+}
 </style>
+<base target="_blank">
 <base target="_blank">
 </head>
 <body class="text-white overflow-hidden h-screen">
@@ -312,7 +407,7 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
             <h1 class="text-3xl font-bold mb-2">شات عربي</h1>
             <p class="text-slate-400 text-sm">دردشة فورية لجميع العرب</p>
         </div>
-        
+
         <!-- Login Type Selection -->
         <div class="grid grid-cols-3 gap-3 mb-6">
             <button id="guestBtn" class="login-type-btn py-4 bg-gradient-to-br from-emerald-500/20 to-green-500/20 hover:from-emerald-500/30 hover:to-green-500/30 border-2 border-emerald-500 rounded-xl font-bold text-sm transition" style="color: #10b981;">
@@ -343,17 +438,17 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
                 <input id="usernameInput" type="text" placeholder="ادخل اسمك" maxlength="20"
                     class="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-white placeholder-slate-500">
             </div>
-            
+
             <div id="codeField">
                 <label class="block text-sm font-semibold mb-2 text-slate-300">كود الدخول</label>
                 <input id="ownerCodeInput" type="password" placeholder="كود العضو"
                     class="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-white placeholder-slate-500">
             </div>
-            
+
             <button id="loginBtn" class="w-full py-3.5 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 rounded-xl font-bold text-lg shadow-lg shadow-blue-500/30 transition transform hover:scale-105">
                 <i class="fas fa-sign-in-alt ml-2"></i>دخول الشات
             </button>
-            
+
             <p class="text-xs text-center text-slate-500 mt-4">بالدخول أنت توافق على قوانين الدردشة</p>
         </div>
     </div>
@@ -408,21 +503,12 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
                 </div>
             </div>
 
-            <!-- Countries Section -->
+            <!-- Countries & Rooms Accordion -->
             <div class="p-4 border-b border-slate-700/50">
                 <h2 class="font-bold text-lg mb-3 flex items-center gap-2">
-                    <i class="fas fa-globe text-blue-400"></i>قائمة الدول
+                    <i class="fas fa-globe text-blue-400"></i>قائمة الدول والغرف
                 </h2>
-                <div id="countriesList" class="space-y-2"></div>
-            </div>
-            
-            <!-- Current Room Users -->
-            <div class="p-4 border-b border-slate-700/50">
-                <h3 class="font-bold text-sm mb-3 flex items-center gap-2">
-                    <i class="fas fa-users text-purple-400"></i>المتواجدين في الروم 
-                    <span id="roomUserCountBadge" class="text-xs bg-blue-500 px-2 py-0.5 rounded-full">0</span>
-                </h3>
-                <div id="roomUsersList" class="space-y-1.5 max-h-48 overflow-y-auto scrollbar-hide"></div>
+                <div id="countriesRoomsList" class="space-y-1"></div>
             </div>
 
             <!-- All Online Users -->
@@ -449,15 +535,15 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
                 </div>
                 <span id="msgCountBox" class="text-2xl font-bold text-red-400">0</span>
               </div>
-              
+
               <button id="cleanOldBtnBox" class="w-full bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white py-2.5 rounded-lg mb-2 text-sm font-bold transition-all shadow-md active:scale-95">
                 <i class="fas fa-broom ml-2"></i>تنظيف قديم - خلي 100
               </button>
-              
+
               <button id="deleteAllBtnBox" class="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white py-2.5 rounded-lg text-sm font-bold transition-all shadow-md active:scale-95">
                 <i class="fas fa-trash-alt ml-2"></i>حذف كل الرسائل
               </button>
-              
+
               <div class="text-xs text-gray-400 mt-3 text-center flex items-center justify-center">
                 <i class="fas fa-shield-alt ml-1 text-green-400"></i>
                 <span>تنظيف تلقائي مفعل</span>
@@ -468,6 +554,28 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
                 <i class="fas fa-sign-out-alt ml-1"></i>تسجيل خروج
             </button>
         </div>
+    </div>
+</div>
+
+<!-- ==================== IN-ROOM USERS PANEL (LEFT SIDE) ==================== -->
+<div id="inRoomOverlay" class="in-room-overlay"></div>
+<div id="inRoomUsersPanel" class="in-room-users-panel">
+    <div class="in-room-users-header">
+        <div class="flex items-center gap-3">
+            <div class="p-2 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-lg">
+                <i class="fas fa-users"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-sm">المتواجدون في الروم</h3>
+                <p class="text-xs text-slate-400" id="inRoomPanelRoomName">لم تدخل روم بعد</p>
+            </div>
+        </div>
+        <button id="closeInRoomPanel" class="p-2 hover:bg-slate-700 rounded-lg transition">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div id="inRoomUsersList" class="in-room-users-list space-y-1.5">
+        <p class="text-slate-500 text-sm text-center py-4">لم تدخل روم بعد</p>
     </div>
 </div>
 
@@ -486,8 +594,20 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
                         <p class="text-xs text-slate-400" id="userInfo"></p>
                     </div>
                 </div>
+                <div class="flex items-center gap-2">
+                    <!-- Private Message Notification -->
+                    <button id="pmNotificationBtn" class="hidden relative p-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 rounded-xl shadow-lg transition transform hover:scale-105">
+                        <i class="fas fa-envelope text-lg"></i>
+                        <span id="pmNotificationBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center hidden animate-bounce">0</span>
+                        <span id="pmNotificationDot" class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full hidden animate-ping"></span>
+                    </button>
+                    <button id="inRoomToggleBtn" class="hidden p-3 bg-cyan-600 hover:bg-cyan-700 rounded-xl shadow-lg transition transform hover:scale-105">
+                        <i class="fas fa-users text-lg"></i>
+                        <span id="inRoomBadge" class="absolute -top-1 -right-1 bg-red-500 text-xs w-5 h-5 rounded-full flex items-center justify-center hidden">0</span>
+                    </button>
+                </div>
             </div>
-            
+
             <!-- Welcome Ticker -->
             <div class="bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border border-blue-500/30 rounded-lg px-3 py-2 overflow-hidden">
                 <div class="ticker-scroll whitespace-nowrap text-sm" id="welcomeTicker">
@@ -499,31 +619,28 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
 
     <!-- Main Content -->
     <div class="flex-1 flex flex-col overflow-hidden">
-        <!-- Rooms Bar -->
-        <div class="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-4 py-3">
-            <div class="flex items-center justify-between mb-2">
-                <h2 class="font-bold text-sm flex items-center gap-2">
-                    <i class="fas fa-door-open text-cyan-400"></i>الغرف المتاحة
-                </h2>
-                <span id="selectedCountryName" class="text-xs text-slate-400"></span>
-            </div>
-            <div id="roomsBar" class="flex gap-2 overflow-x-auto scrollbar-hide">
-                <p class="text-slate-500 text-sm py-2">اختر دولة لعرض الغرف</p>
-            </div>
-        </div>
-
         <!-- Chat Area -->
         <main class="flex-1 flex flex-col bg-slate-900/30 relative">
             <!-- Room Header -->
             <div id="roomHeader" class="bg-slate-800/70 backdrop-blur-lg border-b border-slate-700/50 px-4 py-3">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h2 id="currentRoomName" class="font-bold text-lg">اختر غرفة للدردشة</h2>
+                        <div class="flex items-center gap-2">
+                            <span id="currentRoomIcon"></span>
+                            <h2 id="currentRoomName" class="font-bold text-lg">اختر غرفة للدردشة</h2>
+                        </div>
                         <p id="currentCountryName" class="text-xs text-slate-400"></p>
+                        <div id="roomExpiryInfo" class="hidden mt-1"></div>
                     </div>
                     <div id="roomActions" class="hidden flex items-center gap-2">
+                        <button id="exitRoomBtn" class="px-3 py-1.5 bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 rounded-lg text-xs font-bold transition">
+                            <i class="fas fa-sign-out-alt ml-1"></i>خروج من الروم
+                        </button>
                         <button id="manageMembersBtn" class="hidden px-3 py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg text-xs font-bold transition">
                             <i class="fas fa-users-cog ml-1"></i>إدارة الأعضاء
+                        </button>
+                        <button id="renewRoomBtn" class="hidden px-3 py-1.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 rounded-lg text-xs font-bold transition">
+                            <i class="fas fa-sync-alt ml-1"></i>تجديد الروم
                         </button>
                         <span id="roomUserCount" class="text-xs bg-slate-700 px-3 py-1.5 rounded-lg">
                             <i class="fas fa-user ml-1"></i>0
@@ -536,7 +653,7 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
             <div id="messagesArea" class="flex-1 overflow-y-auto scrollbar-hide p-4 space-y-3">
                 <div class="text-center text-slate-500 mt-20">
                     <i class="fas fa-comments text-6xl mb-4 opacity-30"></i>
-                    <p>اختر غرفة لبدء الدردشة</p>
+                    <p>اختر غرفة من القائمة الجانبية لبدء الدردشة</p>
                 </div>
             </div>
 
@@ -569,11 +686,87 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
                 <select id="newRoomCountry" class="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-white">
                 </select>
             </div>
+            <div>
+                <label class="block text-sm font-semibold mb-2">الرتبة المطلوبة للدخول <span class="text-xs text-amber-400">(اختياري)</span></label>
+                <select id="newRoomRequiredRank" class="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-white">
+                    <option value="">مفتوحة للجميع</option>
+                    <option value="user">عضو فما فوق</option>
+                    <option value="root">روت فما فوق</option>
+                    <option value="super">سوبر فما فوق</option>
+                    <option value="superadmin">سوبر أدمن فما فوق</option>
+                    <option value="master">ماستر فما فوق</option>
+                    <option value="royal">ملكي فما فوق</option>
+                </select>
+                <p class="text-xs text-slate-400 mt-1">تحديد رتبة الحد الأدنى للدخول. الملكي والمالك يتجولون بحرية.</p>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold mb-2">تاريخ انتهاء الروم <span class="text-xs text-amber-400">(اختياري - يترك فارغاً للغرف الدائمة)</span></label>
+                <input id="newRoomExpiry" type="date" 
+                    class="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-white">
+                <p class="text-xs text-slate-400 mt-1">عند انتهاء التاريخ، لن يتمكن أحد من الدخول للروم إلا بعد التجديد</p>
+            </div>
+
+            <!-- Royal Room Toggle -->
+            <div class="p-3 bg-gradient-to-r from-yellow-900/30 to-amber-900/30 rounded-xl border border-yellow-500/30">
+                <label class="flex items-center gap-3 cursor-pointer">
+                    <input type="checkbox" id="newRoomIsRoyal" class="w-5 h-5 rounded border-yellow-500 text-yellow-500 focus:ring-yellow-500">
+                    <div class="flex-1">
+                        <span class="font-bold text-sm text-yellow-400"><i class="fas fa-gem ml-1"></i>روم مميز (ملكي)</span>
+                        <p class="text-xs text-slate-400 mt-0.5">اسم الروم يتوهج بألوان متعددة ويمكن رفع صورة مميزة</p>
+                    </div>
+                </label>
+            </div>
+
+            <!-- Royal Room Image Upload -->
+            <div id="royalRoomImageField" class="hidden">
+                <label class="block text-sm font-semibold mb-2 text-yellow-400"><i class="fas fa-image ml-1"></i>صورة الروم المميز</label>
+                <div class="flex items-center gap-3">
+                    <div id="royalRoomImagePreview" class="w-12 h-12 rounded-lg bg-slate-700 border border-yellow-500/50 flex items-center justify-center overflow-hidden">
+                        <i class="fas fa-image text-slate-500"></i>
+                    </div>
+                    <div class="flex-1">
+                        <input type="file" id="newRoomRoyalImage" accept="image/*" class="hidden">
+                        <button onclick="document.getElementById('newRoomRoyalImage').click()" class="px-4 py-2 bg-gradient-to-r from-yellow-600 to-amber-600 hover:from-yellow-700 hover:to-amber-700 rounded-lg text-sm font-bold transition">
+                            <i class="fas fa-upload ml-1"></i>اختيار صورة
+                        </button>
+                        <p class="text-xs text-slate-400 mt-1">الصورة تظهر بجانب اسم الروم في القائمة</p>
+                    </div>
+                </div>
+            </div>
+
             <div class="flex gap-2">
                 <button id="confirmCreateRoom" class="flex-1 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 rounded-lg font-bold transition">
                     إنشاء
                 </button>
                 <button id="cancelCreateRoom" class="flex-1 py-2.5 bg-slate-700 hover:bg-slate-600 rounded-lg font-bold transition">
+                    إلغاء
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== RENEW ROOM MODAL ==================== -->
+<div id="renewRoomModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
+    <div class="bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md mx-4 border border-green-500/20">
+        <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+            <i class="fas fa-sync-alt text-green-400"></i>تجديد الروم
+        </h3>
+        <div class="space-y-4">
+            <div class="p-3 bg-slate-700/50 rounded-lg">
+                <p class="text-sm text-slate-300">الغرفة: <span id="renewRoomName" class="font-bold text-white"></span></p>
+                <p class="text-sm text-slate-300 mt-1">تاريخ الانتهاء الحالي: <span id="renewCurrentExpiry" class="font-bold text-red-400"></span></p>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold mb-2">تاريخ الانتهاء الجديد</label>
+                <input id="renewRoomExpiry" type="date" 
+                    class="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500 outline-none text-white">
+            </div>
+            <div class="flex gap-2">
+                <button id="confirmRenewRoom" class="flex-1 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 rounded-lg font-bold transition">
+                    <i class="fas fa-check ml-1"></i>تجديد
+                </button>
+                <button id="cancelRenewRoom" class="flex-1 py-2.5 bg-slate-700 hover:bg-slate-600 rounded-lg font-bold transition">
                     إلغاء
                 </button>
             </div>
@@ -614,6 +807,9 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
                 </h4>
                 <button id="ownerCreateRoomBtn" class="w-full py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 rounded-lg font-semibold text-sm transition mb-2">
                     <i class="fas fa-plus ml-1"></i>إنشاء غرفة جديدة
+                </button>
+                <button id="broadcastBtn" class="w-full py-2.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 rounded-lg font-semibold text-sm transition mb-2">
+                    <i class="fas fa-bullhorn ml-1"></i>إرسال رسالة لجميع الغرف
                 </button>
                 <button id="clearMessagesBtn" class="w-full py-2.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 rounded-lg font-semibold text-sm transition">
                     <i class="fas fa-trash-alt ml-1"></i>مسح الرسائل للجميع
@@ -732,7 +928,7 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
             <h4 class="font-bold mb-3 flex items-center gap-2">
                 <i class="fas fa-user-plus text-green-400"></i>إضافة عضو جديد
             </h4>
-            <div class="grid md:grid-cols-3 gap-3 mb-3">
+            <div class="grid md:grid-cols-4 gap-3 mb-3">
                 <input id="newMemberName" type="text" placeholder="اسم العضو" maxlength="20"
                     class="px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-white text-sm">
                 <select id="newMemberRank" class="px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-white text-sm">
@@ -743,11 +939,13 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
                     <option value="master">ماستر (أحمر)</option>
                     <option value="royal">ملكي (براق متعدد الألوان)</option>
                 </select>
+                <input id="newMemberExpiry" type="date" placeholder="تاريخ الانتهاء (للملكي فقط)"
+                    class="px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-white text-sm">
                 <button id="addMemberBtn" class="py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 rounded-lg font-semibold text-sm transition">
                     <i class="fas fa-plus ml-1"></i>إضافة
                 </button>
             </div>
-            <p class="text-xs text-slate-400">سيتم إنشاء كود تلقائي مكون من 6 أرقام</p>
+            <p class="text-xs text-slate-400">سيتم إنشاء كود تلقائي مكون من 6 أرقام. لعضوية الملكي، حدد تاريخ الانتهاء (إجباري)</p>
         </div>
 
         <!-- Members List -->
@@ -791,10 +989,10 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
                 <i class="fas fa-times text-white"></i>
             </button>
         </div>
-        
+
         <div id="privateMessagesArea" class="flex-1 overflow-y-auto scrollbar-hide p-4 space-y-3 bg-slate-900/30">
         </div>
-        
+
         <div class="p-4 border-t border-slate-700/50 bg-slate-800/70">
             <div class="flex gap-2">
                 <input id="privateMessageInput" type="text" placeholder="اكتب رسالة خاصة..." maxlength="500"
@@ -803,6 +1001,73 @@ body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
                     <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== ASSIGN PERMISSIONS MODAL ==================== -->
+<div id="assignPermsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop overflow-y-auto py-8">
+    <div class="bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md mx-4 border border-amber-500/20">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-bold flex items-center gap-2">
+                <i class="fas fa-user-cog text-amber-400"></i>تخصيص صلاحيات العضو
+            </h3>
+            <button id="closeAssignPerms" class="p-2 hover:bg-slate-700 rounded-lg transition">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <div id="assignPermsUserInfo" class="mb-4 p-3 bg-slate-700/50 rounded-lg">
+            <p class="text-sm text-slate-300">العضو: <span id="assignPermsUsername" class="font-bold text-white"></span></p>
+            <p class="text-sm text-slate-300">الرتبة: <span id="assignPermsRank" class="font-bold"></span></p>
+        </div>
+
+        <div class="space-y-3">
+            <h4 class="font-bold text-sm text-amber-400 mb-2">اختر الصلاحيات:</h4>
+
+            <label class="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-700 transition">
+                <input type="checkbox" id="permKick" class="w-5 h-5 rounded border-slate-500 text-amber-500 focus:ring-amber-500">
+                <div class="flex-1">
+                    <span class="font-bold text-sm"><i class="fas fa-sign-out-alt text-orange-400 ml-1"></i>طرد</span>
+                    <p class="text-xs text-slate-400">إمكانية طرد الأعضاء من الشات</p>
+                </div>
+            </label>
+
+            <label class="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-700 transition">
+                <input type="checkbox" id="permBan" class="w-5 h-5 rounded border-slate-500 text-amber-500 focus:ring-amber-500">
+                <div class="flex-1">
+                    <span class="font-bold text-sm"><i class="fas fa-user-slash text-red-400 ml-1"></i>حظر</span>
+                    <p class="text-xs text-slate-400">إمكانية حظر الأعضاء نهائياً</p>
+                </div>
+            </label>
+
+            <label class="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-700 transition">
+                <input type="checkbox" id="permMute" class="w-5 h-5 rounded border-slate-500 text-amber-500 focus:ring-amber-500">
+                <div class="flex-1">
+                    <span class="font-bold text-sm"><i class="fas fa-volume-mute text-yellow-400 ml-1"></i>كتم</span>
+                    <p class="text-xs text-slate-400">إمكانية كتم الأعضاء مؤقتاً</p>
+                </div>
+            </label>
+
+            <label class="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-700 transition">
+                <input type="checkbox" id="permIPBan" class="w-5 h-5 rounded border-slate-500 text-amber-500 focus:ring-amber-500">
+                <div class="flex-1">
+                    <span class="font-bold text-sm"><i class="fas fa-ban text-red-500 ml-1"></i>حظر IP</span>
+                    <p class="text-xs text-slate-400">إمكانية حظر عنوان IP</p>
+                </div>
+            </label>
+
+            <label class="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-700 transition">
+                <input type="checkbox" id="permBanPM" class="w-5 h-5 rounded border-slate-500 text-amber-500 focus:ring-amber-500">
+                <div class="flex-1">
+                    <span class="font-bold text-sm"><i class="fas fa-envelope text-blue-400 ml-1"></i>حظر محادثة خاصة</span>
+                    <p class="text-xs text-slate-400">إمكانية حظر الأعضاء من المحادثات الخاصة</p>
+                </div>
+            </label>
+
+            <button id="savePermsBtn" class="w-full py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 rounded-xl font-bold shadow-lg transition mt-4">
+                <i class="fas fa-save ml-2"></i>حفظ الصلاحيات
+            </button>
         </div>
     </div>
 </div>
@@ -846,16 +1111,19 @@ let mutedUsers = {};
 let bannedFromPM = {};
 let roomMembers = {};
 let ownerProfile = {};
+let royalAvatars = {}; // Cache for royal user avatars
 let userIP = 'unknown';
 let deviceId = localStorage.getItem('chatDeviceId') || generateDeviceId();
+let lastPMTimestamp = 0;
+let unreadPMCount = 0;
+let pmSoundEnabled = true;
+let currentOwnerCustomTarget = null;
+let expandedCountries = new Set();
 
 // Owner code
 const OWNER_CODE = '19951995';
 
 // ==================== RANKS CONFIGURATION ====================
-// - Red for admins (master, super, root)
-// - Purple for member (user)
-// - Grey for guest
 const RANKS = {
     owner: { 
         name: 'مالك', 
@@ -956,10 +1224,43 @@ const RANKS = {
     }
 };
 
+// Room access rules - which ranks can enter which rooms
+// Each room can have a requiredRank. Users can enter rooms with requiredRank <= their rank
+// Owner and Royal can enter ANY room (free roam)
+const ROOM_ACCESS = {
+    // Default: all rooms are open to all
+    // If a room has requiredRank set, only users with that rank or higher can enter
+    rankHierarchy: ['guest', 'user', 'root', 'super', 'superadmin', 'master', 'royal', 'owner'],
+    canEnterRoom: function(userRank, requiredRank) {
+        if (!requiredRank) return true; // No restriction
+        if (userRank === 'owner' || userRank === 'royal') return true; // Owner & Royal roam free
+        const userIndex = this.rankHierarchy.indexOf(userRank);
+        const requiredIndex = this.rankHierarchy.indexOf(requiredRank);
+        if (userIndex === -1 || requiredIndex === -1) return false;
+        return userIndex >= requiredIndex;
+    },
+    getRequiredRankName: function(requiredRank) {
+        if (!requiredRank) return 'مفتوحة للجميع';
+        return RANKS[requiredRank]?.name || requiredRank;
+    }
+};
+
 function generateDeviceId() {
     const id = 'dev_' + Math.random().toString(36).substr(2, 16) + Date.now().toString(36);
     localStorage.setItem('chatDeviceId', id);
     return id;
+}
+
+// Load royal avatars cache
+async function loadRoyalAvatars() {
+    const snapshot = await get(ref(db, 'royalProfiles'));
+    const profiles = snapshot.val() || {};
+    royalAvatars = {};
+    for (const username in profiles) {
+        if (profiles[username].avatar) {
+            royalAvatars[username] = profiles[username].avatar;
+        }
+    }
 }
 
 function generateMemberCode() {
@@ -1001,15 +1302,11 @@ const sidebarDrawer = document.getElementById('sidebarDrawer');
 const closeSidebar = document.getElementById('closeSidebar');
 const drawerOwnerPanelBtn = document.getElementById('drawerOwnerPanelBtn');
 const drawerLogoutBtn = document.getElementById('drawerLogoutBtn');
-const countriesList = document.getElementById('countriesList');
-const roomsBar = document.getElementById('roomsBar');
+const countriesRoomsList = document.getElementById('countriesRoomsList');
 const usersList = document.getElementById('usersList');
-const roomUsersList = document.getElementById('roomUsersList');
 const userCount = document.getElementById('userCount');
-const roomUserCountBadge = document.getElementById('roomUserCountBadge');
 const currentRoomName = document.getElementById('currentRoomName');
 const currentCountryName = document.getElementById('currentCountryName');
-const selectedCountryName = document.getElementById('selectedCountryName');
 const roomUserCount = document.getElementById('roomUserCount');
 const manageMembersBtn = document.getElementById('manageMembersBtn');
 const messagesArea = document.getElementById('messagesArea');
@@ -1019,8 +1316,18 @@ const sendBtn = document.getElementById('sendBtn');
 const createRoomModal = document.getElementById('createRoomModal');
 const newRoomName = document.getElementById('newRoomName');
 const newRoomCountry = document.getElementById('newRoomCountry');
+const newRoomExpiry = document.getElementById('newRoomExpiry');
 const confirmCreateRoom = document.getElementById('confirmCreateRoom');
 const cancelCreateRoom = document.getElementById('cancelCreateRoom');
+const renewRoomModal = document.getElementById('renewRoomModal');
+const renewRoomName = document.getElementById('renewRoomName');
+const renewCurrentExpiry = document.getElementById('renewCurrentExpiry');
+const renewRoomExpiry = document.getElementById('renewRoomExpiry');
+const confirmRenewRoom = document.getElementById('confirmRenewRoom');
+const cancelRenewRoom = document.getElementById('cancelRenewRoom');
+const renewRoomBtn = document.getElementById('renewRoomBtn');
+const roomExpiryInfo = document.getElementById('roomExpiryInfo');
+const exitRoomBtn = document.getElementById('exitRoomBtn');
 const ownerPanelModal = document.getElementById('ownerPanelModal');
 const closeOwnerPanel = document.getElementById('closeOwnerPanel');
 const ownerCreateRoomBtn = document.getElementById('ownerCreateRoomBtn');
@@ -1041,6 +1348,7 @@ const manageMembersModal = document.getElementById('manageMembersModal');
 const closeManageMembers = document.getElementById('closeManageMembers');
 const newMemberName = document.getElementById('newMemberName');
 const newMemberRank = document.getElementById('newMemberRank');
+const newMemberExpiry = document.getElementById('newMemberExpiry');
 const addMemberBtn = document.getElementById('addMemberBtn');
 const membersListContainer = document.getElementById('membersListContainer');
 const privateChatModal = document.getElementById('privateChatModal');
@@ -1049,6 +1357,18 @@ const privateChatTitle = document.getElementById('privateChatTitle');
 const privateMessagesArea = document.getElementById('privateMessagesArea');
 const privateMessageInput = document.getElementById('privateMessageInput');
 const sendPrivateBtn = document.getElementById('sendPrivateBtn');
+const pmNotificationBtn = document.getElementById('pmNotificationBtn');
+const pmNotificationBadge = document.getElementById('pmNotificationBadge');
+const pmNotificationDot = document.getElementById('pmNotificationDot');
+
+// In-room users panel
+const inRoomUsersPanel = document.getElementById('inRoomUsersPanel');
+const inRoomOverlay = document.getElementById('inRoomOverlay');
+const inRoomToggleBtn = document.getElementById('inRoomToggleBtn');
+const closeInRoomPanel = document.getElementById('closeInRoomPanel');
+const inRoomUsersList = document.getElementById('inRoomUsersList');
+const inRoomPanelRoomName = document.getElementById('inRoomPanelRoomName');
+const inRoomBadge = document.getElementById('inRoomBadge');
 
 // Owner Profile Elements
 const ownerProfileSection = document.getElementById('ownerProfileSection');
@@ -1067,13 +1387,69 @@ const ownerBioInput = document.getElementById('ownerBioInput');
 const ownerFullInfoInput = document.getElementById('ownerFullInfoInput');
 const saveOwnerProfile = document.getElementById('saveOwnerProfile');
 
+// Assign Permissions Elements
+const assignPermsModal = document.getElementById('assignPermsModal');
+const closeAssignPerms = document.getElementById('closeAssignPerms');
+const assignPermsUsername = document.getElementById('assignPermsUsername');
+const assignPermsRank = document.getElementById('assignPermsRank');
+const permKick = document.getElementById('permKick');
+const permBan = document.getElementById('permBan');
+const permMute = document.getElementById('permMute');
+const permIPBan = document.getElementById('permIPBan');
+const permBanPM = document.getElementById('permBanPM');
+const savePermsBtn = document.getElementById('savePermsBtn');
+const ownerCustomPermsModal = document.getElementById('ownerCustomPermsModal');
+const closeOwnerCustomPerms = document.getElementById('closeOwnerCustomPerms');
+const ownerCustomTargetName = document.getElementById('ownerCustomTargetName');
+const ownerCustomTargetRank = document.getElementById('ownerCustomTargetRank');
+const ownerPermKick = document.getElementById('ownerPermKick');
+const ownerPermBan = document.getElementById('ownerPermBan');
+const ownerPermMute = document.getElementById('ownerPermMute');
+const ownerPermIPBan = document.getElementById('ownerPermIPBan');
+const ownerPermBanPM = document.getElementById('ownerPermBanPM');
+const ownerPermManageMembers = document.getElementById('ownerPermManageMembers');
+const ownerPermAssignPerms = document.getElementById('ownerPermAssignPerms');
+const ownerSaveCustomPermsBtn = document.getElementById('ownerSaveCustomPermsBtn');
+
+let currentAssignUser = null;
+let currentRenewRoomId = null;
+let currentRoyalTarget = null;
+let currentRoyalAvatarBase64 = null;
+let selectedRoyalRoomImage = null;
+
+// Royal Profile DOM Elements
+const royalProfileModal = document.getElementById('royalProfileModal');
+const closeRoyalProfile = document.getElementById('closeRoyalProfile');
+const royalProfileName = document.getElementById('royalProfileName');
+const royalProfileAvatar = document.getElementById('royalProfileAvatar');
+const royalBioSection = document.getElementById('royalBioSection');
+const royalBioText = document.getElementById('royalBioText');
+const royalFullInfoSection = document.getElementById('royalFullInfoSection');
+const royalFullInfoText = document.getElementById('royalFullInfoText');
+const royalEditSection = document.getElementById('royalEditSection');
+const royalEditAvatarPreview = document.getElementById('royalEditAvatarPreview');
+const royalAvatarInput = document.getElementById('royalAvatarInput');
+const royalBioEdit = document.getElementById('royalBioEdit');
+const royalFullInfoEdit = document.getElementById('royalFullInfoEdit');
+const saveRoyalProfileBtn = document.getElementById('saveRoyalProfileBtn');
+
+// Royal Grant DOM Elements
+const royalGrantModal = document.getElementById('royalGrantModal');
+const closeRoyalGrant = document.getElementById('closeRoyalGrant');
+const royalGrantTargetName = document.getElementById('royalGrantTargetName');
+const royalGrantTargetRank = document.getElementById('royalGrantTargetRank');
+const royalPermKick = document.getElementById('royalPermKick');
+const royalPermBan = document.getElementById('royalPermBan');
+const royalPermMute = document.getElementById('royalPermMute');
+const royalPermBanPM = document.getElementById('royalPermBanPM');
+const royalSavePermsBtn = document.getElementById('royalSavePermsBtn');
+
 // ==================== LOGIN TYPE SELECTION ====================
 guestBtn.addEventListener('click', () => {
     loginType = 'guest';
     guestBtn.classList.add('active');
     memberBtn.classList.remove('active');
     ownerBtn.classList.remove('active');
-    // Show nickname field for guest, hide username and code
     guestNicknameField.classList.remove('hidden');
     usernameField.classList.add('hidden');
     codeField.classList.add('hidden');
@@ -1105,34 +1481,76 @@ function generateGuestName() {
     return 'زائر_' + Math.random().toString(36).substr(2, 6).toUpperCase();
 }
 
-function getRankDisplay(rank, username, clickable = false) {
-    // Safety check - if username or rank is missing, return placeholder
+function getRankDisplay(rank, username, clickable = false, expiryDate = null, royalAvatar = null) {
     if (!username || username === 'undefined' || username === 'null') {
         return '<span class="text-slate-500">مستخدم غير معروف</span>';
     }
+
+    // Check if rank expired (for royal members)
+    if (rank === 'royal' && expiryDate) {
+        const now = Date.now();
+        const expiry = new Date(expiryDate).getTime();
+        if (now > expiry) {
+            rank = 'user'; // Downgrade to regular user
+        }
+    }
+
     const rankData = RANKS[rank];
     if (!rankData) return username;
-    
+
     const clickClass = clickable ? 'username-click' : '';
     const clickAttr = clickable ? `onclick="openPrivateChat('${username}')"` : '';
-    
-    if (rank === 'owner') {
-        return `<span class="glow-owner" ${clickAttr}><i class="fas fa-crown"></i> ${rankData.name} <i class="fas fa-check-circle"></i></span> <span class="${clickClass}" ${clickAttr}>${username}</span>`;
+
+    let expiryBadge = '';
+    if (rank === 'royal' && expiryDate) {
+        const now = Date.now();
+        const expiry = new Date(expiryDate).getTime();
+        const daysLeft = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
+        if (daysLeft > 0) {
+            expiryBadge = `<span class="text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded ml-1">${daysLeft}يوم</span>`;
+        } else {
+            expiryBadge = `<span class="text-[10px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded ml-1">منتهي</span>`;
+        }
+    }
+
+    // Royal avatar small image next to name
+    let avatarHTML = '';
+    if (rank === 'royal' && royalAvatar) {
+        avatarHTML = `<img src="${royalAvatar}" class="w-5 h-5 rounded-full border border-yellow-500/50 inline-block ml-1 object-cover" style="vertical-align:middle;">`;
     } else if (rank === 'royal') {
-        return `<span class="glow-royal" ${clickAttr}><i class="fas fa-gem"></i> ${rankData.name} <i class="fas fa-shield-alt"></i></span> <span class="${clickClass}" ${clickAttr}>${username}</span>`;
+        avatarHTML = `<span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gradient-to-br from-yellow-600 to-amber-700 border border-yellow-500/50 ml-1 text-[10px]"><i class="fas fa-gem text-white"></i></span>`;
+    }
+
+    // Rank icon and label (small, before the colored username)
+    let rankLabel = '';
+    if (rank === 'owner') {
+        rankLabel = `<span class="text-xs text-amber-400 mr-1"><i class="fas fa-crown"></i></span>`;
+    } else if (rank === 'master') {
+        rankLabel = `<span class="text-xs text-red-400 mr-1"><i class="fas fa-shield-alt"></i></span>`;
+    } else if (rank === 'super') {
+        rankLabel = `<span class="text-xs text-pink-400 mr-1"><i class="fas fa-shield-alt"></i></span>`;
+    } else if (rank === 'superadmin') {
+        rankLabel = `<span class="text-xs text-blue-400 mr-1"><i class="fas fa-shield-alt"></i></span>`;
+    } else if (rank === 'root') {
+        rankLabel = `<span class="text-xs text-green-400 mr-1"><i class="fas fa-shield-alt"></i></span>`;
+    } else if (rank === 'user') {
+        rankLabel = `<span class="text-xs text-purple-400 mr-1"><i class="fas fa-user"></i></span>`;
     } else if (rank === 'guest') {
-        return `<span class="${rankData.color}"><i class="fas fa-user-secret"></i> ${rankData.name}</span> <span class="${clickClass}" ${clickAttr}>${username}</span>`;
+        rankLabel = `<span class="text-xs text-slate-400 mr-1"><i class="fas fa-user-secret"></i></span>`;
+    }
+
+    // The username itself gets the glow color class applied directly
+    if (rank === 'owner') {
+        return `${rankLabel}<span class="glow-owner ${clickClass}" ${clickAttr}>${username}</span>`;
+    } else if (rank === 'royal') {
+        // Royal users show profile on click
+        const profileClickAttr = clickable ? `onclick="openRoyalProfileView('${username}')"` : '';
+        return `${avatarHTML}${rankLabel}<span class="glow-royal ${clickClass}" style="cursor:pointer;" ${profileClickAttr}>${username}</span>${expiryBadge}`;
+    } else if (rank === 'guest') {
+        return `${rankLabel}<span class="${rankData.color} ${clickClass}" ${clickAttr}>${username}</span>`;
     } else {
-        const iconMap = {
-            'master': 'fa-user-shield',
-            'super': 'fa-user-shield',
-            'superadmin': 'fa-user-shield',
-            'root': 'fa-user-shield',
-            'user': 'fa-user-check',
-            'guest': 'fa-user-secret'
-        };
-        const icon = iconMap[rank] || 'fa-user';
-        return `<span class="${rankData.color}"><i class="fas ${icon}"></i> ${rankData.name}</span> <span class="${clickClass}" ${clickAttr}>${username}</span>`;
+        // For all other ranks, apply the color class directly to the username
+        return `${rankLabel}<span class="${rankData.color} ${clickClass}" ${clickAttr}>${username}</span>`;
     }
 }
 
@@ -1157,18 +1575,181 @@ sidebarOverlay.addEventListener('click', (e) => {
     if (e.target === sidebarOverlay) closeSidebarFn();
 });
 
+// ==================== IN-ROOM USERS PANEL ====================
+function openInRoomPanel() {
+    inRoomOverlay.classList.add('show');
+    inRoomUsersPanel.classList.add('open');
+}
+
+function closeInRoomPanelFn() {
+    inRoomOverlay.classList.remove('show');
+    inRoomUsersPanel.classList.remove('open');
+}
+
+inRoomToggleBtn.addEventListener('click', openInRoomPanel);
+closeInRoomPanel.addEventListener('click', closeInRoomPanelFn);
+inRoomOverlay.addEventListener('click', closeInRoomPanelFn);
+
+// ==================== PRIVATE MESSAGE NOTIFICATION SYSTEM ====================
+pmNotificationBtn.addEventListener('click', () => {
+    // Reset notification
+    unreadPMCount = 0;
+    pmNotificationBadge.classList.add('hidden');
+    pmNotificationDot.classList.add('hidden');
+    pmNotificationBadge.textContent = '0';
+
+    // Show PM list modal
+    openPMListModal();
+});
+
+function updatePMNotification(sender, timestamp) {
+    if (!sender || sender === currentUser) return;
+    if (timestamp <= lastPMTimestamp) return;
+
+    lastPMTimestamp = timestamp;
+    unreadPMCount++;
+
+    // Show badge
+    pmNotificationBadge.textContent = unreadPMCount > 99 ? '99+' : unreadPMCount;
+    pmNotificationBadge.classList.remove('hidden');
+    pmNotificationDot.classList.remove('hidden');
+    pmNotificationBtn.classList.remove('hidden');
+
+    // Play sound
+    playPMSound();
+
+    // Show browser notification if supported
+    if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('رسالة خاصة جديدة', {
+            body: `رسالة جديدة من ${sender}`,
+            icon: 'https://cdn-icons-png.flaticon.com/512/1041/1041916.png'
+        });
+    }
+}
+
+function playPMSound() {
+    if (!pmSoundEnabled) return;
+    try {
+        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZURE');
+        audio.volume = 0.5;
+        audio.play().catch(() => {});
+    } catch (e) {}
+}
+
+// Request notification permission
+if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+}
+
+// ==================== PM LIST MODAL ====================
+function openPMListModal() {
+    // Create dynamic modal
+    const existing = document.getElementById('pmListModal');
+    if (existing) existing.remove();
+
+    // Get all PM conversations
+    const conversations = [];
+    for (const chatId in privateChats) {
+        const users = chatId.split('_');
+        if (users.includes(currentUser)) {
+            const otherUser = users.find(u => u !== currentUser);
+            const messages = Object.values(privateChats[chatId]);
+            const lastMsg = messages[messages.length - 1];
+            if (lastMsg) {
+                conversations.push({
+                    user: otherUser,
+                    lastMsg: lastMsg.text,
+                    timestamp: lastMsg.timestamp,
+                    unread: messages.filter(m => m.from === otherUser && m.timestamp > lastPMTimestamp - 300000).length
+                });
+            }
+        }
+    }
+
+    conversations.sort((a, b) => b.timestamp - a.timestamp);
+
+    let listHTML = '';
+    if (conversations.length === 0) {
+        listHTML = '<p class="text-slate-500 text-center py-8">لا توجد محادثات خاصة</p>';
+    } else {
+        conversations.forEach(conv => {
+            const time = new Date(conv.timestamp).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
+            listHTML += `
+                <div onclick="openPrivateChat('${conv.user}'); closePMListModal();" class="flex items-center gap-3 p-3 bg-slate-700/30 hover:bg-slate-700/60 rounded-lg cursor-pointer transition mb-2">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-sm font-bold">
+                        ${conv.user.charAt(0).toUpperCase()}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-sm truncate">${conv.user}</span>
+                            <span class="text-xs text-slate-400">${time}</span>
+                        </div>
+                        <p class="text-xs text-slate-400 truncate">${conv.lastMsg}</p>
+                    </div>
+                    ${conv.unread > 0 ? `<span class="bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">${conv.unread}</span>` : ''}
+                </div>
+            `;
+        });
+    }
+
+    const modalHTML = `
+        <div id="pmListModal" class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
+            <div class="bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md mx-4 border border-purple-500/20" style="max-height:80vh; display:flex; flex-direction:column;">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-bold flex items-center gap-2">
+                        <i class="fas fa-envelope text-purple-400"></i>الرسائل الخاصة
+                    </h3>
+                    <button onclick="closePMListModal()" class="p-2 hover:bg-slate-700 rounded-lg transition">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div class="flex-1 overflow-y-auto scrollbar-hide">
+                    ${listHTML}
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+window.closePMListModal = () => {
+    const modal = document.getElementById('pmListModal');
+    if (modal) modal.remove();
+};
+
 // ==================== INITIALIZE DEFAULT COUNTRIES ====================
 async function initDefaultCountries() {
     const defaultCountries = [
         { id: 'iraq', name: 'العراق', flag: '🇮🇶' },
         { id: 'saudi', name: 'السعودية', flag: '🇸🇦' },
         { id: 'egypt', name: 'مصر', flag: '🇪🇬' },
-        { id: 'uae', name: 'الإمارات', flag: '🇦🇪' }
+        { id: 'uae', name: 'الإمارات', flag: '🇦🇪' },
+        { id: 'jordan', name: 'الأردن', flag: '🇯🇴' },
+        { id: 'syria', name: 'سوريا', flag: '🇸🇾' },
+        { id: 'lebanon', name: 'لبنان', flag: '🇱🇧' },
+        { id: 'palestine', name: 'فلسطين', flag: '🇵🇸' },
+        { id: 'kuwait', name: 'الكويت', flag: '🇰🇼' },
+        { id: 'qatar', name: 'قطر', flag: '🇶🇦' },
+        { id: 'bahrain', name: 'البحرين', flag: '🇧🇭' },
+        { id: 'oman', name: 'عمان', flag: '🇴🇲' },
+        { id: 'yemen', name: 'اليمن', flag: '🇾🇪' },
+        { id: 'sudan', name: 'السودان', flag: '🇸🇩' },
+        { id: 'libya', name: 'ليبيا', flag: '🇱🇾' },
+        { id: 'tunisia', name: 'تونس', flag: '🇹🇳' },
+        { id: 'algeria', name: 'الجزائر', flag: '🇩🇿' },
+        { id: 'morocco', name: 'المغرب', flag: '🇲🇦' },
+        { id: 'mauritania', name: 'موريتانيا', flag: '🇲🇷' },
+        { id: 'somalia', name: 'الصومال', flag: '🇸🇴' },
+        { id: 'djibouti', name: 'جيبوتي', flag: '🇩🇯' },
+        { id: 'comoros', name: 'جزر القمر', flag: '🇰🇲' },
+        { id: 'turkey', name: 'تركيا', flag: '🇹🇷' },
+        { id: 'iran', name: 'إيران', flag: '🇮🇷' }
     ];
-    
+
     const countriesRef = ref(db, 'countries');
     const snapshot = await get(countriesRef);
-    
+
     if (!snapshot.exists()) {
         for (const country of defaultCountries) {
             await set(ref(db, `countries/${country.id}`), country);
@@ -1176,13 +1757,124 @@ async function initDefaultCountries() {
     }
 }
 
+// ==================== RENDER COUNTRIES & ROOMS ACCORDION ====================
+function renderCountriesRooms() {
+    countriesRoomsList.innerHTML = '';
+    const countryList = Object.values(countries);
+
+    if (countryList.length === 0) {
+        countriesRoomsList.innerHTML = '<p class="text-slate-500 text-sm text-center py-4">لا توجد دول بعد</p>';
+        return;
+    }
+
+    countryList.forEach(country => {
+        const section = document.createElement('div');
+        section.className = 'country-rooms-section';
+
+        const isExpanded = expandedCountries.has(country.id);
+        const countryRooms = Object.values(rooms).filter(r => r.countryId === country.id);
+
+        const header = document.createElement('div');
+        header.className = `country-header ${isExpanded ? 'active' : ''}`;
+        header.innerHTML = `
+            <div class="flex items-center gap-2">
+                <span class="text-xl">${country.flag}</span>
+                <span class="font-semibold text-sm">${country.name}</span>
+                <span class="text-xs bg-slate-700 px-2 py-0.5 rounded-full">${countryRooms.length}</span>
+            </div>
+            <i class="fas fa-chevron-${isExpanded ? 'up' : 'down'} text-slate-400 text-xs"></i>
+        `;
+
+        const roomsList = document.createElement('div');
+        roomsList.className = `country-rooms-list ${isExpanded ? 'open' : ''}`;
+
+        if (countryRooms.length === 0) {
+            roomsList.innerHTML = '<p class="text-slate-500 text-xs text-center py-3 pr-6">لا توجد غرف</p>';
+        } else {
+            countryRooms.forEach(room => {
+                const roomUsers = Object.values(onlineUsers).filter(u => u && u.currentRoom === room.id).length;
+                const isExpired = isRoomExpired(room);
+                const isActive = currentRoom?.id === room.id;
+
+                let expiryBadge = '';
+                if (room.expiryDate) {
+                    const now = Date.now();
+                    const expiry = new Date(room.expiryDate).getTime();
+                    const daysLeft = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
+                    if (daysLeft <= 0) {
+                        expiryBadge = '<span class="room-expiry-badge room-expiry-expired mr-2">منتهي</span>';
+                    } else if (daysLeft <= 3) {
+                        expiryBadge = `<span class="room-expiry-badge room-expiry-warning mr-2">${daysLeft}يوم</span>`;
+                    } else {
+                        expiryBadge = `<span class="room-expiry-badge room-expiry-active mr-2">${daysLeft}يوم</span>`;
+                    }
+                }
+
+                const btn = document.createElement('button');
+                const isRoyal = room.isRoyal === true;
+                btn.className = `room-item-btn ${isActive ? 'active-room' : ''}`;
+                if (isExpired) {
+                    btn.classList.add('opacity-50');
+                }
+                if (isRoyal && !isExpired) {
+                    btn.classList.add('royal-room-badge');
+                }
+
+                const roomNameClass = isRoyal && !isExpired ? 'royal-room-name' : (isExpired ? 'line-through text-slate-500' : '');
+                const roomIcon = isRoyal && room.royalImage 
+                    ? `<img src="${room.royalImage}" class="royal-room-icon" alt="">`
+                    : (isRoyal ? '<i class="fas fa-gem text-yellow-400 text-xs"></i>' : '<i class="fas fa-hashtag text-cyan-400 text-xs"></i>');
+                const royalBadge = isRoyal && !isExpired ? '<span class="text-[10px] bg-yellow-500/30 text-yellow-300 px-1.5 py-0.5 rounded mr-1 border border-yellow-500/40"><i class="fas fa-gem"></i> مميز</span>' : '';
+
+                btn.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        ${roomIcon}
+                        <span class="text-sm ${roomNameClass}">${room.name}</span>
+                        ${royalBadge}
+                        ${expiryBadge}
+                    </div>
+                    <span class="text-xs bg-slate-700 px-2 py-0.5 rounded-full">${roomUsers}</span>
+                `;
+                btn.onclick = () => {
+                    if (isExpired && !isOwner) {
+                        alert('هذه الغرفة منتهية الصلاحية. لا يمكن الدخول إلا بعد تجديدها من المالك.');
+                        return;
+                    }
+                    selectRoom(room);
+                    closeSidebarFn();
+                };
+                roomsList.appendChild(btn);
+            });
+        }
+
+        header.onclick = () => {
+            if (expandedCountries.has(country.id)) {
+                expandedCountries.delete(country.id);
+            } else {
+                expandedCountries.add(country.id);
+            }
+            renderCountriesRooms();
+        };
+
+        section.appendChild(header);
+        section.appendChild(roomsList);
+        countriesRoomsList.appendChild(section);
+    });
+}
+
+function isRoomExpired(room) {
+    if (!room.expiryDate) return false;
+    const now = Date.now();
+    const expiry = new Date(room.expiryDate).getTime();
+    return now > expiry;
+}
+
 // ==================== LOGIN ====================
 loginBtn.addEventListener('click', async () => {
     let username = '';
     let code = ownerCodeInput.value.trim();
-    
+
     if (loginType === 'guest') {
-        // Guest enters nickname manually
         const nickname = guestNicknameInput.value.trim();
         if (!nickname || nickname.length < 2) {
             alert('يرجى ادخال اسم مستعار');
@@ -1200,13 +1892,13 @@ loginBtn.addEventListener('click', async () => {
             alert('الكود مطلوب للعضو');
             return;
         }
-        
+
         // Check member in Firebase
         const memberSnapshot = await get(ref(db, 'members'));
         const allMembers = memberSnapshot.val() || {};
         let memberFound = null;
         let memberRoom = null;
-        
+
         for (const roomId in allMembers) {
             if (allMembers[roomId][username]) {
                 memberFound = allMembers[roomId][username];
@@ -1214,28 +1906,40 @@ loginBtn.addEventListener('click', async () => {
                 break;
             }
         }
-        
+
         if (!memberFound) {
             alert('هذا الاسم غير مسجل');
             return;
         }
-        
+
         if (memberFound.code !== code) {
             alert('هذا الاسم محجوز بكود خاص');
             return;
         }
-        
+
+        // Check if royal membership expired
+        if (memberFound.rank === 'royal' && memberFound.expiryDate) {
+            const now = Date.now();
+            const expiry = new Date(memberFound.expiryDate).getTime();
+            if (now > expiry) {
+                // Downgrade to user
+                await update(ref(db, `members/${memberRoom}/${username}`), { rank: 'user', wasRoyal: true, royalExpiredAt: Date.now() });
+                memberFound.rank = 'user';
+                alert('عضويتك الملكية منتهية الصلاحية. تم تخفيض رتبتك إلى عضو عادي. تواصل مع المالك للتجديد.');
+            }
+        }
+
         // Check device binding
         if (memberFound.deviceId && memberFound.deviceId !== deviceId) {
             alert('هذا الاسم مسجل من جهاز آخر');
             return;
         }
-        
+
         // Bind device on first login
         if (!memberFound.deviceId) {
             await update(ref(db, `members/${memberRoom}/${username}`), { deviceId: deviceId });
         }
-        
+
         userRank = memberFound.rank;
     } else if (loginType === 'owner') {
         username = usernameInput.value.trim();
@@ -1250,39 +1954,39 @@ loginBtn.addEventListener('click', async () => {
         userRank = 'owner';
         isOwner = true;
     }
-    
+
     // Check if banned
     const bannedSnapshot = await get(child(ref(db), `bannedUsers/${username}`));
     if (bannedSnapshot.exists()) {
         alert('أنت محظور من الدردشة');
         return;
     }
-    
+
     const bannedIPSnapshot = await get(child(ref(db), `bannedIPs/${userIP.replace(/\./g, '_')}`));
     if (bannedIPSnapshot.exists()) {
         alert('عنوان IP الخاص بك محظور');
         return;
     }
-    
+
     currentUser = username;
-    
+
     const userDisplay = getRankDisplay(userRank, username);
     userInfo.innerHTML = userDisplay;
     drawerUserInfo.innerHTML = userDisplay;
-    
+
     // Show owner panel button and profile section
     if (isOwner) {
         drawerOwnerPanelBtn.classList.remove('hidden');
         document.getElementById('editOwnerProfileBtn').classList.remove('hidden');
     }
-    // Show owner profile section for ALL users (visible to everyone)
+    // Show owner profile section for ALL users
     ownerProfileSection.classList.remove('hidden');
     ownerProfileName.textContent = 'المالك';
     loadOwnerProfile();
-    
+
     // Store rank in localStorage for cleanup button
     localStorage.setItem('userRank', userRank);
-    
+
     // Add user to online
     const userRef = ref(db, `onlineUsers/${username}`);
     await set(userRef, {
@@ -1292,18 +1996,8 @@ loginBtn.addEventListener('click', async () => {
         deviceId,
         timestamp: Date.now()
     });
-    
-    // Add user to online users list - stays until explicit logout
-    await set(userRef, {
-        username,
-        rank: userRank,
-        ip: userIP,
-        deviceId,
-        timestamp: Date.now()
-    });
 
-    // Keep-alive: write to Firebase every 8 seconds to maintain connection
-    // This prevents Firebase from considering the session idle
+    // Keep-alive
     if (window.chatKeepAlive) clearInterval(window.chatKeepAlive);
     window.chatKeepAlive = setInterval(async () => {
         if (currentUser) {
@@ -1313,22 +2007,21 @@ loginBtn.addEventListener('click', async () => {
                     timestamp: Date.now() 
                 });
             } catch (e) {
-                // Ignore errors - connection might be temporarily down
                 console.log('Keep-alive error:', e);
             }
         }
     }, 8000);
-    
+
     loginScreen.classList.add('hidden');
     mainApp.classList.remove('hidden');
-    
+    pmNotificationBtn.classList.remove('hidden');
+
     setupListeners();
 });
 
 // ==================== LOGOUT ====================
 drawerLogoutBtn.addEventListener('click', async () => {
     if (currentUser) {
-        // Remove user from online list immediately on logout
         await remove(ref(db, `onlineUsers/${currentUser}`));
     }
     if (window.chatKeepAlive) clearInterval(window.chatKeepAlive);
@@ -1340,35 +2033,57 @@ function setupListeners() {
     // Countries
     onValue(ref(db, 'countries'), (snapshot) => {
         countries = snapshot.val() || {};
-        renderCountries();
+        renderCountriesRooms();
         populateCountrySelect();
     });
-    
+
     // Rooms
     onValue(ref(db, 'rooms'), (snapshot) => {
         rooms = snapshot.val() || {};
-        if (currentCountry) renderRoomsBar();
+        renderCountriesRooms();
+        if (currentRoom) {
+            updateRoomHeader();
+            renderInRoomUsers();
+        }
     });
-    
+
     // Messages
     onValue(ref(db, 'messages'), (snapshot) => {
         messages = snapshot.val() || {};
         if (currentRoom) renderMessages();
     });
-    
+
     // Private Chats
     onValue(ref(db, 'private_chats'), (snapshot) => {
-        privateChats = snapshot.val() || {};
+        const newPrivateChats = snapshot.val() || {};
+
+        // Check for new messages
+        for (const chatId in newPrivateChats) {
+            const users = chatId.split('_');
+            if (users.includes(currentUser)) {
+                const messages = Object.values(newPrivateChats[chatId]);
+                const lastMsg = messages[messages.length - 1];
+                if (lastMsg && lastMsg.from !== currentUser && lastMsg.timestamp > lastPMTimestamp) {
+                    // Only notify if not currently viewing this chat
+                    if (currentPrivateChat !== lastMsg.from) {
+                        updatePMNotification(lastMsg.from, lastMsg.timestamp);
+                    }
+                }
+            }
+        }
+
+        privateChats = newPrivateChats;
         if (currentPrivateChat) renderPrivateMessages();
     });
-    
+
     // Online Users
     onValue(ref(db, 'onlineUsers'), (snapshot) => {
         onlineUsers = snapshot.val() || {};
         renderUsers();
-        renderRoomUsers();
+        renderInRoomUsers();
+        renderCountriesRooms(); // Update room user counts
     });
-    
+
     // Members
     onValue(ref(db, 'members'), (snapshot) => {
         roomMembers = snapshot.val() || {};
@@ -1376,32 +2091,32 @@ function setupListeners() {
             renderMembersListForOwner();
         }
     });
-    
+
     // Banned Users
     onValue(ref(db, 'bannedUsers'), (snapshot) => {
         bannedUsers = snapshot.val() || {};
         renderBannedUsers();
     });
-    
+
     // Muted Users
     onValue(ref(db, 'mutedUsers'), (snapshot) => {
         mutedUsers = snapshot.val() || {};
         renderMutedUsers();
         checkUserMuteStatus();
     });
-    
+
     // Banned IPs
     onValue(ref(db, 'bannedIPs'), (snapshot) => {
         bannedIPs = snapshot.val() || {};
         renderBannedIPs();
     });
-    
+
     // Banned from PM
     onValue(ref(db, 'bannedFromPM'), (snapshot) => {
         bannedFromPM = snapshot.val() || {};
         renderBannedPM();
     });
-    
+
     // Welcome Ticker
     onValue(ref(db, 'settings/welcomeTicker'), (snapshot) => {
         const ticker = snapshot.val();
@@ -1410,118 +2125,280 @@ function setupListeners() {
             tickerInput.value = ticker;
         }
     });
-    
+
     // Owner Profile
     onValue(ref(db, 'ownerProfile'), (snapshot) => {
         ownerProfile = snapshot.val() || {};
         if (isOwner) updateOwnerProfileDisplay();
     });
-}
 
-// ==================== RENDER COUNTRIES ====================
-function renderCountries() {
-    countriesList.innerHTML = '';
-    Object.values(countries).forEach(country => {
-        const btn = document.createElement('button');
-        btn.className = `w-full text-right px-4 py-2.5 rounded-xl transition text-sm font-semibold ${currentCountry?.id === country.id ? 'bg-blue-600 shadow-lg' : 'bg-slate-700/50 hover:bg-slate-700'}`;
-        btn.innerHTML = `<span class="text-xl ml-2">${country.flag}</span>${country.name}`;
-        btn.onclick = () => {
-            selectCountry(country);
-            closeSidebarFn();
-        };
-        countriesList.appendChild(btn);
+    // Royal Profiles (for avatar updates)
+    onValue(ref(db, 'royalProfiles'), (snapshot) => {
+        const profiles = snapshot.val() || {};
+        royalAvatars = {};
+        for (const username in profiles) {
+            if (profiles[username].avatar) {
+                royalAvatars[username] = profiles[username].avatar;
+            }
+        }
+        // Re-render to show updated avatars
+        renderUsers();
+        renderInRoomUsers();
+        if (currentRoom) renderMessages();
     });
 }
 
-// ==================== SELECT COUNTRY ====================
-function selectCountry(country) {
-    currentCountry = country;
-    currentRoom = null;
-    currentCountryName.textContent = country.name;
-    selectedCountryName.textContent = `${country.flag} ${country.name}`;
-    renderCountries();
-    renderRoomsBar();
-    messagesArea.innerHTML = '<div class="text-center text-slate-500 mt-20"><i class="fas fa-comments text-6xl mb-4 opacity-30"></i><p>اختر غرفة لبدء الدردشة</p></div>';
-    messageInputArea.classList.add('hidden');
-    document.getElementById('roomActions').classList.add('hidden');
-    manageMembersBtn.classList.add('hidden');
-}
+// ==================== CHECK ROOM ACCESS ====================
+async function canEnterRoom(room) {
+    // Check room expiry
+    if (isRoomExpired(room) && !isOwner) {
+        alert('هذه الغرفة منتهية الصلاحية. لا يمكن الدخول إلا بعد تجديدها من المالك.');
+        return false;
+    }
 
-// ==================== RENDER ROOMS BAR ====================
-function renderRoomsBar() {
-    if (!currentCountry) {
-        roomsBar.innerHTML = '<p class="text-slate-500 text-sm py-2">اختر دولة لعرض الغرف</p>';
-        return;
+    // Check if user is a member of this room (for member-type users)
+    if (loginType === 'member' && !isOwner && userRank !== 'royal') {
+        const membersSnapshot = await get(ref(db, `members/${room.id}`));
+        const roomMembersList = membersSnapshot.val() || {};
+
+        // If this room has members registered, check if current user is one of them
+        if (Object.keys(roomMembersList).length > 0) {
+            const isMemberOfRoom = roomMembersList[currentUser] !== undefined;
+            if (!isMemberOfRoom) {
+                alert('لا يمكنك الدخول لهذه الغرفة! هذه الغرفة مخصصة لأعضاء مسجلين فقط.');
+                return false;
+            }
+        }
     }
-    roomsBar.innerHTML = '';
-    const countryRooms = Object.values(rooms).filter(r => r.countryId === currentCountry.id);
-    
-    if (countryRooms.length === 0) {
-        roomsBar.innerHTML = '<p class="text-slate-500 text-sm py-2">لا توجد غرف بعد</p>';
-        return;
+
+    // Check rank-based access
+    if (room.requiredRank && !ROOM_ACCESS.canEnterRoom(userRank, room.requiredRank)) {
+        const requiredName = ROOM_ACCESS.getRequiredRankName(room.requiredRank);
+        alert(`لا يمكنك الدخول لهذه الغرفة! هذه الغرفة مخصصة لـ: ${requiredName} فما فوق.`);
+        return false;
     }
-    
-    countryRooms.forEach(room => {
-        const roomUsers = Object.values(onlineUsers).filter(u => u && u.currentRoom === room.id).length;
-        const btn = document.createElement('button');
-        btn.className = `flex-shrink-0 px-4 py-2 rounded-xl transition text-sm font-semibold ${currentRoom?.id === room.id ? 'room-active' : 'bg-slate-700/50 hover:bg-slate-700'}`;
-        btn.innerHTML = `
-            <div class="flex items-center gap-2">
-                <i class="fas fa-hashtag text-cyan-400"></i>
-                <span>${room.name}</span>
-                <span class="text-xs bg-slate-600 px-2 py-0.5 rounded-full">${roomUsers}</span>
-            </div>
-        `;
-        btn.onclick = () => selectRoom(room);
-        roomsBar.appendChild(btn);
-    });
+
+    return true;
 }
 
 // ==================== SELECT ROOM ====================
 async function selectRoom(room) {
+    const allowed = await canEnterRoom(room);
+    if (!allowed) return;
+
     currentRoom = room;
     currentRoomName.textContent = room.name;
+    currentCountryName.textContent = countries[room.countryId]?.name || '';
     document.getElementById('roomActions').classList.remove('hidden');
     messageInputArea.classList.remove('hidden');
-    
+    inRoomToggleBtn.classList.remove('hidden');
+
+    // Show exit room button for everyone
+    exitRoomBtn.classList.remove('hidden');
+
     // Show manage members button for owner
     if (isOwner && RANKS[userRank].canManageMembers) {
         manageMembersBtn.classList.remove('hidden');
     }
-    
+
+    // Show renew button for owner if room has expiry
+    if (isOwner && room.expiryDate) {
+        renewRoomBtn.classList.remove('hidden');
+    } else {
+        renewRoomBtn.classList.add('hidden');
+    }
+
+    // Update room expiry info
+    updateRoomHeader();
+
     // Update user's current room
     await update(ref(db, `onlineUsers/${currentUser}`), { currentRoom: room.id });
-    
-    renderRoomsBar();
+
+    renderCountriesRooms();
     renderMessages();
-    renderRoomUsers();
-    
-    // Update room user count
-    const roomUsers = Object.values(onlineUsers).filter(u => u && u.currentRoom === room.id).length;
+    renderInRoomUsers();
+}
+
+// ==================== EXIT ROOM ====================
+async function exitRoom() {
+    if (!currentRoom) return;
+
+    // Remove user from current room
+    await update(ref(db, `onlineUsers/${currentUser}`), { currentRoom: null });
+
+    currentRoom = null;
+    currentRoomName.textContent = 'اختر غرفة للدردشة';
+    currentCountryName.textContent = '';
+    document.getElementById('roomActions').classList.add('hidden');
+    messageInputArea.classList.add('hidden');
+    inRoomToggleBtn.classList.add('hidden');
+    exitRoomBtn.classList.add('hidden');
+    manageMembersBtn.classList.add('hidden');
+    renewRoomBtn.classList.add('hidden');
+    roomExpiryInfo.classList.add('hidden');
+
+    messagesArea.innerHTML = `
+        <div class="text-center text-slate-500 mt-20">
+            <i class="fas fa-door-open text-6xl mb-4 opacity-30"></i>
+            <p>اختر غرفة من القائمة الجانبية لبدء الدردشة</p>
+        </div>
+    `;
+
+    renderCountriesRooms();
+    renderInRoomUsers();
+}
+
+exitRoomBtn.addEventListener('click', exitRoom);
+
+function updateRoomHeader() {
+    if (!currentRoom) return;
+
+    const roomUsers = Object.values(onlineUsers).filter(u => u && u.currentRoom === currentRoom.id).length;
     roomUserCount.innerHTML = `<i class="fas fa-user ml-1"></i>${roomUsers}`;
+
+    // Update room name styling
+    const currentRoomIcon = document.getElementById('currentRoomIcon');
+    if (currentRoom.isRoyal) {
+        currentRoomName.className = 'font-bold text-lg royal-room-name';
+        if (currentRoom.royalImage) {
+            currentRoomIcon.innerHTML = `<img src="${currentRoom.royalImage}" class="royal-room-icon" alt="">`;
+        } else {
+            currentRoomIcon.innerHTML = '<i class="fas fa-gem text-yellow-400 text-lg"></i>';
+        }
+    } else {
+        currentRoomName.className = 'font-bold text-lg';
+        currentRoomIcon.innerHTML = '';
+    }
+
+    let infoHTML = '';
+
+    // Show required rank
+    if (currentRoom.requiredRank) {
+        const reqRankName = ROOM_ACCESS.getRequiredRankName(currentRoom.requiredRank);
+        const reqRankColor = RANKS[currentRoom.requiredRank]?.color || 'text-slate-400';
+        infoHTML += `<span class="text-xs bg-slate-700/50 px-2 py-0.5 rounded ml-2 border border-slate-600"><i class="fas fa-lock text-slate-400 ml-1"></i>مخصصة لـ: <span class="${reqRankColor}">${reqRankName}</span></span>`;
+    }
+
+    // Update expiry info
+    if (currentRoom.expiryDate) {
+        const now = Date.now();
+        const expiry = new Date(currentRoom.expiryDate).getTime();
+        const daysLeft = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
+
+        if (daysLeft <= 0) {
+            infoHTML += `<span class="room-expiry-badge room-expiry-expired mr-2">منتهية الصلاحية</span>`;
+        } else if (daysLeft <= 3) {
+            infoHTML += `<span class="room-expiry-badge room-expiry-warning mr-2">تنتهي خلال ${daysLeft} أيام</span>`;
+        } else {
+            infoHTML += `<span class="room-expiry-badge room-expiry-active mr-2">متبقي ${daysLeft} أيام</span>`;
+        }
+    }
+
+    if (infoHTML) {
+        roomExpiryInfo.classList.remove('hidden');
+        roomExpiryInfo.innerHTML = infoHTML;
+    } else {
+        roomExpiryInfo.classList.add('hidden');
+    }
+}
+
+// ==================== RENDER IN-ROOM USERS (LEFT PANEL) ====================
+async function renderInRoomUsers() {
+    if (!currentRoom) {
+        inRoomPanelRoomName.textContent = 'لم تدخل روم بعد';
+        inRoomUsersList.innerHTML = `
+            <div class="text-center py-8">
+                <i class="fas fa-door-open text-4xl text-slate-600 mb-3"></i>
+                <p class="text-slate-500 text-sm">اختر غرفة من القائمة للدخول</p>
+            </div>
+        `;
+        inRoomBadge.classList.add('hidden');
+        return;
+    }
+
+    const roomUsers = Object.values(onlineUsers).filter(u => u && u.currentRoom === currentRoom.id);
+    inRoomPanelRoomName.textContent = currentRoom.name;
+    inRoomBadge.textContent = roomUsers.length;
+    inRoomBadge.classList.remove('hidden');
+    inRoomUsersList.innerHTML = '';
+
+    if (roomUsers.length === 0) {
+        inRoomUsersList.innerHTML = '<p class="text-slate-500 text-sm text-center py-4">لا أحد في الغرفة</p>';
+        return;
+    }
+
+    // Load royal avatars
+    await loadRoyalAvatars();
+
+    roomUsers.forEach(user => {
+        const div = document.createElement('div');
+        div.className = 'flex items-center justify-between px-3 py-2 bg-slate-700/30 hover:bg-slate-700/50 rounded-lg transition';
+
+        const isMuted = mutedUsers[user.username];
+        const royalAvatar = user.rank === 'royal' ? royalAvatars[user.username] : null;
+        const userDisplay = getRankDisplay(user.rank, user.username, user.username !== currentUser, null, royalAvatar);
+
+        let adminBadge = '';
+        if (user.rank === 'master') {
+            adminBadge = '<span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full mr-1"><i class="fas fa-shield-alt"></i></span>';
+        } else if (user.rank === 'super') {
+            adminBadge = '<span class="text-xs bg-pink-500/20 text-pink-400 px-2 py-0.5 rounded-full mr-1"><i class="fas fa-shield-alt"></i></span>';
+        } else if (user.rank === 'superadmin') {
+            adminBadge = '<span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full mr-1"><i class="fas fa-shield-alt"></i></span>';
+        } else if (user.rank === 'root') {
+            adminBadge = '<span class="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full mr-1"><i class="fas fa-shield-alt"></i></span>';
+        } else if (user.rank === 'user') {
+            adminBadge = '<span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full mr-1"><i class="fas fa-user"></i></span>';
+        }
+
+        div.innerHTML = `
+            <div class="flex items-center gap-2 flex-1">
+                <div class="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
+                ${adminBadge}
+                <span class="text-sm">${userDisplay}</span>
+                ${isMuted ? '<span class="mute-badge text-xs bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded-full"><i class="fas fa-volume-mute"></i></span>' : ''}
+            </div>
+            ${(isOwner || userRank === 'royal' || RANKS[userRank].canMute) && user.username !== currentUser && (!isProtectedUser(user.rank) || isOwner || userRank === 'royal') ? '<button onclick="showUserActionsByName(' + "'" + user.username + "'" + ')" class="p-1 hover:bg-slate-600 rounded"><i class="fas fa-ellipsis-v text-slate-500 text-xs"></i></button>' : ''}
+        `;
+
+        inRoomUsersList.appendChild(div);
+    });
 }
 
 // ==================== RENDER MESSAGES ====================
-function renderMessages() {
-    if (!currentRoom) return;
+async function renderMessages() {
+    if (!currentRoom) {
+        messagesArea.innerHTML = `
+            <div class="text-center text-slate-500 mt-20">
+                <i class="fas fa-door-open text-6xl mb-4 opacity-30"></i>
+                <p>اختر غرفة من القائمة الجانبية لبدء الدردشة</p>
+                <p class="text-xs mt-2 text-slate-600">يمكنك الخروج من الروم الحالي والانتقال لغرفة أخرى</p>
+            </div>
+        `;
+        return;
+    }
     const roomMessages = Object.values(messages).filter(m => m.roomId === currentRoom.id);
     messagesArea.innerHTML = '';
-    
+
     if (roomMessages.length === 0) {
         messagesArea.innerHTML = '<div class="text-center text-slate-500 mt-20"><i class="fas fa-message text-6xl mb-4 opacity-30"></i><p>لا توجد رسائل بعد، كن أول من يرسل</p></div>';
         return;
     }
-    
+
+    // Load royal avatars
+    await loadRoyalAvatars();
+
     roomMessages.sort((a, b) => a.timestamp - b.timestamp);
-    
+
     roomMessages.forEach(msg => {
         if (!msg || !msg.username) return;
         const isOwn = msg.username === currentUser;
         const msgDiv = document.createElement('div');
         msgDiv.className = `message-appear flex ${isOwn ? 'justify-end' : 'justify-start'}`;
-        
-        const rankDisplay = getRankDisplay(msg.rank, msg.username, !isOwn);
-        
+
+        const royalAvatar = msg.rank === 'royal' ? royalAvatars[msg.username] : null;
+        const rankDisplay = getRankDisplay(msg.rank, msg.username, !isOwn, null, royalAvatar);
+
         msgDiv.innerHTML = `
             <div class="max-w-md ${isOwn ? 'bg-gradient-to-r from-blue-600 to-cyan-600' : 'bg-slate-700/70'} rounded-2xl px-4 py-2.5 shadow-lg">
                 <div class="flex items-center gap-2 mb-1 flex-wrap">
@@ -1533,7 +2410,7 @@ function renderMessages() {
         `;
         messagesArea.appendChild(msgDiv);
     });
-    
+
     setTimeout(() => {
         messagesArea.scrollTop = messagesArea.scrollHeight;
     }, 50);
@@ -1547,7 +2424,7 @@ async function checkUserMuteStatus() {
         const muteData = mutedSnapshot.val();
         const now = Date.now();
         const muteUntil = muteData.until || now;
-        
+
         if (now < muteUntil) {
             const remaining = Math.ceil((muteUntil - now) / 1000 / 60);
             messageInput.disabled = true;
@@ -1555,7 +2432,6 @@ async function checkUserMuteStatus() {
             sendBtn.disabled = true;
             sendBtn.classList.add('opacity-50', 'cursor-not-allowed');
         } else {
-            // Mute expired, remove it
             await remove(ref(db, `mutedUsers/${currentUser}`));
             messageInput.disabled = false;
             messageInput.placeholder = 'اكتب رسالتك هنا...';
@@ -1574,14 +2450,28 @@ async function checkUserMuteStatus() {
 async function sendMessage() {
     const text = messageInput.value.trim();
     if (!text || !currentRoom) return;
-    
+
+    // Check if user is actually in a room
+    const userSnapshot = await get(ref(db, `onlineUsers/${currentUser}`));
+    const userData = userSnapshot.val();
+    if (!userData || !userData.currentRoom) {
+        alert('أنت خارج الروم! اختر غرفة للدخول إليها.');
+        return;
+    }
+
+    // Check if room expired
+    if (isRoomExpired(currentRoom) && !isOwner) {
+        alert('هذه الغرفة منتهية الصلاحية. لا يمكن إرسال رسائل.');
+        return;
+    }
+
     // Check if muted
     const mutedSnapshot = await get(child(ref(db), `mutedUsers/${currentUser}`));
     if (mutedSnapshot.exists()) {
         const muteData = mutedSnapshot.val();
         const now = Date.now();
         const muteUntil = muteData.until || now;
-        
+
         if (now < muteUntil) {
             const remaining = Math.ceil((muteUntil - now) / 1000 / 60);
             alert(`أنت مكتوم لمدة ${remaining} دقيقة`);
@@ -1589,7 +2479,7 @@ async function sendMessage() {
             return;
         }
     }
-    
+
     const message = {
         username: currentUser,
         rank: userRank,
@@ -1597,10 +2487,10 @@ async function sendMessage() {
         roomId: currentRoom.id,
         timestamp: Date.now()
     };
-    
+
     await push(ref(db, 'messages'), message);
     messageInput.value = '';
-    
+
     setTimeout(() => {
         messagesArea.scrollTop = messagesArea.scrollHeight;
     }, 100);
@@ -1614,27 +2504,26 @@ messageInput.addEventListener('keypress', (e) => {
     }
 });
 
-
 // ==================== RENDER ALL USERS ====================
-function renderUsers() {
-    // Show ALL users in online list - they stay until explicit logout
+async function renderUsers() {
     const users = Object.values(onlineUsers);
     userCount.textContent = users.length;
     usersList.innerHTML = '';
-    
+
+    // Load royal avatars if needed
+    await loadRoyalAvatars();
+
     users.forEach(user => {
         const div = document.createElement('div');
         div.className = 'flex items-center justify-between px-3 py-2 bg-slate-700/30 hover:bg-slate-700/50 rounded-lg transition';
-        
+
         const isMuted = mutedUsers[user.username];
-        const userDisplay = getRankDisplay(user.rank, user.username, user.username !== currentUser);
-        
-        // Show admin badges with correct colors
+        const royalAvatar = user.rank === 'royal' ? royalAvatars[user.username] : null;
+        const userDisplay = getRankDisplay(user.rank, user.username, user.username !== currentUser, null, royalAvatar);
+
         let adminBadge = '';
         if (user.rank === 'master') {
             adminBadge = '<span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full mr-1"><i class="fas fa-shield-alt"></i></span>';
-        } else if (user.rank === 'royal') {
-            adminBadge = '<span class="text-xs bg-gradient-to-r from-yellow-500/30 to-purple-500/30 text-yellow-300 px-2 py-0.5 rounded-full mr-1 border border-yellow-500/50"><i class="fas fa-gem"></i></span>';
         } else if (user.rank === 'super') {
             adminBadge = '<span class="text-xs bg-pink-500/20 text-pink-400 px-2 py-0.5 rounded-full mr-1"><i class="fas fa-shield-alt"></i></span>';
         } else if (user.rank === 'superadmin') {
@@ -1644,7 +2533,7 @@ function renderUsers() {
         } else if (user.rank === 'user') {
             adminBadge = '<span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full mr-1"><i class="fas fa-user"></i></span>';
         }
-        
+
         div.innerHTML = `
             <div class="flex items-center gap-2 flex-1">
                 <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
@@ -1652,87 +2541,32 @@ function renderUsers() {
                 <span class="text-sm">${userDisplay}</span>
                 ${isMuted ? '<span class="mute-badge text-xs bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded-full"><i class="fas fa-volume-mute"></i></span>' : ''}
             </div>
-            ${(isOwner || RANKS[userRank].canMute) && user.username !== currentUser && (!isProtectedUser(user.rank) || isOwner) ? '<button onclick="showUserActionsByName(\'' + user.username + '\')" class="p-1 hover:bg-slate-600 rounded"><i class="fas fa-ellipsis-v text-slate-500 text-xs"></i></button>' : ''}
+            ${(isOwner || userRank === 'royal' || RANKS[userRank].canMute) && user.username !== currentUser && (!isProtectedUser(user.rank) || isOwner || userRank === 'royal') ? '<button onclick="showUserActionsByName(' + "'" + user.username + "'" + ')" class="p-1 hover:bg-slate-600 rounded"><i class="fas fa-ellipsis-v text-slate-500 text-xs"></i></button>' : ''}
         `;
-        
+
         usersList.appendChild(div);
     });
 }
 
-// ==================== RENDER ROOM USERS ====================
-function renderRoomUsers() {
-    if (!currentRoom) {
-        roomUsersList.innerHTML = '<p class="text-slate-500 text-sm text-center py-2">لم تدخل غرفة بعد</p>';
-        roomUserCountBadge.textContent = '0';
-        return;
-    }
-    
-    const roomUsers = Object.values(onlineUsers).filter(u => u && u.currentRoom === currentRoom.id);
-    roomUserCountBadge.textContent = roomUsers.length;
-    roomUsersList.innerHTML = '';
-    
-    if (roomUsers.length === 0) {
-        roomUsersList.innerHTML = '<p class="text-slate-500 text-sm text-center py-2">لا أحد في الغرفة</p>';
-        return;
-    }
-    
-    roomUsers.forEach(user => {
-        const div = document.createElement('div');
-        div.className = 'flex items-center justify-between px-3 py-2 bg-slate-700/30 hover:bg-slate-700/50 rounded-lg transition';
-        
-        const isMuted = mutedUsers[user.username];
-        const userDisplay = getRankDisplay(user.rank, user.username, user.username !== currentUser);
-        
-        // Show admin badges with correct colors
-        let adminBadge = '';
-        if (user.rank === 'master') {
-            adminBadge = '<span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full mr-1"><i class="fas fa-shield-alt"></i></span>';
-        } else if (user.rank === 'royal') {
-            adminBadge = '<span class="text-xs bg-gradient-to-r from-yellow-500/30 to-purple-500/30 text-yellow-300 px-2 py-0.5 rounded-full mr-1 border border-yellow-500/50"><i class="fas fa-gem"></i></span>';
-        } else if (user.rank === 'super') {
-            adminBadge = '<span class="text-xs bg-pink-500/20 text-pink-400 px-2 py-0.5 rounded-full mr-1"><i class="fas fa-shield-alt"></i></span>';
-        } else if (user.rank === 'superadmin') {
-            adminBadge = '<span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full mr-1"><i class="fas fa-shield-alt"></i></span>';
-        } else if (user.rank === 'root') {
-            adminBadge = '<span class="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full mr-1"><i class="fas fa-shield-alt"></i></span>';
-        } else if (user.rank === 'user') {
-            adminBadge = '<span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full mr-1"><i class="fas fa-user"></i></span>';
-        }
-        
-        div.innerHTML = `
-            <div class="flex items-center gap-2 flex-1">
-                <div class="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
-                ${adminBadge}
-                <span class="text-sm">${userDisplay}</span>
-                ${isMuted ? '<span class="mute-badge text-xs bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded-full"><i class="fas fa-volume-mute"></i></span>' : ''}
-            </div>
-            ${(isOwner || RANKS[userRank].canMute) && user.username !== currentUser && (!isProtectedUser(user.rank) || isOwner) ? '<button onclick="showUserActionsByName(\'' + user.username + '\')" class="p-1 hover:bg-slate-600 rounded"><i class="fas fa-ellipsis-v text-slate-500 text-xs"></i></button>' : ''}
-        `;
-        
-        roomUsersList.appendChild(div);
-    });
-}
-
-// ==================== SHOW USER ACTIONS (OWNER CONTROLS) ====================
+// ==================== SHOW USER ACTIONS ====================
 window.showUserActionsByName = (username) => {
     const user = onlineUsers[username];
     if (user) showUserActions(user);
 };
 
 function showUserActions(user) {
-    // Safety check
     if (!user || !user.username) return;
     actionUserName.textContent = user.username;
     userActions.innerHTML = '';
-    
+
     const rank = RANKS[userRank];
     const targetUser = onlineUsers[user.username];
     const targetRank = targetUser ? targetUser.rank : 'user';
-    
+
     // Show current user's permissions
     userPermsDisplay.classList.remove('hidden');
     userPermsDisplay.innerHTML = '<span class="text-xs text-slate-400 w-full mb-1">صلاحياتك:</span>';
-    
+
     if (isOwner) {
         userPermsDisplay.innerHTML += `
             <span class="perm-badge perm-kick text-xs"><i class="fas fa-sign-out-alt"></i> طرد</span>
@@ -1744,8 +2578,8 @@ function showUserActions(user) {
     } else if (rank.canMute) {
         userPermsDisplay.innerHTML += '<span class="perm-badge perm-mute text-xs"><i class="fas fa-volume-mute"></i> كتم</span>';
     }
-    
-    // Private chat button for everyone (except if banned from PM)
+
+    // Private chat button for everyone
     if (user.username !== currentUser) {
         const isBannedFromPM = bannedFromPM[user.username];
         if (!isBannedFromPM) {
@@ -1756,22 +2590,27 @@ function showUserActions(user) {
             });
         }
     }
-    
-    // OWNER ONLY: Full control permissions
+
+    // Royal user - edit own profile
+    if (userRank === 'royal' && user.username === currentUser) {
+        addActionButton('تعديل ملفي الشخصي', 'fa-user-edit', 'bg-yellow-600 hover:bg-yellow-700', () => openRoyalProfileView(currentUser));
+    }
+
+    // Royal user - grant permissions to others (not protected)
+    if (userRank === 'royal' && user.username !== currentUser && !isProtectedUser(user.rank)) {
+        addActionButton('منح صلاحيات', 'fa-gem', 'bg-yellow-600 hover:bg-yellow-700', () => openRoyalGrant(user.username));
+    }
+
+    // OWNER ONLY
     if (isOwner) {
-        // Separator
         const sep = document.createElement('div');
         sep.className = 'border-t border-slate-600 my-2';
         sep.innerHTML = '<span class="text-xs text-amber-400 font-bold">صلاحيات المالك</span>';
         userActions.appendChild(sep);
-        
-        // Kick
+
         addActionButton('طرد من الشات', 'fa-sign-out-alt', 'bg-orange-600 hover:bg-orange-700', () => kickUser(user.username));
-        
-        // Ban
         addActionButton('حظر نهائي', 'fa-user-slash', 'bg-red-600 hover:bg-red-700', () => banUser(user.username));
-        
-        // Mute options
+
         const muteDiv = document.createElement('div');
         muteDiv.className = 'grid grid-cols-3 gap-2';
         muteDiv.innerHTML = `
@@ -1786,35 +2625,34 @@ function showUserActions(user) {
             </button>
         `;
         userActions.appendChild(muteDiv);
-        
-        // Unmute
+
         if (mutedUsers[user.username]) {
             addActionButton('فك الكتم', 'fa-volume-up', 'bg-green-600 hover:bg-green-700', () => unmuteUser(user.username));
         }
-        
-        // IP Ban
+
         if (user.ip && user.ip !== 'unknown') {
             addActionButton(`حظر IP`, 'fa-ban', 'bg-red-800 hover:bg-red-900', () => banIP(user.ip, user.username));
         }
-        
-        // Ban from Private Chat
+
         const isBannedPM = bannedFromPM[user.username];
         if (isBannedPM) {
             addActionButton('فك حظر المحادثة الخاصة', 'fa-envelope-open', 'bg-indigo-600 hover:bg-indigo-700', () => unbanUserFromPM(user.username));
         } else {
             addActionButton('حظر من المحادثة الخاصة', 'fa-envelope', 'bg-blue-800 hover:bg-blue-900', () => banUserFromPM(user.username));
+        addActionButton('تخصيص صلاحيات', 'fa-user-cog', 'bg-amber-600 hover:bg-amber-700', () => openOwnerCustomPerms(user.username));
+        addActionButton('منح رتبة', 'fa-crown', 'bg-purple-600 hover:bg-purple-700', () => openOwnerGrantRank(user.username));
+        addActionButton('إرسال رسالة باسمه', 'fa-comment', 'bg-teal-600 hover:bg-teal-700', () => sendMessageAsUser(user.username));
         }
     } 
-    // Non-owners with mute permission
     else if (rank.canMute && (rank.name === 'سوبر' || rank.name === 'روت') && user.username !== currentUser) {
         const sep = document.createElement('div');
         sep.className = 'border-t border-slate-600 my-2';
         sep.innerHTML = '<span class="text-xs text-yellow-400 font-bold">صلاحيات المسؤول</span>';
         userActions.appendChild(sep);
-        
+
         addActionButton('كتم 5 دقائق', 'fa-volume-mute', 'bg-yellow-600 hover:bg-yellow-700', () => muteUser(user.username, 5));
     }
-    
+
     userActionModal.classList.remove('hidden');
 }
 
@@ -1884,13 +2722,11 @@ async function banIP(ip, username) {
     alert(`تم حظر IP: ${ip}`);
 }
 
-// NEW: Ban user from private chat
 async function banUserFromPM(username) {
     await set(ref(db, `bannedFromPM/${username}`), { timestamp: Date.now(), bannedBy: currentUser });
     alert(`تم حظر ${username} من المحادثات الخاصة`);
 }
 
-// NEW: Unban user from private chat
 async function unbanUserFromPM(username) {
     await remove(ref(db, `bannedFromPM/${username}`));
     alert(`تم فك حظر ${username} من المحادثات الخاصة`);
@@ -1907,6 +2743,42 @@ ownerCreateRoomBtn.addEventListener('click', () => {
 cancelCreateRoom.addEventListener('click', () => {
     createRoomModal.classList.add('hidden');
     newRoomName.value = '';
+    newRoomExpiry.value = '';
+    document.getElementById('newRoomRequiredRank').value = '';
+    document.getElementById('newRoomIsRoyal').checked = false;
+    document.getElementById('royalRoomImageField').classList.add('hidden');
+    selectedRoyalRoomImage = null;
+    document.getElementById('royalRoomImagePreview').innerHTML = '<i class="fas fa-image text-slate-500"></i>';
+});
+
+// Royal room checkbox toggle
+document.getElementById('newRoomIsRoyal').addEventListener('change', (e) => {
+    const imageField = document.getElementById('royalRoomImageField');
+    if (e.target.checked) {
+        imageField.classList.remove('hidden');
+    } else {
+        imageField.classList.add('hidden');
+        selectedRoyalRoomImage = null;
+        document.getElementById('royalRoomImagePreview').innerHTML = '<i class="fas fa-image text-slate-500"></i>';
+    }
+});
+
+// Royal room image upload
+document.getElementById('newRoomRoyalImage').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+        alert('حجم الصورة يجب أن يكون أقل من 2 ميجابايت');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        selectedRoyalRoomImage = event.target.result;
+        document.getElementById('royalRoomImagePreview').innerHTML = `<img src="${selectedRoyalRoomImage}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">`;
+    };
+    reader.readAsDataURL(file);
 });
 
 confirmCreateRoom.addEventListener('click', async () => {
@@ -1916,24 +2788,88 @@ confirmCreateRoom.addEventListener('click', async () => {
     }
     const roomName = newRoomName.value.trim();
     const countryId = newRoomCountry.value;
-    
+    const expiryDate = newRoomExpiry.value;
+    const requiredRank = document.getElementById('newRoomRequiredRank').value;
+    const isRoyal = document.getElementById('newRoomIsRoyal').checked;
+    const royalImage = selectedRoyalRoomImage;
+
     if (!roomName || roomName.length < 2) {
         alert('يرجى ادخال اسم غرفة صحيح');
         return;
     }
-    
+
     const roomId = `room_${Date.now()}`;
-    await set(ref(db, `rooms/${roomId}`), {
+    const roomData = {
         id: roomId,
         name: roomName,
         countryId,
         createdBy: currentUser,
         timestamp: Date.now()
-    });
-    
+    };
+
+    if (expiryDate) {
+        roomData.expiryDate = expiryDate;
+    }
+
+    if (requiredRank) {
+        roomData.requiredRank = requiredRank;
+    }
+
+    if (isRoyal) {
+        roomData.isRoyal = true;
+        if (royalImage) {
+            roomData.royalImage = royalImage;
+        }
+    }
+
+    await set(ref(db, `rooms/${roomId}`), roomData);
+
     createRoomModal.classList.add('hidden');
     newRoomName.value = '';
+    newRoomExpiry.value = '';
+    document.getElementById('newRoomRequiredRank').value = '';
+    document.getElementById('newRoomIsRoyal').checked = false;
+    document.getElementById('royalRoomImageField').classList.add('hidden');
+    selectedRoyalRoomImage = null;
+    document.getElementById('royalRoomImagePreview').innerHTML = '<i class="fas fa-image text-slate-500"></i>';
     alert('تم إنشاء الغرفة بنجاح');
+});
+
+// ==================== RENEW ROOM ====================
+renewRoomBtn.addEventListener('click', () => {
+    if (!isOwner || !currentRoom) return;
+    currentRenewRoomId = currentRoom.id;
+    renewRoomName.textContent = currentRoom.name;
+    renewCurrentExpiry.textContent = currentRoom.expiryDate ? new Date(currentRoom.expiryDate).toLocaleDateString('ar-SA') : 'غير محدد';
+    renewRoomExpiry.value = currentRoom.expiryDate || '';
+    renewRoomModal.classList.remove('hidden');
+});
+
+cancelRenewRoom.addEventListener('click', () => {
+    renewRoomModal.classList.add('hidden');
+    currentRenewRoomId = null;
+});
+
+confirmRenewRoom.addEventListener('click', async () => {
+    if (!currentRenewRoomId || !isOwner) return;
+
+    const newExpiry = renewRoomExpiry.value;
+    if (!newExpiry) {
+        alert('يرجى تحديد تاريخ الانتهاء الجديد');
+        return;
+    }
+
+    await update(ref(db, `rooms/${currentRenewRoomId}`), { expiryDate: newExpiry });
+
+    renewRoomModal.classList.add('hidden');
+    currentRenewRoomId = null;
+    alert('تم تجديد الروم بنجاح');
+
+    // Update current room data
+    if (currentRoom && currentRoom.id === currentRenewRoomId) {
+        currentRoom.expiryDate = newExpiry;
+        updateRoomHeader();
+    }
 });
 
 function populateCountrySelect() {
@@ -1967,6 +2903,71 @@ closeOwnerPanel.addEventListener('click', () => {
     ownerPanelModal.classList.add('hidden');
 });
 
+// ==================== BROADCAST MESSAGE ====================
+const broadcastModal = document.getElementById('broadcastModal');
+const closeBroadcastModal = document.getElementById('closeBroadcastModal');
+const broadcastMessageInput = document.getElementById('broadcastMessageInput');
+const confirmBroadcastBtn = document.getElementById('confirmBroadcastBtn');
+const cancelBroadcastBtn = document.getElementById('cancelBroadcastBtn');
+const broadcastBtn = document.getElementById('broadcastBtn');
+
+broadcastBtn.addEventListener('click', () => {
+    if (!isOwner) return;
+    ownerPanelModal.classList.add('hidden');
+    broadcastModal.classList.remove('hidden');
+    broadcastMessageInput.value = '';
+    broadcastMessageInput.focus();
+});
+
+closeBroadcastModal.addEventListener('click', () => {
+    broadcastModal.classList.add('hidden');
+});
+
+cancelBroadcastBtn.addEventListener('click', () => {
+    broadcastModal.classList.add('hidden');
+});
+
+confirmBroadcastBtn.addEventListener('click', async () => {
+    if (!isOwner) return;
+    const text = broadcastMessageInput.value.trim();
+    if (!text) {
+        alert('يرجى كتابة رسالة');
+        return;
+    }
+
+    // Get all rooms
+    const roomsSnapshot = await get(ref(db, 'rooms'));
+    const allRooms = roomsSnapshot.val() || {};
+    const roomIds = Object.keys(allRooms);
+
+    if (roomIds.length === 0) {
+        alert('لا توجد غرف حالياً');
+        return;
+    }
+
+    const timestamp = Date.now();
+    const promises = roomIds.map(roomId => {
+        const message = {
+            username: currentUser,
+            rank: 'owner',
+            text: text,
+            roomId: roomId,
+            timestamp: timestamp,
+            isBroadcast: true
+        };
+        return push(ref(db, 'messages'), message);
+    });
+
+    await Promise.all(promises);
+
+    broadcastModal.classList.add('hidden');
+    alert(`تم إرسال الرسالة لـ ${roomIds.length} غرفة بنجاح`);
+});
+
+broadcastModal.addEventListener('click', (e) => {
+    if (e.target === broadcastModal) broadcastModal.classList.add('hidden');
+});
+
 updateTickerBtn.addEventListener('click', async () => {
     const ticker = tickerInput.value.trim();
     if (ticker) {
@@ -1986,58 +2987,89 @@ manageMembersBtn.addEventListener('click', () => {
 closeManageMembers.addEventListener('click', () => {
     manageMembersModal.classList.add('hidden');
     newMemberName.value = '';
+    newMemberExpiry.value = '';
 });
 
 addMemberBtn.addEventListener('click', async () => {
     const memberName = newMemberName.value.trim();
     const memberRank = newMemberRank.value;
-    
+    const expiryDate = newMemberExpiry.value;
+
     if (!memberName || memberName.length < 2) {
         alert('يرجى ادخال اسم صحيح');
         return;
     }
-    
+
     if (!currentRoom) {
         alert('لا توجد غرفة محددة');
         return;
     }
-    
+
+    // Validate royal expiry
+    if (memberRank === 'royal' && !expiryDate) {
+        alert('عضوية الملكي تتطلب تحديد تاريخ انتهاء!');
+        return;
+    }
+
     const code = generateMemberCode();
-    await set(ref(db, `members/${currentRoom.id}/${memberName}`), {
+    const memberData = {
         rank: memberRank,
         code: code,
         deviceId: null,
         createdAt: Date.now(),
         createdBy: currentUser
-    });
-    
+    };
+
+    if (expiryDate) {
+        memberData.expiryDate = expiryDate;
+    }
+
+    await set(ref(db, `members/${currentRoom.id}/${memberName}`), memberData);
+
     newMemberName.value = '';
-    alert(`تم إضافة العضو بنجاح\nالاسم: ${memberName}\nالرتبة: ${RANKS[memberRank].name}\nالكود: ${code}`);
+    newMemberExpiry.value = '';
+
+    let msg = `تم إضافة العضو بنجاح\nالاسم: ${memberName}\nالرتبة: ${RANKS[memberRank].name}\nالكود: ${code}`;
+    if (expiryDate) {
+        msg += `\nتاريخ الانتهاء: ${new Date(expiryDate).toLocaleDateString('ar-SA')}`;
+    }
+    alert(msg);
 });
 
 function renderMembersListForOwner() {
     if (!currentRoom) return;
-    
+
     const members = roomMembers[currentRoom.id] || {};
     membersListContainer.innerHTML = '';
-    
+
     const memberNames = Object.keys(members);
     if (memberNames.length === 0) {
         membersListContainer.innerHTML = '<p class="text-slate-500 text-center py-4">لا يوجد أعضاء مسجلين في هذه الغرفة</p>';
         return;
     }
-    
+
     memberNames.forEach(name => {
         const member = members[name];
         const div = document.createElement('div');
         div.className = 'bg-slate-800 p-3 rounded-lg border border-slate-600';
-        
-        // Color indicator for rank
+
         const rankColorClass = RANKS[member.rank].color;
         const rankIcon = (member.rank === 'master' || member.rank === 'super' || member.rank === 'root') ? 'fa-shield-alt' : 'fa-user';
         const rankDisplay = `<span class="${rankColorClass}"><i class="fas ${rankIcon}"></i> ${RANKS[member.rank].name}</span>`;
         const deviceStatus = member.deviceId ? '<span class="text-green-400 text-xs"><i class="fas fa-link"></i> مربوط</span>' : '<span class="text-slate-500 text-xs"><i class="fas fa-unlink"></i> غير مربوط</span>';
-        
+
+        let expiryInfo = '';
+        if (member.expiryDate) {
+            const now = Date.now();
+            const expiry = new Date(member.expiryDate).getTime();
+            const daysLeft = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
+            if (daysLeft <= 0) {
+                expiryInfo = `<span class="text-red-400 text-xs mr-2"><i class="fas fa-exclamation-circle"></i> منتهي - تم التخفيض لعضو</span>`;
+            } else {
+                expiryInfo = `<span class="text-amber-400 text-xs mr-2"><i class="fas fa-clock"></i> ${daysLeft} يوم متبقي</span>`;
+            }
+        }
+
         div.innerHTML = `
             <div class="flex items-start justify-between gap-3 mb-2">
                 <div class="flex-1">
@@ -2048,6 +3080,7 @@ function renderMembersListForOwner() {
                         <span>الكود: <span class="text-yellow-400 font-mono">${member.code}</span></span>
                         <span>•</span>
                         ${deviceStatus}
+                        ${expiryInfo}
                     </div>
                 </div>
             </div>
@@ -2067,29 +3100,47 @@ function renderMembersListForOwner() {
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
+            ${member.rank === 'royal' ? `
+            <div class="mt-2 flex gap-2">
+                <input type="date" id="renewMemberExpiry_${name}" value="${member.expiryDate || ''}" class="flex-1 px-2 py-1 bg-slate-700 border border-slate-600 rounded text-xs outline-none text-white">
+                <button onclick="renewMemberExpiry('${currentRoom.id}', '${name}')" class="px-3 py-1 bg-amber-600 hover:bg-amber-700 rounded text-xs font-semibold transition">
+                    <i class="fas fa-sync-alt"></i> تجديد
+                </button>
+            </div>
+            ` : ''}
         `;
         membersListContainer.appendChild(div);
     });
 }
 
+// ==================== RENEW MEMBER EXPIRY ====================
+window.renewMemberExpiry = async (roomId, username) => {
+    const input = document.getElementById(`renewMemberExpiry_${username}`);
+    if (!input || !input.value) {
+        alert('يرجى تحديد تاريخ الانتهاء الجديد');
+        return;
+    }
+
+    await update(ref(db, `members/${roomId}/${username}`), { expiryDate: input.value });
+    alert(`تم تجديد عضوية ${username} حتى ${new Date(input.value).toLocaleDateString('ar-SA')}`);
+};
+
 // ==================== PRIVATE CHAT SYSTEM ====================
 window.openPrivateChat = async (username) => {
     if (!username || username === 'undefined' || username === currentUser) return;
-    
-    // Check if current user is banned from PM
+
     const bannedPMSnapshot = await get(child(ref(db), `bannedFromPM/${currentUser}`));
     if (bannedPMSnapshot.exists()) {
         alert('أنت محظور من إرسال المحادثات الخاصة');
         return;
     }
-    
-    // Check if target user is banned from PM
+
     const targetBannedSnapshot = await get(child(ref(db), `bannedFromPM/${username}`));
     if (targetBannedSnapshot.exists()) {
         alert('هذا المستخدم محظور من استقبال المحادثات الخاصة');
         return;
     }
-    
+
     currentPrivateChat = username;
     privateChatTitle.textContent = `محادثة مع ${username}`;
     privateChatModal.classList.remove('hidden');
@@ -2109,15 +3160,14 @@ function getPrivateChatId(user1, user2) {
 async function sendPrivateMessage() {
     const text = privateMessageInput.value.trim();
     if (!text || !currentPrivateChat) return;
-    
-    // Check if banned from PM
+
     const bannedPMSnapshot = await get(child(ref(db), `bannedFromPM/${currentUser}`));
     if (bannedPMSnapshot.exists()) {
         alert('أنت محظور من إرسال المحادثات الخاصة');
         privateChatModal.classList.add('hidden');
         return;
     }
-    
+
     const chatId = getPrivateChatId(currentUser, currentPrivateChat);
     const message = {
         from: currentUser,
@@ -2125,7 +3175,7 @@ async function sendPrivateMessage() {
         text,
         timestamp: Date.now()
     };
-    
+
     await push(ref(db, `private_chats/${chatId}`), message);
     privateMessageInput.value = '';
 }
@@ -2140,58 +3190,65 @@ privateMessageInput.addEventListener('keypress', (e) => {
 
 function renderPrivateMessages() {
     if (!currentPrivateChat) return;
-    
+
     const chatId = getPrivateChatId(currentUser, currentPrivateChat);
     const chatMessages = privateChats[chatId] || {};
-    
+
     privateMessagesArea.innerHTML = '';
-    const allMessages = Object.values(chatMessages);
-    
+    const allMessages = Object.entries(chatMessages);
+
     if (allMessages.length === 0) {
         privateMessagesArea.innerHTML = '<div class="text-center text-slate-500 mt-20"><i class="fas fa-envelope text-4xl mb-4 opacity-30"></i><p>ابدأ المحادثة</p></div>';
         return;
     }
-    
-    allMessages.sort((a, b) => a.timestamp - b.timestamp);
-    
-    allMessages.forEach(msg => {
+
+    allMessages.sort((a, b) => a[1].timestamp - b[1].timestamp);
+
+    allMessages.forEach(([msgKey, msg]) => {
         if (!msg || !msg.from) return;
         const isOwn = msg.from === currentUser;
         const msgDiv = document.createElement('div');
-        msgDiv.className = `message-appear flex ${isOwn ? 'justify-end' : 'justify-start'}`;
-        
+        msgDiv.className = `message-appear flex ${isOwn ? 'justify-end' : 'justify-start'} group`;
+
         msgDiv.innerHTML = `
-            <div class="max-w-xs ${isOwn ? 'bg-gradient-to-r from-blue-600 to-cyan-600' : 'bg-slate-700/70'} rounded-2xl px-4 py-2.5 shadow-lg">
+            <div class="max-w-xs ${isOwn ? 'bg-gradient-to-r from-blue-600 to-cyan-600' : 'bg-slate-700/70'} rounded-2xl px-4 py-2.5 shadow-lg relative">
                 <p class="text-sm break-words">${msg.text}</p>
-                <span class="text-xs opacity-70 mt-1 block">${new Date(msg.timestamp).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}</span>
+                <div class="flex items-center justify-between mt-1">
+                    <span class="text-xs opacity-70">${new Date(msg.timestamp).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}</span>
+                    <button onclick="deletePrivateMessage('${chatId}', '${msgKey}')" class="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-red-500/30 rounded text-red-400 text-xs mr-1" title="حذف الرسالة">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
             </div>
         `;
         privateMessagesArea.appendChild(msgDiv);
     });
-    
+
     privateMessagesArea.scrollTop = privateMessagesArea.scrollHeight;
 }
 
+// ==================== DELETE SINGLE PRIVATE MESSAGE ====================
+window.deletePrivateMessage = async (chatId, msgKey) => {
+    if (!confirm('هل أنت متأكد من حذف هذه الرسالة؟')) return;
+
+    await remove(ref(db, `private_chats/${chatId}/${msgKey}`));
+};
 
 // ==================== OWNER PROFILE SYSTEM ====================
-// Load owner profile from Firebase (visible to all users)
 async function loadOwnerProfile() {
     const snapshot = await get(ref(db, 'ownerProfile'));
     if (snapshot.exists()) {
         ownerProfile = snapshot.val();
         updateOwnerProfileDisplay();
     } else {
-        // Show default state if no profile exists
         ownerProfile = {};
         updateOwnerProfileDisplay();
     }
 }
 
-// Update owner profile display in sidebar
 function updateOwnerProfileDisplay() {
     if (!ownerProfile) return;
-    
-    // Avatar
+
     if (ownerProfile.avatar) {
         ownerAvatarContainer.innerHTML = `<img src="${ownerProfile.avatar}" class="owner-avatar" alt="Owner Avatar">`;
     } else {
@@ -2201,16 +3258,14 @@ function updateOwnerProfileDisplay() {
             </div>
         `;
     }
-    
-    // Bio
+
     if (ownerProfile.bio) {
         ownerBioDisplay.classList.remove('hidden');
         ownerBioText.textContent = ownerProfile.bio;
     } else {
         ownerBioDisplay.classList.add('hidden');
     }
-    
-    // Full Info
+
     if (ownerProfile.fullInfo) {
         ownerInfoDisplay.classList.remove('hidden');
         ownerInfoText.innerHTML = ownerProfile.fullInfo.replace(/\n/g, '<br>');
@@ -2219,12 +3274,10 @@ function updateOwnerProfileDisplay() {
     }
 }
 
-// Open owner profile edit modal
 editOwnerProfileBtn.addEventListener('click', () => {
     ownerProfileModal.classList.remove('hidden');
     closeSidebarFn();
-    
-    // Pre-fill existing data
+
     if (ownerProfile.bio) ownerBioInput.value = ownerProfile.bio;
     if (ownerProfile.fullInfo) ownerFullInfoInput.value = ownerProfile.fullInfo;
     if (ownerProfile.avatar) {
@@ -2236,17 +3289,16 @@ closeOwnerProfile.addEventListener('click', () => {
     ownerProfileModal.classList.add('hidden');
 });
 
-// Handle avatar image selection
 let selectedAvatarBase64 = null;
 ownerAvatarInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    
+
     if (file.size > 2 * 1024 * 1024) {
         alert('حجم الصورة يجب أن يكون أقل من 2 ميجابايت');
         return;
     }
-    
+
     const reader = new FileReader();
     reader.onload = (event) => {
         selectedAvatarBase64 = event.target.result;
@@ -2255,54 +3307,470 @@ ownerAvatarInput.addEventListener('change', (e) => {
     reader.readAsDataURL(file);
 });
 
-// Save owner profile
 saveOwnerProfile.addEventListener('click', async () => {
     const bio = ownerBioInput.value.trim();
     const fullInfo = ownerFullInfoInput.value.trim();
-    
+
     const updates = {};
     if (bio) updates.bio = bio;
     if (fullInfo) updates.fullInfo = fullInfo;
     if (selectedAvatarBase64) updates.avatar = selectedAvatarBase64;
     updates.updatedAt = Date.now();
-    
+
     await update(ref(db, 'ownerProfile'), updates);
-    
+
     ownerProfile = { ...ownerProfile, ...updates };
     updateOwnerProfileDisplay();
-    
+
     ownerProfileModal.classList.add('hidden');
     alert('تم حفظ الملف الشخصي بنجاح');
 });
 
+// ==================== USER PROFILE SYSTEM (View any user's profile) ====================
+window.openUserProfile = async (username) => {
+    const user = onlineUsers[username];
+    if (!user) return;
+
+    userActionModal.classList.add('hidden');
+
+    // If user is royal, show royal profile
+    if (user.rank === 'royal') {
+        openRoyalProfileView(username);
+        return;
+    }
+
+    // For other users, show basic info
+    const profileSnapshot = await get(ref(db, `userProfiles/${username}`));
+    const profile = profileSnapshot.val() || {};
+
+    // Create a simple profile modal dynamically
+    const rankData = RANKS[user.rank] || RANKS.user;
+
+    alert(`الملف الشخصي لـ: ${username}\nالرتبة: ${rankData.name}\n${profile.bio ? 'النبذة: ' + profile.bio : ''}`);
+};
+
+// ==================== ROYAL PROFILE SYSTEM ====================
+// View Royal Profile
+window.openRoyalProfileView = async (username) => {
+    const user = onlineUsers[username];
+    if (!user) return;
+
+    currentRoyalTarget = username;
+    royalProfileName.textContent = username;
+
+    // Load royal profile from Firebase
+    const profileSnapshot = await get(ref(db, `royalProfiles/${username}`));
+    const profile = profileSnapshot.val() || {};
+
+    // Set avatar
+    if (profile.avatar) {
+        royalProfileAvatar.innerHTML = `<img src="${profile.avatar}" class="w-full h-full object-cover">`;
+    } else {
+        royalProfileAvatar.innerHTML = `<i class="fas fa-gem text-white"></i>`;
+    }
+
+    // Show/hide bio
+    if (profile.bio) {
+        royalBioSection.classList.remove('hidden');
+        royalBioText.textContent = profile.bio;
+    } else {
+        royalBioSection.classList.add('hidden');
+    }
+
+    // Show/hide full info
+    if (profile.fullInfo) {
+        royalFullInfoSection.classList.remove('hidden');
+        royalFullInfoText.innerHTML = profile.fullInfo.replace(/\n/g, '<br>');
+    } else {
+        royalFullInfoSection.classList.add('hidden');
+    }
+
+    // Setup private chat button
+    const chatBtn = document.getElementById('royalProfileChatBtn');
+    if (chatBtn) {
+        chatBtn.onclick = () => {
+            royalProfileModal.classList.add('hidden');
+            openPrivateChat(username);
+        };
+    }
+
+    // Show edit section only for owner or the royal user himself
+    if (isOwner || username === currentUser) {
+        royalEditSection.classList.remove('hidden');
+        royalBioEdit.value = profile.bio || '';
+        royalFullInfoEdit.value = profile.fullInfo || '';
+
+        if (profile.avatar) {
+            royalEditAvatarPreview.innerHTML = `<img src="${profile.avatar}" class="w-full h-full object-cover">`;
+        } else {
+            royalEditAvatarPreview.innerHTML = `<i class="fas fa-camera text-white"></i>`;
+        }
+    } else {
+        royalEditSection.classList.add('hidden');
+    }
+
+    royalProfileModal.classList.remove('hidden');
+};
+
+// Owner can edit any royal profile
+window.openRoyalProfileEdit = (username) => {
+    openRoyalProfileView(username);
+};
+
+closeRoyalProfile.addEventListener('click', () => {
+    royalProfileModal.classList.add('hidden');
+    currentRoyalTarget = null;
+    currentRoyalAvatarBase64 = null;
+});
+
+// Handle royal avatar upload
+royalAvatarInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+        alert('حجم الصورة يجب أن يكون أقل من 2 ميجابايت');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        currentRoyalAvatarBase64 = event.target.result;
+        royalEditAvatarPreview.innerHTML = `<img src="${currentRoyalAvatarBase64}" class="w-full h-full object-cover">`;
+    };
+    reader.readAsDataURL(file);
+});
+
+// Save royal profile
+saveRoyalProfileBtn.addEventListener('click', async () => {
+    if (!currentRoyalTarget) return;
+    if (!isOwner && currentRoyalTarget !== currentUser) {
+        alert('لا يمكنك تعديل هذا الملف');
+        return;
+    }
+
+    const bio = royalBioEdit.value.trim();
+    const fullInfo = royalFullInfoEdit.value.trim();
+
+    const updates = {};
+    if (bio) updates.bio = bio;
+    if (fullInfo) updates.fullInfo = fullInfo;
+    if (currentRoyalAvatarBase64) updates.avatar = currentRoyalAvatarBase64;
+    updates.updatedAt = Date.now();
+
+    await update(ref(db, `royalProfiles/${currentRoyalTarget}`), updates);
+
+    royalProfileModal.classList.add('hidden');
+    alert('تم حفظ ملف الملكي بنجاح');
+    currentRoyalTarget = null;
+    currentRoyalAvatarBase64 = null;
+});
+
+// ==================== ROYAL GRANT PERMISSIONS SYSTEM ====================
+window.openRoyalGrant = async (username) => {
+    const user = onlineUsers[username];
+    if (!user) return;
+
+    // Royal can only grant to users with lower rank
+    if (isProtectedUser(user.rank) && user.rank !== 'royal') {
+        alert('لا يمكنك منح صلاحيات لمالك أو ملكي آخر!');
+        return;
+    }
+
+    currentRoyalTarget = username;
+    royalGrantTargetName.textContent = username;
+
+    const rankData = RANKS[user.rank] || RANKS.user;
+    royalGrantTargetRank.innerHTML = `<span class="${rankData.color}">${rankData.name}</span>`;
+
+    // Load current permissions
+    const permsSnapshot = await get(ref(db, `userPermissions/${username}`));
+    const perms = permsSnapshot.val() || {};
+
+    royalPermKick.checked = perms.canKick || false;
+    royalPermBan.checked = perms.canBan || false;
+    royalPermMute.checked = perms.canMute || false;
+    royalPermBanPM.checked = perms.canBanPM || false;
+
+    userActionModal.classList.add('hidden');
+    royalGrantModal.classList.remove('hidden');
+};
+
+closeRoyalGrant.addEventListener('click', () => {
+    royalGrantModal.classList.add('hidden');
+    currentRoyalTarget = null;
+});
+
+// Royal grants rank to user
+window.royalGrantRank = async (newRank) => {
+    if (!currentRoyalTarget || userRank !== 'royal') return;
+
+    // Royal cannot grant royal or owner
+    if (newRank === 'owner' || newRank === 'royal') {
+        alert('لا يمكنك منح رتبة ملكي أو مالك!');
+        return;
+    }
+
+    // Find which room this user is a member of
+    const membersSnapshot = await get(ref(db, 'members'));
+    const allMembers = membersSnapshot.val() || {};
+    let foundRoom = null;
+
+    for (const roomId in allMembers) {
+        if (allMembers[roomId][currentRoyalTarget]) {
+            foundRoom = roomId;
+            break;
+        }
+    }
+
+    if (foundRoom) {
+        await update(ref(db, `members/${foundRoom}/${currentRoyalTarget}`), { rank: newRank });
+    }
+
+    // Also update online user rank
+    await update(ref(db, `onlineUsers/${currentRoyalTarget}`), { rank: newRank });
+
+    alert(`تم منح رتبة ${RANKS[newRank].name} لـ ${currentRoyalTarget}`);
+    royalGrantModal.classList.add('hidden');
+    currentRoyalTarget = null;
+};
+
+// Royal grants custom color
+window.royalGrantColor = async (color) => {
+    if (!currentRoyalTarget || userRank !== 'royal') return;
+
+    if (color === 'none') {
+        await remove(ref(db, `userCustomColors/${currentRoyalTarget}`));
+        alert('تم إزالة اللون المخصص');
+    } else {
+        await set(ref(db, `userCustomColors/${currentRoyalTarget}`), { 
+            color: color, 
+            grantedBy: currentUser,
+            grantedAt: Date.now()
+        });
+        alert(`تم منح اللون ${color} لـ ${currentRoyalTarget}`);
+    }
+
+    royalGrantModal.classList.add('hidden');
+    currentRoyalTarget = null;
+};
+
+// Royal saves permissions
+royalSavePermsBtn.addEventListener('click', async () => {
+    if (!currentRoyalTarget || userRank !== 'royal') return;
+
+    const perms = {
+        canKick: royalPermKick.checked,
+        canBan: royalPermBan.checked,
+        canMute: royalPermMute.checked,
+        canBanPM: royalPermBanPM.checked,
+        assignedBy: currentUser,
+        assignedAt: Date.now()
+    };
+
+    await set(ref(db, `userPermissions/${currentRoyalTarget}`), perms);
+
+    royalGrantModal.classList.add('hidden');
+    alert(`تم تحديث صلاحيات ${currentRoyalTarget} بنجاح`);
+    currentRoyalTarget = null;
+});
+
+// ==================== OWNER GRANT RANK MODAL ====================
+window.openOwnerGrantRank = (username) => {
+    currentAssignUser = username;
+    const user = onlineUsers[username];
+    const rank = user ? user.rank : 'user';
+
+    // Use the existing assignPermsModal structure but for rank granting
+    assignPermsUsername.textContent = username;
+    const rankData = RANKS[rank] || RANKS.user;
+    assignPermsRank.innerHTML = `<span class="${rankData.color}">${rankData.name}</span>`;
+
+    // Show a simple rank selection in the assign perms modal
+    userActionModal.classList.add('hidden');
+
+    // Create a temporary modal for rank selection
+    const rankOptions = ['guest', 'user', 'root', 'super', 'superadmin', 'master', 'royal'];
+    let rankButtons = '';
+    rankOptions.forEach(r => {
+        const rd = RANKS[r];
+        rankButtons += `<button onclick="ownerConfirmGrantRank('${username}', '${r}')" class="py-2 bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-600 hover:to-slate-700 border border-slate-600 rounded-lg text-xs font-bold transition ${rd.color}"><i class="fas fa-crown"></i> ${rd.name}</button>`;
+    });
+
+    const modalHTML = `
+        <div id="ownerGrantRankModal" class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
+            <div class="bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-sm mx-4 border border-amber-500/20">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold"><i class="fas fa-crown text-amber-400 ml-2"></i>منح رتبة</h3>
+                    <button onclick="closeOwnerGrantRank()" class="p-2 hover:bg-slate-700 rounded-lg"><i class="fas fa-times"></i></button>
+                </div>
+                <p class="text-sm text-slate-300 mb-3">العضو: <span class="font-bold text-white">${username}</span></p>
+                <p class="text-xs text-slate-400 mb-3">اختر الرتبة الجديدة:</p>
+                <div class="grid grid-cols-2 gap-2">
+                    ${rankButtons}
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Remove existing if any
+    const existing = document.getElementById('ownerGrantRankModal');
+    if (existing) existing.remove();
+
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+};
+
+window.closeOwnerGrantRank = () => {
+    const modal = document.getElementById('ownerGrantRankModal');
+    if (modal) modal.remove();
+};
+
+window.ownerConfirmGrantRank = async (username, newRank) => {
+    if (!isOwner) return;
+
+    // Find which room this user is a member of
+    const membersSnapshot = await get(ref(db, 'members'));
+    const allMembers = membersSnapshot.val() || {};
+    let foundRoom = null;
+
+    for (const roomId in allMembers) {
+        if (allMembers[roomId][username]) {
+            foundRoom = roomId;
+            break;
+        }
+    }
+
+    if (foundRoom) {
+        await update(ref(db, `members/${foundRoom}/${username}`), { rank: newRank });
+    }
+
+    // Also update online user rank
+    await update(ref(db, `onlineUsers/${username}`), { rank: newRank });
+
+    closeOwnerGrantRank();
+    alert(`تم منح رتبة ${RANKS[newRank].name} لـ ${username}`);
+};
+
+// ==================== OWNER CUSTOM PERMISSIONS PANEL ====================
+window.openOwnerCustomPerms = async (username) => {
+    if (!isOwner) return;
+
+    const user = onlineUsers[username];
+    if (!user) {
+        alert('المستخدم غير متصل حالياً');
+        return;
+    }
+
+    currentOwnerCustomTarget = username;
+    ownerCustomTargetName.textContent = username;
+
+    const rankData = RANKS[user.rank] || RANKS.user;
+    ownerCustomTargetRank.innerHTML = `<span class="${rankData.color}">${rankData.name}</span>`;
+
+    // Load current permissions from Firebase
+    const permsSnapshot = await get(ref(db, `userPermissions/${username}`));
+    const perms = permsSnapshot.val() || {};
+
+    // Set checkboxes based on current permissions
+    ownerPermKick.checked = perms.canKick || false;
+    ownerPermBan.checked = perms.canBan || false;
+    ownerPermMute.checked = perms.canMute || false;
+    ownerPermIPBan.checked = perms.canIPBan || false;
+    ownerPermBanPM.checked = perms.canBanPM || false;
+    ownerPermManageMembers.checked = perms.canManageMembers || false;
+    ownerPermAssignPerms.checked = perms.canAssignPerms || false;
+
+    userActionModal.classList.add('hidden');
+    ownerCustomPermsModal.classList.remove('hidden');
+};
+
+closeOwnerCustomPerms.addEventListener('click', () => {
+    ownerCustomPermsModal.classList.add('hidden');
+    currentOwnerCustomTarget = null;
+});
+
+// Save owner custom permissions
+ownerSaveCustomPermsBtn.addEventListener('click', async () => {
+    if (!currentOwnerCustomTarget || !isOwner) return;
+
+    const perms = {
+        canKick: ownerPermKick.checked,
+        canBan: ownerPermBan.checked,
+        canMute: ownerPermMute.checked,
+        canIPBan: ownerPermIPBan.checked,
+        canBanPM: ownerPermBanPM.checked,
+        canManageMembers: ownerPermManageMembers.checked,
+        canAssignPerms: ownerPermAssignPerms.checked,
+        assignedBy: currentUser,
+        assignedAt: Date.now()
+    };
+
+    await set(ref(db, `userPermissions/${currentOwnerCustomTarget}`), perms);
+
+    // Build confirmation message
+    const granted = [];
+    if (perms.canKick) granted.push('طرد');
+    if (perms.canBan) granted.push('حظر');
+    if (perms.canMute) granted.push('كتم');
+    if (perms.canIPBan) granted.push('حظر IP');
+    if (perms.canBanPM) granted.push('حظر خاص');
+    if (perms.canManageMembers) granted.push('إدارة أعضاء');
+    if (perms.canAssignPerms) granted.push('منح صلاحيات');
+
+    const msg = granted.length > 0 
+        ? `تم منح الصلاحيات لـ ${currentOwnerCustomTarget}:
+${granted.join('، ')}`
+        : `تم إزالة جميع الصلاحيات من ${currentOwnerCustomTarget}`;
+
+    alert(msg);
+
+    ownerCustomPermsModal.classList.add('hidden');
+    currentOwnerCustomTarget = null;
+});
+
+// Close on backdrop click
+ownerCustomPermsModal.addEventListener('click', (e) => {
+    if (e.target === ownerCustomPermsModal) {
+        ownerCustomPermsModal.classList.add('hidden');
+        currentOwnerCustomTarget = null;
+    }
+});
+
+// ==================== SEND MESSAGE AS USER (Owner only) ====================
+window.sendMessageAsUser = async (targetUsername) => {
+    if (!isOwner || !currentRoom) return;
+
+    const text = prompt(`اكتب الرسالة التي تريد إرسالها باسم ${targetUsername}:`);
+    if (!text || !text.trim()) return;
+
+    const targetUser = onlineUsers[targetUsername];
+    const targetRank = targetUser ? targetUser.rank : 'user';
+
+    const message = {
+        username: targetUsername,
+        rank: targetRank,
+        text: text.trim(),
+        roomId: currentRoom.id,
+        timestamp: Date.now(),
+        sentByOwner: currentUser
+    };
+
+    await push(ref(db, 'messages'), message);
+    alert(`تم إرسال الرسالة باسم ${targetUsername}`);
+    userActionModal.classList.add('hidden');
+};
 
 // ==================== ASSIGN PERMISSIONS SYSTEM ====================
-const assignPermsModal = document.getElementById('assignPermsModal');
-const closeAssignPerms = document.getElementById('closeAssignPerms');
-const assignPermsUsername = document.getElementById('assignPermsUsername');
-const assignPermsRank = document.getElementById('assignPermsRank');
-const permKick = document.getElementById('permKick');
-const permBan = document.getElementById('permBan');
-const permMute = document.getElementById('permMute');
-const permIPBan = document.getElementById('permIPBan');
-const permBanPM = document.getElementById('permBanPM');
-const savePermsBtn = document.getElementById('savePermsBtn');
-
-let currentAssignUser = null;
-
-// Open assign permissions modal
 window.openAssignPerms = async (username) => {
     if (!isOwner) return;
     currentAssignUser = username;
     assignPermsUsername.textContent = username;
 
-    // Get user's current rank
     const user = onlineUsers[username];
     const rank = user ? user.rank : 'user';
     const rankData = RANKS[rank];
     assignPermsRank.innerHTML = `<span class="${rankData.color}">${rankData.name}</span>`;
 
-    // Load current permissions from Firebase
     const permsSnapshot = await get(ref(db, `userPermissions/${username}`));
     const perms = permsSnapshot.val() || {};
 
@@ -2353,7 +3821,6 @@ async function getUserEffectivePermissions(username) {
     const rank = user.rank;
     const rankPerms = RANKS[rank] || {};
 
-    // If owner or royal, return all permissions
     if (rank === 'owner' || rank === 'royal') {
         return {
             canKick: true, canBan: true, canMute: true, 
@@ -2361,11 +3828,9 @@ async function getUserEffectivePermissions(username) {
         };
     }
 
-    // Check custom permissions
     const permsSnapshot = await get(ref(db, `userPermissions/${username}`));
     const customPerms = permsSnapshot.val() || {};
 
-    // Merge rank permissions with custom permissions
     return {
         canKick: customPerms.canKick || rankPerms.canKick || false,
         canBan: customPerms.canBan || rankPerms.canBan || false,
@@ -2375,137 +3840,6 @@ async function getUserEffectivePermissions(username) {
         canBanPM: customPerms.canBanPM || rankPerms.canBanPM || false
     };
 }
-
-// ==================== UPDATE USER ACTIONS WITH CUSTOM PERMISSIONS ====================
-// Override the showUserActions function to use custom permissions
-const originalShowUserActions = showUserActions;
-showUserActions = async function(user) {
-    const targetUser = onlineUsers[user.username];
-    const targetRank = targetUser ? targetUser.rank : 'user';
-
-    // No one can take action against owner (except owner himself)
-    if (isOwnerProtected(targetRank) && !isOwner) {
-        alert('لا يمكنك تنفيذ أي إجراء على المالك! المالك محمي بشكل كامل.');
-        return;
-    }
-
-    // Royal users are protected from non-owners
-    if (isProtectedUser(targetRank) && !isOwner) {
-        alert('هذا المستخدم محمي (ملكي) - لا يمكنك تنفيذ إجراءات عليه!');
-        return;
-    }
-
-    actionUserName.textContent = user.username;
-    userActions.innerHTML = '';
-
-    // Get current user's effective permissions
-    const myPerms = await getUserEffectivePermissions(currentUser);
-
-    // Show current user's permissions
-    userPermsDisplay.classList.remove('hidden');
-    userPermsDisplay.innerHTML = '<span class="text-xs text-slate-400 w-full mb-1">صلاحياتك:</span>';
-
-    if (myPerms.canKick) userPermsDisplay.innerHTML += '<span class="perm-badge perm-kick text-xs"><i class="fas fa-sign-out-alt"></i> طرد</span>';
-    if (myPerms.canBan) userPermsDisplay.innerHTML += '<span class="perm-badge perm-ban text-xs"><i class="fas fa-user-slash"></i> حظر</span>';
-    if (myPerms.canMute) userPermsDisplay.innerHTML += '<span class="perm-badge perm-mute text-xs"><i class="fas fa-volume-mute"></i> كتم</span>';
-    if (myPerms.canIPBan) userPermsDisplay.innerHTML += '<span class="perm-badge perm-ipban text-xs"><i class="fas fa-ban"></i> IP</span>';
-    if (myPerms.canBanPM) userPermsDisplay.innerHTML += '<span class="perm-badge perm-pm text-xs"><i class="fas fa-envelope"></i> خاص</span>';
-
-    // Private chat button for everyone (except if banned from PM)
-    if (user.username !== currentUser) {
-        const isBannedFromPM = bannedFromPM[user.username];
-        if (!isBannedFromPM) {
-            addActionButton('محادثة خاصة', 'fa-envelope', 'bg-blue-600 hover:bg-blue-700', () => openPrivateChat(user.username));
-        } else {
-            addActionButton('محادثة خاصة (محظور)', 'fa-envelope', 'bg-slate-600 cursor-not-allowed opacity-50', () => {
-                alert('هذا المستخدم محظور من المحادثات الخاصة');
-            });
-        }
-    }
-
-    // OWNER: Full control + assign permissions
-    if (isOwner) {
-        const sep = document.createElement('div');
-        sep.className = 'border-t border-slate-600 my-2';
-        sep.innerHTML = '<span class="text-xs text-amber-400 font-bold">صلاحيات المالك</span>';
-        userActions.appendChild(sep);
-
-        addActionButton('طرد من الشات', 'fa-sign-out-alt', 'bg-orange-600 hover:bg-orange-700', () => kickUser(user.username));
-        addActionButton('حظر نهائي', 'fa-user-slash', 'bg-red-600 hover:bg-red-700', () => banUser(user.username));
-
-        const muteDiv = document.createElement('div');
-        muteDiv.className = 'grid grid-cols-3 gap-2';
-        muteDiv.innerHTML = `
-            <button onclick="muteUserByName('${user.username}', 5)" class="py-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-xs font-bold transition">
-                <i class="fas fa-volume-mute"></i> 5 دق
-            </button>
-            <button onclick="muteUserByName('${user.username}', 15)" class="py-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-xs font-bold transition">
-                <i class="fas fa-volume-mute"></i> 15 دق
-            </button>
-            <button onclick="muteUserByName('${user.username}', 60)" class="py-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-xs font-bold transition">
-                <i class="fas fa-volume-mute"></i> ساعة
-            </button>
-        `;
-        userActions.appendChild(muteDiv);
-
-        if (mutedUsers[user.username]) {
-            addActionButton('فك الكتم', 'fa-volume-up', 'bg-green-600 hover:bg-green-700', () => unmuteUser(user.username));
-        }
-
-        if (user.ip && user.ip !== 'unknown') {
-            addActionButton(`حظر IP`, 'fa-ban', 'bg-red-800 hover:bg-red-900', () => banIP(user.ip, user.username));
-        }
-
-        const isBannedPM = bannedFromPM[user.username];
-        if (isBannedPM) {
-            addActionButton('فك حظر المحادثة الخاصة', 'fa-envelope-open', 'bg-indigo-600 hover:bg-indigo-700', () => unbanUserFromPM(user.username));
-        } else {
-            addActionButton('حظر من المحادثة الخاصة', 'fa-envelope', 'bg-blue-800 hover:bg-blue-900', () => banUserFromPM(user.username));
-        }
-
-        // NEW: Assign Permissions button
-        addActionButton('تخصيص صلاحيات', 'fa-user-cog', 'bg-amber-600 hover:bg-amber-700', () => openAssignPerms(user.username));
-    } 
-    // Users with custom permissions
-    else {
-        const hasAnyPerm = myPerms.canKick || myPerms.canBan || myPerms.canMute || myPerms.canIPBan || myPerms.canBanPM;
-
-        if (hasAnyPerm && user.username !== currentUser) {
-            const sep = document.createElement('div');
-            sep.className = 'border-t border-slate-600 my-2';
-            sep.innerHTML = '<span class="text-xs text-yellow-400 font-bold">صلاحياتك</span>';
-            userActions.appendChild(sep);
-
-            if (myPerms.canKick) {
-                addActionButton('طرد', 'fa-sign-out-alt', 'bg-orange-600 hover:bg-orange-700', () => kickUser(user.username));
-            }
-            if (myPerms.canBan) {
-                addActionButton('حظر نهائي', 'fa-user-slash', 'bg-red-600 hover:bg-red-700', () => banUser(user.username));
-            }
-            if (myPerms.canMute) {
-                addActionButton('كتم 5 دقائق', 'fa-volume-mute', 'bg-yellow-600 hover:bg-yellow-700', () => muteUser(user.username, 5));
-                addActionButton('كتم 15 دقيقة', 'fa-volume-mute', 'bg-yellow-600 hover:bg-yellow-700', () => muteUser(user.username, 15));
-                addActionButton('كتم ساعة', 'fa-volume-mute', 'bg-yellow-600 hover:bg-yellow-700', () => muteUser(user.username, 60));
-            }
-            if (myPerms.canIPBan && user.ip && user.ip !== 'unknown') {
-                addActionButton('حظر IP', 'fa-ban', 'bg-red-800 hover:bg-red-900', () => banIP(user.ip, user.username));
-            }
-            if (myPerms.canBanPM) {
-                const isBannedPM = bannedFromPM[user.username];
-                if (isBannedPM) {
-                    addActionButton('فك حظر الخاص', 'fa-envelope-open', 'bg-indigo-600 hover:bg-indigo-700', () => unbanUserFromPM(user.username));
-                } else {
-                    addActionButton('حظر من الخاص', 'fa-envelope', 'bg-blue-800 hover:bg-blue-900', () => banUserFromPM(user.username));
-                }
-            }
-        }
-    }
-
-    userActionModal.classList.remove('hidden');
-};
-
-// Update renderUsers and renderRoomUsers to show action buttons based on permissions
-// We need to update the condition for showing action buttons
 
 // ==================== RENDER ADMIN LISTS ====================
 function renderBannedUsers() {
@@ -2574,7 +3908,6 @@ function renderBannedIPs() {
     });
 }
 
-// NEW: Render banned from PM list
 function renderBannedPM() {
     bannedPMList.innerHTML = '';
     const banned = Object.keys(bannedFromPM);
@@ -2630,10 +3963,12 @@ window.copyMemberCode = (code) => {
 };
 
 // ==================== CLOSE MODALS ON BACKDROP CLICK ====================
-[createRoomModal, ownerPanelModal, userActionModal, manageMembersModal, privateChatModal, ownerProfileModal].forEach(modal => {
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.classList.add('hidden');
-    });
+[createRoomModal, renewRoomModal, ownerPanelModal, userActionModal, manageMembersModal, privateChatModal, ownerProfileModal, royalProfileModal, royalGrantModal, assignPermsModal].forEach(modal => {
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.classList.add('hidden');
+        });
+    }
 });
 
 // ==================== INITIALIZE ====================
@@ -2642,79 +3977,344 @@ initDefaultCountries();
 // Check mute status periodically
 setInterval(checkUserMuteStatus, 60000);
 
-// No automatic cleanup - users stay until they logout
-
-// Handle page close - do NOT remove user automatically
-// User stays in online list until they click logout
+// Handle page close
 window.addEventListener('beforeunload', async () => {
     if (window.chatKeepAlive) clearInterval(window.chatKeepAlive);
-    // Intentionally NOT removing user - they stay in online list until logout
 });
 </script>
 
-<!-- ==================== ASSIGN PERMISSIONS MODAL ==================== -->
-<div id="assignPermsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop overflow-y-auto py-8">
-    <div class="bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md mx-4 border border-amber-500/20">
+<!-- ==================== ROYAL PROFILE MODAL ==================== -->
+<div id="royalProfileModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop overflow-y-auto py-8">
+    <div class="bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md mx-4 border border-yellow-500/30">
         <div class="flex items-center justify-between mb-6">
             <h3 class="text-xl font-bold flex items-center gap-2">
-                <i class="fas fa-user-cog text-amber-400"></i>تخصيص صلاحيات العضو
+                <i class="fas fa-gem text-yellow-400"></i>ملف الملكي الشخصي
             </h3>
-            <button id="closeAssignPerms" class="p-2 hover:bg-slate-700 rounded-lg transition">
+            <button id="closeRoyalProfile" class="p-2 hover:bg-slate-700 rounded-lg transition">
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>
 
-        <div id="assignPermsUserInfo" class="mb-4 p-3 bg-slate-700/50 rounded-lg">
-            <p class="text-sm text-slate-300">العضو: <span id="assignPermsUsername" class="font-bold text-white"></span></p>
-            <p class="text-sm text-slate-300">الرتبة: <span id="assignPermsRank" class="font-bold"></span></p>
+        <div class="text-center mb-4">
+            <div id="royalProfileAvatar" class="w-24 h-24 rounded-full border-3 border-yellow-500 mx-auto mb-3 bg-gradient-to-br from-yellow-600 to-amber-700 flex items-center justify-center text-4xl overflow-hidden">
+                <i class="fas fa-gem text-white"></i>
+            </div>
+            <h3 id="royalProfileName" class="text-lg font-bold glow-royal"></h3>
+            <span class="text-xs text-yellow-400 bg-yellow-500/10 px-3 py-1 rounded-full border border-yellow-500/30"><i class="fas fa-gem mr-1"></i>ملكي</span>
+        </div>
+
+        <!-- Private Chat Button -->
+        <div class="mb-4">
+            <button id="royalProfileChatBtn" class="w-full py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2">
+                <i class="fas fa-comment-dots"></i>
+                <span>محادثة خاصة</span>
+            </button>
+        </div>
+
+        <div id="royalBioSection" class="hidden mb-4">
+            <label class="block text-sm font-semibold mb-2 text-yellow-400"><i class="fas fa-quote-right ml-1"></i>النبذة</label>
+            <p id="royalBioText" class="text-sm text-slate-300 bg-slate-700/50 p-3 rounded-lg leading-relaxed"></p>
+        </div>
+
+        <div id="royalFullInfoSection" class="hidden mb-4">
+            <label class="block text-sm font-semibold mb-2 text-yellow-400"><i class="fas fa-info-circle ml-1"></i>المعلومات</label>
+            <div id="royalFullInfoText" class="text-sm text-slate-300 bg-slate-700/50 p-3 rounded-lg leading-relaxed space-y-1"></div>
+        </div>
+
+        <div id="royalEditSection" class="hidden space-y-3 border-t border-slate-700 pt-4 mt-4">
+            <h4 class="font-bold text-sm text-amber-400 mb-2"><i class="fas fa-edit ml-1"></i>تعديل الملف</h4>
+            <div class="text-center">
+                <div id="royalEditAvatarPreview" class="w-20 h-20 rounded-full border-2 border-yellow-500 mx-auto mb-2 bg-gradient-to-br from-yellow-600 to-amber-700 flex items-center justify-center text-2xl cursor-pointer overflow-hidden" onclick="document.getElementById('royalAvatarInput').click()">
+                    <i class="fas fa-camera text-white"></i>
+                </div>
+                <input type="file" id="royalAvatarInput" accept="image/*" class="hidden">
+                <button onclick="document.getElementById('royalAvatarInput').click()" class="px-3 py-1.5 bg-gradient-to-r from-yellow-600 to-amber-600 hover:from-yellow-700 hover:to-amber-700 rounded-lg text-xs font-bold transition">
+                    <i class="fas fa-camera ml-1"></i>تغيير الصورة
+                </button>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold mb-1 text-slate-300">نبذة عنك</label>
+                <textarea id="royalBioEdit" rows="2" maxlength="200" class="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-white text-sm outline-none focus:ring-2 focus:ring-yellow-500"></textarea>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold mb-1 text-slate-300">معلوماتك الكاملة</label>
+                <textarea id="royalFullInfoEdit" rows="3" maxlength="500" class="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-white text-sm outline-none focus:ring-2 focus:ring-yellow-500"></textarea>
+            </div>
+            <button id="saveRoyalProfileBtn" class="w-full py-2.5 bg-gradient-to-r from-yellow-600 to-amber-600 hover:from-yellow-700 hover:to-amber-700 rounded-xl font-bold text-sm transition">
+                <i class="fas fa-save ml-2"></i>حفظ التعديلات
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== ROYAL GRANT PERMISSIONS MODAL ==================== -->
+<div id="royalGrantModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop overflow-y-auto py-8">
+    <div class="bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-lg mx-4 border border-yellow-500/20">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-bold flex items-center gap-2">
+                <i class="fas fa-gem text-yellow-400"></i>منح صلاحيات - الملكي
+            </h3>
+            <button id="closeRoyalGrant" class="p-2 hover:bg-slate-700 rounded-lg transition">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <div id="royalGrantTargetInfo" class="mb-4 p-3 bg-slate-700/50 rounded-lg">
+            <p class="text-sm text-slate-300">العضو: <span id="royalGrantTargetName" class="font-bold text-white"></span></p>
+            <p class="text-sm text-slate-300">الرتبة الحالية: <span id="royalGrantTargetRank" class="font-bold"></span></p>
+        </div>
+
+        <div class="space-y-4">
+            <!-- Grant Rank -->
+            <div class="border-b border-slate-700 pb-4">
+                <h4 class="font-bold text-sm text-yellow-400 mb-2"><i class="fas fa-crown ml-1"></i>منح رتبة</h4>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="royalGrantRank('master')" class="py-2 bg-gradient-to-r from-red-600/30 to-red-700/30 hover:from-red-600/50 hover:to-red-700/50 border border-red-500/30 rounded-lg text-xs font-bold transition text-red-400">
+                        <i class="fas fa-user-shield"></i> ماستر
+                    </button>
+                    <button onclick="royalGrantRank('super')" class="py-2 bg-gradient-to-r from-pink-600/30 to-pink-700/30 hover:from-pink-600/50 hover:to-pink-700/50 border border-pink-500/30 rounded-lg text-xs font-bold transition text-pink-400">
+                        <i class="fas fa-user-shield"></i> سوبر
+                    </button>
+                    <button onclick="royalGrantRank('superadmin')" class="py-2 bg-gradient-to-r from-blue-600/30 to-blue-700/30 hover:from-blue-600/50 hover:to-blue-700/50 border border-blue-500/30 rounded-lg text-xs font-bold transition text-blue-400">
+                        <i class="fas fa-user-shield"></i> سوبر أدمن
+                    </button>
+                    <button onclick="royalGrantRank('root')" class="py-2 bg-gradient-to-r from-green-600/30 to-green-700/30 hover:from-green-600/50 hover:to-green-700/50 border border-green-500/30 rounded-lg text-xs font-bold transition text-green-400">
+                        <i class="fas fa-user-shield"></i> روت
+                    </button>
+                    <button onclick="royalGrantRank('user')" class="py-2 bg-gradient-to-r from-purple-600/30 to-purple-700/30 hover:from-purple-600/50 hover:to-purple-700/50 border border-purple-500/30 rounded-lg text-xs font-bold transition text-purple-400">
+                        <i class="fas fa-user"></i> عضو
+                    </button>
+                    <button onclick="royalGrantRank('royal')" class="py-2 bg-gradient-to-r from-yellow-600/30 to-amber-700/30 hover:from-yellow-600/50 hover:to-amber-700/50 border border-yellow-500/30 rounded-lg text-xs font-bold transition text-yellow-400">
+                        <i class="fas fa-gem"></i> ملكي
+                    </button>
+                </div>
+            </div>
+
+            <!-- Grant Permissions -->
+            <div class="border-b border-slate-700 pb-4">
+                <h4 class="font-bold text-sm text-yellow-400 mb-2"><i class="fas fa-user-cog ml-1"></i>منح صلاحيات</h4>
+                <div class="space-y-2">
+                    <label class="flex items-center gap-3 p-2 bg-slate-700/30 rounded-lg cursor-pointer hover:bg-slate-700/50 transition">
+                        <input type="checkbox" id="royalPermKick" class="w-4 h-4 rounded border-slate-500 text-yellow-500 focus:ring-yellow-500">
+                        <span class="text-sm"><i class="fas fa-sign-out-alt text-orange-400 ml-1"></i>طرد</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-2 bg-slate-700/30 rounded-lg cursor-pointer hover:bg-slate-700/50 transition">
+                        <input type="checkbox" id="royalPermBan" class="w-4 h-4 rounded border-slate-500 text-yellow-500 focus:ring-yellow-500">
+                        <span class="text-sm"><i class="fas fa-user-slash text-red-400 ml-1"></i>حظر</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-2 bg-slate-700/30 rounded-lg cursor-pointer hover:bg-slate-700/50 transition">
+                        <input type="checkbox" id="royalPermMute" class="w-4 h-4 rounded border-slate-500 text-yellow-500 focus:ring-yellow-500">
+                        <span class="text-sm"><i class="fas fa-volume-mute text-yellow-400 ml-1"></i>كتم</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-2 bg-slate-700/30 rounded-lg cursor-pointer hover:bg-slate-700/50 transition">
+                        <input type="checkbox" id="royalPermBanPM" class="w-4 h-4 rounded border-slate-500 text-yellow-500 focus:ring-yellow-500">
+                        <span class="text-sm"><i class="fas fa-envelope text-blue-400 ml-1"></i>حظر محادثة خاصة</span>
+                    </label>
+                </div>
+                <button id="royalSavePermsBtn" class="w-full mt-3 py-2 bg-gradient-to-r from-yellow-600 to-amber-600 hover:from-yellow-700 hover:to-amber-700 rounded-lg font-bold text-sm transition">
+                    <i class="fas fa-save ml-1"></i>حفظ الصلاحيات
+                </button>
+            </div>
+
+            <!-- Grant Color/Glow -->
+            <div>
+                <h4 class="font-bold text-sm text-yellow-400 mb-2"><i class="fas fa-palette ml-1"></i>منح لون/توهج للاسم</h4>
+                <div class="grid grid-cols-4 gap-2">
+                    <button onclick="royalGrantColor('red')" class="py-2 bg-red-600/20 hover:bg-red-600/40 border border-red-500/30 rounded-lg text-xs font-bold transition text-red-400">
+                        أحمر
+                    </button>
+                    <button onclick="royalGrantColor('pink')" class="py-2 bg-pink-600/20 hover:bg-pink-600/40 border border-pink-500/30 rounded-lg text-xs font-bold transition text-pink-400">
+                        وردي
+                    </button>
+                    <button onclick="royalGrantColor('blue')" class="py-2 bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/30 rounded-lg text-xs font-bold transition text-blue-400">
+                        أزرق
+                    </button>
+                    <button onclick="royalGrantColor('green')" class="py-2 bg-green-600/20 hover:bg-green-600/40 border border-green-500/30 rounded-lg text-xs font-bold transition text-green-400">
+                        أخضر
+                    </button>
+                    <button onclick="royalGrantColor('purple')" class="py-2 bg-purple-600/20 hover:bg-purple-600/40 border border-purple-500/30 rounded-lg text-xs font-bold transition text-purple-400">
+                        بنفسجي
+                    </button>
+                    <button onclick="royalGrantColor('cyan')" class="py-2 bg-cyan-600/20 hover:bg-cyan-600/40 border border-cyan-500/30 rounded-lg text-xs font-bold transition text-cyan-400">
+                        سماوي
+                    </button>
+                    <button onclick="royalGrantColor('orange')" class="py-2 bg-orange-600/20 hover:bg-orange-600/40 border border-orange-500/30 rounded-lg text-xs font-bold transition text-orange-400">
+                        برتقالي
+                    </button>
+                    <button onclick="royalGrantColor('none')" class="py-2 bg-slate-600/20 hover:bg-slate-600/40 border border-slate-500/30 rounded-lg text-xs font-bold transition text-slate-400">
+                        إزالة
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== OWNER CUSTOM PERMISSIONS MODAL ==================== -->
+<div id="ownerCustomPermsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop overflow-y-auto py-8">
+    <div class="bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-lg mx-4 border border-amber-500/30">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-bold flex items-center gap-2">
+                <i class="fas fa-user-shield text-amber-400"></i>تخصيص صلاحيات العضو
+            </h3>
+            <button id="closeOwnerCustomPerms" class="p-2 hover:bg-slate-700 rounded-lg transition">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <div id="ownerCustomTargetInfo" class="mb-4 p-3 bg-gradient-to-r from-amber-900/20 to-orange-900/20 rounded-lg border border-amber-500/20">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+                    <i class="fas fa-user text-white"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-slate-300">العضو: <span id="ownerCustomTargetName" class="font-bold text-white text-lg"></span></p>
+                    <p class="text-xs text-slate-400">الرتبة: <span id="ownerCustomTargetRank" class="font-bold"></span></p>
+                </div>
+            </div>
         </div>
 
         <div class="space-y-3">
-            <h4 class="font-bold text-sm text-amber-400 mb-2">اختر الصلاحيات:</h4>
+            <h4 class="font-bold text-sm text-amber-400 mb-3 border-b border-slate-700 pb-2">
+                <i class="fas fa-cogs ml-1"></i>اختر الصلاحيات التي تريد منحها:
+            </h4>
 
-            <label class="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-700 transition">
-                <input type="checkbox" id="permKick" class="w-5 h-5 rounded border-slate-500 text-amber-500 focus:ring-amber-500">
+            <!-- Kick Permission -->
+            <label class="flex items-center gap-3 p-3 bg-slate-700/50 rounded-xl cursor-pointer hover:bg-slate-700 transition border border-slate-600">
+                <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-orange-500/20">
+                    <i class="fas fa-sign-out-alt text-orange-400 text-lg"></i>
+                </div>
                 <div class="flex-1">
-                    <span class="font-bold text-sm"><i class="fas fa-sign-out-alt text-orange-400 ml-1"></i>طرد</span>
-                    <p class="text-xs text-slate-400">إمكانية طرد الأعضاء من الشات</p>
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-sm">صلاحية الطرد</span>
+                        <input type="checkbox" id="ownerPermKick" class="w-5 h-5 rounded border-slate-500 text-amber-500 focus:ring-amber-500">
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1">يمكن للعضو طرد الأعضاء من الشات</p>
                 </div>
             </label>
 
-            <label class="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-700 transition">
-                <input type="checkbox" id="permBan" class="w-5 h-5 rounded border-slate-500 text-amber-500 focus:ring-amber-500">
+            <!-- Ban Permission -->
+            <label class="flex items-center gap-3 p-3 bg-slate-700/50 rounded-xl cursor-pointer hover:bg-slate-700 transition border border-slate-600">
+                <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-red-500/20">
+                    <i class="fas fa-user-slash text-red-400 text-lg"></i>
+                </div>
                 <div class="flex-1">
-                    <span class="font-bold text-sm"><i class="fas fa-user-slash text-red-400 ml-1"></i>حظر</span>
-                    <p class="text-xs text-slate-400">إمكانية حظر الأعضاء نهائياً</p>
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-sm">صلاحية الحظر النهائي</span>
+                        <input type="checkbox" id="ownerPermBan" class="w-5 h-5 rounded border-slate-500 text-amber-500 focus:ring-amber-500">
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1">يمكن للعضو حظر الأعضاء نهائياً من الشات</p>
                 </div>
             </label>
 
-            <label class="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-700 transition">
-                <input type="checkbox" id="permMute" class="w-5 h-5 rounded border-slate-500 text-amber-500 focus:ring-amber-500">
+            <!-- Mute Permission -->
+            <label class="flex items-center gap-3 p-3 bg-slate-700/50 rounded-xl cursor-pointer hover:bg-slate-700 transition border border-slate-600">
+                <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-yellow-500/20">
+                    <i class="fas fa-volume-mute text-yellow-400 text-lg"></i>
+                </div>
                 <div class="flex-1">
-                    <span class="font-bold text-sm"><i class="fas fa-volume-mute text-yellow-400 ml-1"></i>كتم</span>
-                    <p class="text-xs text-slate-400">إمكانية كتم الأعضاء مؤقتاً</p>
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-sm">صلاحية الكتم</span>
+                        <input type="checkbox" id="ownerPermMute" class="w-5 h-5 rounded border-slate-500 text-amber-500 focus:ring-amber-500">
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1">يمكن للعضو كتم الأعضاء مؤقتاً</p>
                 </div>
             </label>
 
-            <label class="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-700 transition">
-                <input type="checkbox" id="permIPBan" class="w-5 h-5 rounded border-slate-500 text-amber-500 focus:ring-amber-500">
+            <!-- IP Ban Permission -->
+            <label class="flex items-center gap-3 p-3 bg-slate-700/50 rounded-xl cursor-pointer hover:bg-slate-700 transition border border-slate-600">
+                <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-red-700/20">
+                    <i class="fas fa-ban text-red-500 text-lg"></i>
+                </div>
                 <div class="flex-1">
-                    <span class="font-bold text-sm"><i class="fas fa-ban text-red-500 ml-1"></i>حظر IP</span>
-                    <p class="text-xs text-slate-400">إمكانية حظر عنوان IP</p>
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-sm">صلاحية حظر IP</span>
+                        <input type="checkbox" id="ownerPermIPBan" class="w-5 h-5 rounded border-slate-500 text-amber-500 focus:ring-amber-500">
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1">يمكن للعضو حظر عنوان IP بالكامل</p>
                 </div>
             </label>
 
-            <label class="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-700 transition">
-                <input type="checkbox" id="permBanPM" class="w-5 h-5 rounded border-slate-500 text-amber-500 focus:ring-amber-500">
+            <!-- PM Ban Permission -->
+            <label class="flex items-center gap-3 p-3 bg-slate-700/50 rounded-xl cursor-pointer hover:bg-slate-700 transition border border-slate-600">
+                <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-500/20">
+                    <i class="fas fa-envelope text-blue-400 text-lg"></i>
+                </div>
                 <div class="flex-1">
-                    <span class="font-bold text-sm"><i class="fas fa-envelope text-blue-400 ml-1"></i>حظر محادثة خاصة</span>
-                    <p class="text-xs text-slate-400">إمكانية حظر الأعضاء من المحادثات الخاصة</p>
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-sm">صلاحية حظر المحادثة الخاصة</span>
+                        <input type="checkbox" id="ownerPermBanPM" class="w-5 h-5 rounded border-slate-500 text-amber-500 focus:ring-amber-500">
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1">يمكن للعضو حظر الأعضاء من إرسال رسائل خاصة</p>
                 </div>
             </label>
 
-            <button id="savePermsBtn" class="w-full py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 rounded-xl font-bold shadow-lg transition mt-4">
-                <i class="fas fa-save ml-2"></i>حفظ الصلاحيات
+            <!-- Manage Members Permission -->
+            <label class="flex items-center gap-3 p-3 bg-slate-700/50 rounded-xl cursor-pointer hover:bg-slate-700 transition border border-slate-600">
+                <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-purple-500/20">
+                    <i class="fas fa-users-cog text-purple-400 text-lg"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-sm">صلاحية إدارة الأعضاء</span>
+                        <input type="checkbox" id="ownerPermManageMembers" class="w-5 h-5 rounded border-slate-500 text-amber-500 focus:ring-amber-500">
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1">يمكن للعضو إضافة وتعديل أعضاء الغرفة</p>
+                </div>
+            </label>
+
+            <!-- Assign Perms Permission -->
+            <label class="flex items-center gap-3 p-3 bg-slate-700/50 rounded-xl cursor-pointer hover:bg-slate-700 transition border border-slate-600">
+                <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-amber-500/20">
+                    <i class="fas fa-user-cog text-amber-400 text-lg"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-sm">صلاحية منح الصلاحيات</span>
+                        <input type="checkbox" id="ownerPermAssignPerms" class="w-5 h-5 rounded border-slate-500 text-amber-500 focus:ring-amber-500">
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1">يمكن للعضو منح صلاحيات للأعضاء الآخرين</p>
+                </div>
+            </label>
+
+            <div class="border-t border-slate-700 pt-4 mt-4">
+                <button id="ownerSaveCustomPermsBtn" class="w-full py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 rounded-xl font-bold shadow-lg transition flex items-center justify-center gap-2">
+                    <i class="fas fa-save"></i>
+                    <span>حفظ الصلاحيات المخصصة</span>
+                </button>
+                <p class="text-xs text-slate-500 text-center mt-2">الصلاحيات غير المحددة لن يتمكن العضو من استخدامها</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== BROADCAST MESSAGE MODAL ==================== -->
+<div id="broadcastModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop overflow-y-auto py-8">
+    <div class="bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-lg mx-4 border border-amber-500/20">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-bold flex items-center gap-2">
+                <i class="fas fa-bullhorn text-amber-400"></i>إرسال رسالة لجميع الغرف
+            </h3>
+            <button id="closeBroadcastModal" class="p-2 hover:bg-slate-700 rounded-lg transition">
+                <i class="fas fa-times text-xl"></i>
             </button>
+        </div>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-semibold mb-2 text-slate-300">نص الرسالة</label>
+                <textarea id="broadcastMessageInput" rows="4" placeholder="اكتب الرسالة التي تريد إرسالها لجميع الغرف..." maxlength="500"
+                    class="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition text-white placeholder-slate-500 text-sm"></textarea>
+                <p class="text-xs text-slate-400 mt-1">سيتم إرسال هذه الرسالة لجميع الغرف باسم المالك</p>
+            </div>
+            <div class="flex gap-2">
+                <button id="confirmBroadcastBtn" class="flex-1 py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 rounded-xl font-bold shadow-lg transition flex items-center justify-center gap-2">
+                    <i class="fas fa-paper-plane"></i>
+                    <span>إرسال للجميع</span>
+                </button>
+                <button id="cancelBroadcastBtn" class="flex-1 py-3 bg-slate-700 hover:bg-slate-600 rounded-xl font-bold transition">
+                    إلغاء
+                </button>
+            </div>
         </div>
     </div>
 </div>
