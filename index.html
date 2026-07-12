@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>شات عربي - دردشة فورية</title>
+<title>لقانا شات - دردشة فورية</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
@@ -508,6 +508,362 @@ input[type="date"] {
     100% { transform: rotate(10deg); }
 }
 
+
+/* ===== VOICE CHAT SYSTEM ===== */
+.voice-chat-panel {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98));
+    border: 2px solid rgba(59, 130, 246, 0.5);
+    border-radius: 20px;
+    padding: 16px 24px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(59, 130, 246, 0.2);
+    backdrop-filter: blur(12px);
+    min-width: 320px;
+    max-width: 90vw;
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.voice-chat-panel.active {
+    display: flex;
+    animation: voicePanelSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes voicePanelSlideUp {
+    from { transform: translateX(-50%) translateY(100px); opacity: 0; }
+    to { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+
+.voice-chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+    padding-bottom: 12px;
+}
+
+.voice-chat-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 800;
+    font-size: 15px;
+}
+
+.voice-chat-title .live-indicator {
+    width: 8px;
+    height: 8px;
+    background: #ef4444;
+    border-radius: 50%;
+    animation: livePulse 1.5s ease-in-out infinite;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+}
+
+@keyframes livePulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+}
+
+.voice-chat-speakers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    max-height: 120px;
+    overflow-y: auto;
+}
+
+.voice-speaker {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 12px;
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 12px;
+    min-width: 70px;
+    transition: all 0.3s ease;
+}
+
+.voice-speaker.speaking {
+    background: rgba(34, 197, 94, 0.2);
+    border-color: rgba(34, 197, 94, 0.5);
+    box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+    animation: speakerActive 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes speakerActive {
+    from { transform: scale(1); }
+    to { transform: scale(1.05); }
+}
+
+.voice-speaker-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6, #06b6d4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+    position: relative;
+}
+
+.voice-speaker-avatar .mic-icon {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #22c55e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    border: 2px solid #0f172a;
+}
+
+.voice-speaker-avatar .mic-muted {
+    background: #ef4444;
+}
+
+.voice-speaker-name {
+    font-size: 11px;
+    font-weight: 700;
+    color: #e2e8f0;
+    max-width: 60px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.voice-chat-controls {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    padding-top: 8px;
+    border-top: 1px solid rgba(51, 65, 85, 0.5);
+}
+
+.voice-control-btn {
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 13px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.voice-control-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.voice-btn-mute {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+}
+
+.voice-btn-unmute {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: white;
+}
+
+.voice-btn-leave {
+    background: linear-gradient(135deg, #64748b, #475569);
+    color: white;
+}
+
+.voice-btn-request {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+}
+
+/* Voice Chat Toggle Button in Room Header */
+.voice-toggle-btn {
+    padding: 6px 14px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 12px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.voice-toggle-btn.voice-off {
+    background: linear-gradient(135deg, #64748b, #475569);
+    color: white;
+}
+
+.voice-toggle-btn.voice-on {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    animation: voiceOnPulse 2s ease-in-out infinite;
+}
+
+@keyframes voiceOnPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+}
+
+/* Mic Request Queue */
+.mic-request-queue {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 100;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98));
+    border: 2px solid rgba(245, 158, 11, 0.5);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(12px);
+    min-width: 250px;
+    display: none;
+}
+
+.mic-request-queue.active {
+    display: block;
+    animation: queueSlideIn 0.4s ease;
+}
+
+@keyframes queueSlideIn {
+    from { transform: translateX(100px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.mic-request-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: rgba(59, 130, 246, 0.1);
+    border-radius: 10px;
+    margin-bottom: 8px;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.mic-request-item:last-child {
+    margin-bottom: 0;
+}
+
+.mic-request-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.mic-request-actions button {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.mic-accept-btn {
+    background: #22c55e;
+    color: white;
+}
+
+.mic-reject-btn {
+    background: #ef4444;
+    color: white;
+}
+
+/* Voice Chat Status Badge */
+.voice-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.voice-status-badge.active {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+    border-color: rgba(34, 197, 94, 0.3);
+}
+
+
+/* ===== AUDIO ACTIVATION ===== */
+#audioActivationOverlay {
+    display: flex;
+}
+#audioActivationOverlay.hidden {
+    display: none;
+}
+
+/* ===== VOICE CHAT ENHANCED ===== */
+.voice-speaker {
+    position: relative;
+    overflow: hidden;
+}
+
+.voice-speaker.speaking::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    border: 2px solid #22c55e;
+    animation: speakingBorder 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes speakingBorder {
+    from { opacity: 0.5; transform: scale(1); }
+    to { opacity: 1; transform: scale(1.02); }
+}
+
+.voice-speaker-avatar {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.voice-speaker.speaking .voice-speaker-avatar {
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.6);
+    transform: scale(1.1);
+}
+
+/* Audio elements hidden */
+audio {
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Safari/iOS specific fixes */
+@supports (-webkit-touch-callout: none) {
+    .voice-chat-panel {
+        -webkit-transform: translateX(-50%);
+        transform: translateX(-50%);
+    }
+}
+
 </style>
 <base target="_blank">
 <base target="_blank">
@@ -522,10 +878,8 @@ input[type="date"] {
 <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-4">
     <div class="bg-slate-800/90 backdrop-blur-xl p-6 md:p-8 rounded-3xl shadow-2xl w-full max-w-lg border border-blue-500/20">
         <div class="text-center mb-6">
-            <div class="inline-block p-4 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl mb-4 shadow-lg shadow-blue-500/50">
-                <i class="fas fa-comments text-4xl"></i>
-            </div>
-            <h1 class="text-3xl font-bold mb-2">شات عربي</h1>
+            
+            <h1 class="text-3xl font-bold mb-2">لقانا شات</h1>
             <p class="text-slate-400 text-sm">دردشة فورية لجميع العرب</p>
         </div>
 
@@ -582,11 +936,9 @@ input[type="date"] {
         <div class="p-4 border-b border-slate-700/50 bg-slate-800/70 backdrop-blur-lg">
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center gap-3">
-                    <div class="p-2 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg">
-                        <i class="fas fa-comments"></i>
-                    </div>
+                    
                     <div>
-                        <h1 class="text-lg font-bold">شات عربي</h1>
+                        <h1 class="text-lg font-bold">لقانا شات</h1>
                         <p class="text-xs text-slate-400" id="drawerUserInfo"></p>
                     </div>
                 </div>
@@ -716,7 +1068,7 @@ input[type="date"] {
                         <i class="fas fa-bars text-lg"></i>
                     </button>
                     <div>
-                        <h1 class="text-xl font-bold">شات عربي</h1>
+                        <h1 class="text-xl font-bold">لقانا شات</h1>
                         <p class="text-xs text-slate-400" id="userInfo"></p>
                     </div>
                 </div>
@@ -737,7 +1089,7 @@ input[type="date"] {
             <!-- Welcome Ticker -->
             <div class="bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border border-blue-500/30 rounded-lg px-3 py-2 overflow-hidden">
                 <div class="ticker-scroll whitespace-nowrap text-sm" id="welcomeTicker">
-                    مرحباً بكم في شات عربي - للتواصل الراقي والمحترم
+                    مرحباً بكم في لقانا شات - للتواصل الراقي والمحترم
                 </div>
             </div>
         </div>
@@ -757,8 +1109,20 @@ input[type="date"] {
                         </div>
                         <p id="currentCountryName" class="text-xs text-slate-400"></p>
                         <div id="roomExpiryInfo" class="hidden mt-1"></div>
+                        <div id="voiceStatusInfo" class="hidden mt-1">
+                            <span id="voiceStatusBadge" class="voice-status-badge">
+                                <i class="fas fa-microphone-slash"></i> الصوت مغلق
+                            </span>
+                        </div>
                     </div>
                     <div id="roomActions" class="hidden flex items-center gap-2">
+                        <button id="voiceChatToggleBtn" class="voice-toggle-btn voice-off hidden">
+                            <i class="fas fa-microphone"></i> <span id="voiceBtnText">صوتي</span>
+                        </button>
+                        <button id="micQueueBtn" class="hidden px-3 py-1.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 rounded-lg text-xs font-bold transition relative">
+                            <i class="fas fa-list ml-1"></i>الطلبات
+                            <span id="micQueueBadge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">0</span>
+                        </button>
                         <button id="exitRoomBtn" class="px-3 py-1.5 bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 rounded-lg text-xs font-bold transition">
                             <i class="fas fa-sign-out-alt ml-1"></i>خروج من الروم
                         </button>
@@ -1694,7 +2058,8 @@ function getRankDisplay(rank, username, clickable = false, expiryDate = null, ro
     } else if (rank === 'royal') {
         // Royal users show profile on click
         const profileClickAttr = clickable ? `onclick="openRoyalProfileView('${username}')"` : '';
-        return `${avatarHTML}${rankLabel}<span class="glow-royal ${clickClass}" style="cursor:pointer;" ${profileClickAttr}>${username}</span>${expiryBadge}`;
+        const protectedBadge = `<span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-blue-500 ml-1" title="مستخدم محمي"><i class="fas fa-shield-alt text-white text-[8px]"></i></span>`;
+        return `${avatarHTML}${rankLabel}${protectedBadge}<span class="glow-royal ${clickClass}" style="cursor:pointer;" ${profileClickAttr}>${username}</span>${expiryBadge}`;
     } else if (rank === 'guest') {
         return `${rankLabel}<span class="${rankData.color} ${clickClass}" ${clickAttr}>${username}</span>`;
     } else {
@@ -2924,6 +3289,14 @@ async function showUserActions(user) {
     if (!user || !user.username) return;
     actionUserName.textContent = user.username;
     userActions.innerHTML = '';
+
+    // Add protected badge for royal/owner users
+    if (isProtectedUser(user.rank)) {
+        const protectedDiv = document.createElement('div');
+        protectedDiv.className = 'mb-3 p-2 bg-blue-500/20 border border-blue-500/40 rounded-lg flex items-center gap-2';
+        protectedDiv.innerHTML = '<i class="fas fa-shield-alt text-blue-400"></i><span class="text-xs text-blue-300 font-bold">مستخدم محمي - لا يمكن طرده أو حظره</span>';
+        userActions.appendChild(protectedDiv);
+    }
 
     const rank = RANKS[userRank];
     const targetUser = onlineUsers[user.username];
@@ -4598,6 +4971,909 @@ window.addEventListener('visibilitychange', async () => {
         } catch (e) {}
     }
 });
+
+
+// ==================== VOICE CHAT SYSTEM v2.0 (ROBUST) ====================
+// Ensures everyone hears everyone with proper TURN, signaling, and error handling
+
+let voiceChatActive = false;
+let localStream = null;
+let peerConnections = {};
+let voiceMuted = true; // Start muted
+let currentVoiceRoom = null;
+let micRequests = [];
+let myMicOpen = false;
+let audioContext = null;
+let analyser = null;
+let dataArray = null;
+let speakingUsers = new Set();
+let audioEnabled = false; // User must click to enable audio
+let pendingSignals = {}; // Store signals until peer connection is ready
+
+// DOM Elements
+const voiceChatPanel = document.getElementById('voiceChatPanel');
+const voiceSpeakers = document.getElementById('voiceSpeakers');
+const voiceMuteBtn = document.getElementById('voiceMuteBtn');
+const voiceLeaveBtn = document.getElementById('voiceLeaveBtn');
+const closeVoicePanel = document.getElementById('closeVoicePanel');
+const voiceChatToggleBtn = document.getElementById('voiceChatToggleBtn');
+const voiceBtnText = document.getElementById('voiceBtnText');
+const micQueueBtn = document.getElementById('micQueueBtn');
+const micQueueBadge = document.getElementById('micQueueBadge');
+const micRequestQueue = document.getElementById('micRequestQueue');
+const micRequestList = document.getElementById('micRequestList');
+const closeMicQueue = document.getElementById('closeMicQueue');
+const voiceStatusInfo = document.getElementById('voiceStatusInfo');
+const voiceStatusBadge = document.getElementById('voiceStatusBadge');
+const audioActivationOverlay = document.getElementById('audioActivationOverlay');
+const activateAudioBtn = document.getElementById('activateAudioBtn');
+
+// ==================== ICE SERVERS (TURN + STUN) ====================
+// Using multiple public TURN servers for NAT traversal
+const iceServers = {
+    iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        { urls: 'stun:stun3.l.google.com:19302' },
+        { urls: 'stun:stun4.l.google.com:19302' },
+        // Free TURN servers (public)
+        {
+            urls: 'turn:openrelay.metered.ca:80',
+            username: 'openrelayproject',
+            credential: 'openrelayproject'
+        },
+        {
+            urls: 'turn:openrelay.metered.ca:443',
+            username: 'openrelayproject',
+            credential: 'openrelayproject'
+        },
+        {
+            urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+            username: 'openrelayproject',
+            credential: 'openrelayproject'
+        }
+    ],
+    iceCandidatePoolSize: 10
+};
+
+// ==================== AUDIO ACTIVATION ====================
+// Browsers require user interaction before playing audio
+activateAudioBtn.addEventListener('click', async () => {
+    audioEnabled = true;
+    audioActivationOverlay.classList.add('hidden');
+
+    // Create a silent audio context to unlock audio on iOS
+    const silentAudio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQQAAAAAAA==');
+    silentAudio.play().catch(() => {});
+
+    // Resume audio context if suspended
+    if (audioContext && audioContext.state === 'suspended') {
+        await audioContext.resume();
+    }
+
+    // If already in voice chat, ensure all remote audio is playing
+    Object.values(peerConnections).forEach((pc, username) => {
+        const audioEl = document.getElementById(`audio-${username}`);
+        if (audioEl) {
+            audioEl.play().catch(e => console.log('Audio play error:', e));
+        }
+    });
+});
+
+function showAudioActivation() {
+    if (!audioEnabled) {
+        audioActivationOverlay.classList.remove('hidden');
+    }
+}
+
+// ==================== OWNER: OPEN/CLOSE VOICE CHAT ====================
+async function toggleVoiceChatForRoom() {
+    if (!isOwner || !currentRoom) {
+        alert('فقط المالك يمكنه فتح/إغلاق المحادثة الصوتية');
+        return;
+    }
+
+    const voiceRef = ref(db, `voiceRooms/${currentRoom.id}`);
+    const snapshot = await get(voiceRef);
+    const isActive = snapshot.exists() && snapshot.val().active;
+
+    if (isActive) {
+        await remove(voiceRef);
+        voiceChatActive = false;
+        await leaveVoiceChat();
+        alert('تم إغلاق المحادثة الصوتية');
+    } else {
+        await set(voiceRef, {
+            active: true,
+            openedBy: currentUser,
+            openedAt: Date.now(),
+            roomId: currentRoom.id
+        });
+        voiceChatActive = true;
+        showAudioActivation();
+        await joinVoiceChatAsListener();
+        alert('تم فتح المحادثة الصوتية!');
+    }
+}
+
+// ==================== JOIN VOICE CHAT ====================
+async function joinVoiceChatAsListener() {
+    if (!currentRoom) return;
+
+    const voiceRef = ref(db, `voiceRooms/${currentRoom.id}`);
+    const snapshot = await get(voiceRef);
+    if (!snapshot.exists() || !snapshot.val().active) {
+        alert('المحادثة الصوتية مغلقة حالياً');
+        return;
+    }
+
+    try {
+        // Request microphone
+        localStream = await navigator.mediaDevices.getUserMedia({ 
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true,
+                sampleRate: 48000,
+                channelCount: 1
+            }, 
+            video: false 
+        });
+
+        // MUTE by default
+        localStream.getAudioTracks().forEach(track => {
+            track.enabled = false;
+        });
+
+        // Setup audio analysis
+        setupAudioAnalysis();
+
+        // Add to speakers list
+        await set(ref(db, `voiceRooms/${currentRoom.id}/speakers/${currentUser}`), {
+            username: currentUser,
+            rank: userRank,
+            joinedAt: Date.now(),
+            muted: true,
+            micOpen: false,
+            isOwner: isOwner,
+            speaking: false
+        });
+
+        currentVoiceRoom = currentRoom.id;
+        voiceChatPanel.classList.add('active');
+        voiceChatToggleBtn.classList.remove('voice-off');
+        voiceChatToggleBtn.classList.add('voice-on');
+        voiceBtnText.textContent = 'مفتوح';
+
+        // Setup all listeners
+        setupVoiceListeners();
+        startSpeakingDetection();
+        updateVoiceControls();
+
+        // Show audio activation if not enabled
+        showAudioActivation();
+
+    } catch (err) {
+        console.error('Voice chat error:', err);
+        alert('لا يمكن الوصول للميكروفون. تأكد من السماح بالوصول.');
+    }
+}
+
+// ==================== REQUEST MIC ====================
+async function requestMic() {
+    if (!currentRoom) return;
+    if (isOwner) {
+        await toggleOwnerMic();
+        return;
+    }
+
+    if (myMicOpen) {
+        await closeMyMic();
+        return;
+    }
+
+    await set(ref(db, `voiceRooms/${currentRoom.id}/requests/${currentUser}`), {
+        username: currentUser,
+        rank: userRank,
+        requestedAt: Date.now(),
+        status: 'pending'
+    });
+
+    alert('تم إرسال طلب فتح المايك للمالك. انتظر الموافقة.');
+}
+
+// ==================== OWNER: OPEN/CLOSE MEMBER MIC ====================
+window.openMemberMic = async (username) => {
+    if (!isOwner || !currentRoom) return;
+
+    await update(ref(db, `voiceRooms/${currentRoom.id}/speakers/${username}`), {
+        micOpen: true,
+        muted: false,
+        micOpenedBy: currentUser,
+        micOpenedAt: Date.now()
+    });
+
+    await remove(ref(db, `voiceRooms/${currentRoom.id}/requests/${username}`));
+
+    const notifRef = push(ref(db, `notifications/${username}`));
+    await set(notifRef, {
+        type: 'voice',
+        title: 'تم فتح مايكك',
+        message: 'المالك فتح لك المايك. يمكنك التكلم الآن!',
+        by: currentUser,
+        timestamp: Date.now()
+    });
+};
+
+window.closeMemberMic = async (username) => {
+    if (!isOwner || !currentRoom) return;
+
+    await update(ref(db, `voiceRooms/${currentRoom.id}/speakers/${username}`), {
+        micOpen: false,
+        muted: true,
+        micClosedBy: currentUser,
+        micClosedAt: Date.now()
+    });
+
+    const notifRef = push(ref(db, `notifications/${username}`));
+    await set(notifRef, {
+        type: 'voice',
+        title: 'تم إغلاق مايكك',
+        message: 'المالك أغلق مايكك.',
+        by: currentUser,
+        timestamp: Date.now()
+    });
+};
+
+// ==================== OWNER: TOGGLE OWN MIC ====================
+async function toggleOwnerMic() {
+    if (!isOwner || !localStream || !currentVoiceRoom) return;
+
+    myMicOpen = !myMicOpen;
+    localStream.getAudioTracks().forEach(track => {
+        track.enabled = myMicOpen;
+    });
+    voiceMuted = !myMicOpen;
+
+    await update(ref(db, `voiceRooms/${currentVoiceRoom}/speakers/${currentUser}`), {
+        micOpen: myMicOpen,
+        muted: !myMicOpen
+    });
+
+    updateVoiceControls();
+}
+
+// ==================== CLOSE MY MIC ====================
+async function closeMyMic() {
+    if (!localStream) return;
+    localStream.getAudioTracks().forEach(track => {
+        track.enabled = false;
+    });
+    myMicOpen = false;
+    voiceMuted = true;
+
+    if (currentVoiceRoom) {
+        await update(ref(db, `voiceRooms/${currentVoiceRoom}/speakers/${currentUser}`), {
+            micOpen: false,
+            muted: true
+        });
+    }
+
+    updateVoiceControls();
+}
+
+// ==================== LEAVE VOICE CHAT ====================
+async function leaveVoiceChat() {
+    if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+        localStream = null;
+    }
+
+    Object.values(peerConnections).forEach(pc => {
+        try { pc.close(); } catch(e) {}
+    });
+    peerConnections = {};
+    pendingSignals = {};
+
+    if (currentVoiceRoom && currentUser) {
+        await remove(ref(db, `voiceRooms/${currentVoiceRoom}/speakers/${currentUser}`));
+    }
+
+    voiceChatPanel.classList.remove('active');
+    voiceChatToggleBtn.classList.remove('voice-on');
+    voiceChatToggleBtn.classList.add('voice-off');
+    voiceBtnText.textContent = isOwner ? 'فتح صوتي' : 'صوتي';
+    currentVoiceRoom = null;
+    myMicOpen = false;
+    speakingUsers.clear();
+
+    if (audioContext) {
+        try { audioContext.close(); } catch(e) {}
+        audioContext = null;
+    }
+}
+
+// ==================== UPDATE CONTROLS ====================
+function updateVoiceControls() {
+    if (!voiceMuteBtn) return;
+
+    if (isOwner) {
+        if (myMicOpen) {
+            voiceMuteBtn.innerHTML = '<i class="fas fa-microphone-slash"></i> إغلاق مايكي';
+            voiceMuteBtn.classList.remove('voice-btn-mute');
+            voiceMuteBtn.classList.add('voice-btn-unmute');
+        } else {
+            voiceMuteBtn.innerHTML = '<i class="fas fa-microphone"></i> فتح مايكي';
+            voiceMuteBtn.classList.remove('voice-btn-unmute');
+            voiceMuteBtn.classList.add('voice-btn-mute');
+        }
+    } else {
+        if (myMicOpen) {
+            voiceMuteBtn.innerHTML = '<i class="fas fa-microphone-slash"></i> إغلاق مايكي';
+            voiceMuteBtn.classList.remove('voice-btn-mute');
+            voiceMuteBtn.classList.add('voice-btn-unmute');
+        } else {
+            voiceMuteBtn.innerHTML = '<i class="fas fa-microphone"></i> طلب مايك';
+            voiceMuteBtn.classList.remove('voice-btn-unmute');
+            voiceMuteBtn.classList.add('voice-btn-mute');
+        }
+    }
+}
+
+// ==================== AUDIO ANALYSIS ====================
+function setupAudioAnalysis() {
+    try {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+        analyser.smoothingTimeConstant = 0.8;
+
+        const source = audioContext.createMediaStreamSource(localStream);
+        source.connect(analyser);
+
+        const bufferLength = analyser.frequencyBinCount;
+        dataArray = new Uint8Array(bufferLength);
+    } catch (e) {
+        console.error('Audio analysis setup error:', e);
+    }
+}
+
+function startSpeakingDetection() {
+    if (!analyser || !dataArray) return;
+
+    function detect() {
+        if (!currentVoiceRoom) return;
+        if (!myMicOpen || voiceMuted) {
+            if (speakingUsers.has(currentUser)) {
+                speakingUsers.delete(currentUser);
+                updateSpeakingStatus(currentUser, false);
+            }
+            requestAnimationFrame(detect);
+            return;
+        }
+
+        try {
+            analyser.getByteFrequencyData(dataArray);
+            let sum = 0;
+            for (let i = 0; i < dataArray.length; i++) {
+                sum += dataArray[i];
+            }
+            const average = sum / dataArray.length;
+            const isSpeaking = average > 12;
+
+            if (isSpeaking) {
+                if (!speakingUsers.has(currentUser)) {
+                    speakingUsers.add(currentUser);
+                    updateSpeakingStatus(currentUser, true);
+                }
+            } else {
+                if (speakingUsers.has(currentUser)) {
+                    speakingUsers.delete(currentUser);
+                    updateSpeakingStatus(currentUser, false);
+                }
+            }
+        } catch (e) {
+            console.error('Speaking detection error:', e);
+        }
+
+        requestAnimationFrame(detect);
+    }
+
+    detect();
+}
+
+async function updateSpeakingStatus(username, isSpeaking) {
+    if (!currentVoiceRoom) return;
+    try {
+        await update(ref(db, `voiceRooms/${currentVoiceRoom}/speakers/${username}`), {
+            speaking: isSpeaking,
+            lastSpeak: Date.now()
+        });
+    } catch (e) {
+        console.error('Update speaking status error:', e);
+    }
+}
+
+// ==================== WEBRTC PEER CONNECTIONS (ROBUST) ====================
+async function createPeerConnection(targetUsername) {
+    console.log(`Creating peer connection with ${targetUsername}`);
+
+    const pc = new RTCPeerConnection(iceServers);
+    peerConnections[targetUsername] = pc;
+
+    // Add local stream tracks
+    if (localStream) {
+        localStream.getTracks().forEach(track => {
+            pc.addTrack(track, localStream);
+        });
+    }
+
+    // ICE candidate handling
+    pc.onicecandidate = (event) => {
+        if (event.candidate) {
+            console.log(`Sending ICE candidate to ${targetUsername}`);
+            const signalRef = push(ref(db, `voiceRooms/${currentVoiceRoom}/signals/${targetUsername}`));
+            set(signalRef, {
+                from: currentUser,
+                type: 'ice',
+                candidate: event.candidate.toJSON(),
+                timestamp: Date.now()
+            });
+        }
+    };
+
+    // Connection state monitoring
+    pc.onconnectionstatechange = () => {
+        console.log(`Connection with ${targetUsername}: ${pc.connectionState}`);
+        if (pc.connectionState === 'failed' || pc.connectionState === 'closed') {
+            delete peerConnections[targetUsername];
+        }
+    };
+
+    // ICE connection state
+    pc.oniceconnectionstatechange = () => {
+        console.log(`ICE with ${targetUsername}: ${pc.iceConnectionState}`);
+    };
+
+    // Handle remote stream - THIS IS THE KEY PART
+    pc.ontrack = (event) => {
+        console.log(`Received remote stream from ${targetUsername}`, event.streams);
+
+        if (event.streams && event.streams[0]) {
+            // Remove existing audio element if any
+            const existingAudio = document.getElementById(`audio-${targetUsername}`);
+            if (existingAudio) {
+                existingAudio.remove();
+            }
+
+            // Create new audio element
+            const remoteAudio = document.createElement('audio');
+            remoteAudio.srcObject = event.streams[0];
+            remoteAudio.autoplay = true;
+            remoteAudio.id = `audio-${targetUsername}`;
+            remoteAudio.setAttribute('playsinline', '');
+            remoteAudio.muted = false;
+            remoteAudio.volume = 1.0;
+
+            // Important: Add to DOM for Safari
+            document.body.appendChild(remoteAudio);
+
+            // Try to play (may need user interaction first)
+            const playPromise = remoteAudio.play();
+            if (playPromise) {
+                playPromise.catch(err => {
+                    console.log(`Audio play blocked for ${targetUsername}, will retry after user interaction`);
+                    // Store for later playback
+                    window._pendingAudioPlayback = window._pendingAudioPlayback || [];
+                    window._pendingAudioPlayback.push(remoteAudio);
+                });
+            }
+        }
+    };
+
+    // Create and send offer
+    try {
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+
+        console.log(`Sending offer to ${targetUsername}`);
+        const signalRef = push(ref(db, `voiceRooms/${currentVoiceRoom}/signals/${targetUsername}`));
+        await set(signalRef, {
+            from: currentUser,
+            type: 'offer',
+            sdp: pc.localDescription,
+            timestamp: Date.now()
+        });
+    } catch (e) {
+        console.error('Error creating offer:', e);
+    }
+
+    return pc;
+}
+
+// ==================== HANDLE INCOMING SIGNALS ====================
+async function handleSignal(signal) {
+    if (signal.from === currentUser) return;
+
+    console.log(`Received ${signal.type} from ${signal.from}`);
+
+    let pc = peerConnections[signal.from];
+
+    if (signal.type === 'offer') {
+        // Create peer connection if doesn't exist
+        if (!pc) {
+            console.log(`Creating new PC for ${signal.from} to handle offer`);
+            pc = new RTCPeerConnection(iceServers);
+            peerConnections[signal.from] = pc;
+
+            // Add local stream
+            if (localStream) {
+                localStream.getTracks().forEach(track => {
+                    pc.addTrack(track, localStream);
+                });
+            }
+
+            // ICE candidate handling
+            pc.onicecandidate = (event) => {
+                if (event.candidate) {
+                    const signalRef = push(ref(db, `voiceRooms/${currentVoiceRoom}/signals/${signal.from}`));
+                    set(signalRef, {
+                        from: currentUser,
+                        type: 'ice',
+                        candidate: event.candidate.toJSON(),
+                        timestamp: Date.now()
+                    });
+                }
+            };
+
+            // Remote stream handling
+            pc.ontrack = (event) => {
+                console.log(`Received stream from ${signal.from} in answer path`);
+
+                const existingAudio = document.getElementById(`audio-${signal.from}`);
+                if (existingAudio) {
+                    existingAudio.remove();
+                }
+
+                const remoteAudio = document.createElement('audio');
+                remoteAudio.srcObject = event.streams[0];
+                remoteAudio.autoplay = true;
+                remoteAudio.id = `audio-${signal.from}`;
+                remoteAudio.setAttribute('playsinline', '');
+                remoteAudio.muted = false;
+                remoteAudio.volume = 1.0;
+                document.body.appendChild(remoteAudio);
+
+                remoteAudio.play().catch(err => {
+                    console.log('Audio play blocked, will retry');
+                    window._pendingAudioPlayback = window._pendingAudioPlayback || [];
+                    window._pendingAudioPlayback.push(remoteAudio);
+                });
+            };
+
+            // Connection monitoring
+            pc.onconnectionstatechange = () => {
+                console.log(`Connection with ${signal.from}: ${pc.connectionState}`);
+            };
+        }
+
+        try {
+            await pc.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+
+            console.log(`Sending answer to ${signal.from}`);
+            const signalRef = push(ref(db, `voiceRooms/${currentVoiceRoom}/signals/${signal.from}`));
+            await set(signalRef, {
+                from: currentUser,
+                type: 'answer',
+                sdp: pc.localDescription,
+                timestamp: Date.now()
+            });
+        } catch (e) {
+            console.error('Error handling offer:', e);
+        }
+
+    } else if (signal.type === 'answer') {
+        if (pc) {
+            try {
+                await pc.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+                console.log(`Set remote description (answer) from ${signal.from}`);
+            } catch (e) {
+                console.error('Error setting remote description:', e);
+            }
+        }
+    } else if (signal.type === 'ice') {
+        if (pc) {
+            try {
+                await pc.addIceCandidate(new RTCIceCandidate(signal.candidate));
+                console.log(`Added ICE candidate from ${signal.from}`);
+            } catch (e) {
+                console.error('Error adding ICE candidate:', e);
+            }
+        } else {
+            // Store for later
+            if (!pendingSignals[signal.from]) pendingSignals[signal.from] = [];
+            pendingSignals[signal.from].push(signal);
+        }
+    }
+}
+
+// ==================== SETUP VOICE LISTENERS ====================
+function setupVoiceListeners() {
+    if (!currentVoiceRoom) return;
+
+    // Listen for speakers
+    onValue(ref(db, `voiceRooms/${currentVoiceRoom}/speakers`), (snapshot) => {
+        const speakers = snapshot.val() || {};
+        renderVoiceSpeakers(speakers);
+
+        // Create peer connections with new speakers
+        Object.keys(speakers).forEach(username => {
+            if (username !== currentUser && !peerConnections[username]) {
+                createPeerConnection(username);
+            }
+        });
+
+        // Check if my mic status changed
+        if (speakers[currentUser]) {
+            const myData = speakers[currentUser];
+            if (myData.micOpen !== myMicOpen) {
+                myMicOpen = myData.micOpen;
+                if (localStream) {
+                    localStream.getAudioTracks().forEach(track => {
+                        track.enabled = myData.micOpen;
+                    });
+                }
+                voiceMuted = !myData.micOpen;
+                updateVoiceControls();
+            }
+        }
+    });
+
+    // Listen for signals
+    onValue(ref(db, `voiceRooms/${currentVoiceRoom}/signals/${currentUser}`), (snapshot) => {
+        const signals = snapshot.val() || {};
+        Object.values(signals).forEach(signal => {
+            if (signal && signal.timestamp > Date.now() - 60000) {
+                handleSignal(signal);
+            }
+        });
+    });
+}
+
+// ==================== RENDER SPEAKERS ====================
+function renderVoiceSpeakers(speakers) {
+    voiceSpeakers.innerHTML = '';
+
+    const speakerList = Object.entries(speakers);
+    if (speakerList.length === 0) {
+        voiceSpeakers.innerHTML = '<p class="text-slate-500 text-xs text-center w-full">لا يوجد متحدثين حالياً</p>';
+        return;
+    }
+
+    speakerList.forEach(([username, data]) => {
+        const div = document.createElement('div');
+        const isMe = username === currentUser;
+        const isSpeaking = data.speaking && data.micOpen;
+        const micOpen = data.micOpen;
+        const isOwnerSpeaker = data.isOwner;
+
+        div.className = `voice-speaker ${isSpeaking ? 'speaking' : ''}`;
+
+        const initial = username.charAt(0).toUpperCase();
+        const micColor = micOpen ? '#22c55e' : '#ef4444';
+        const micIcon = micOpen ? 'fa-microphone' : 'fa-microphone-slash';
+
+        let ownerControls = '';
+        if (isOwner && !isMe) {
+            if (micOpen) {
+                ownerControls = `<button onclick="closeMemberMic('${username}')" class="mt-1 px-2 py-0.5 bg-red-500/30 hover:bg-red-500/50 rounded text-[9px] font-bold text-red-300 transition"><i class="fas fa-microphone-slash"></i> قفل</button>`;
+            } else {
+                ownerControls = `<button onclick="openMemberMic('${username}')" class="mt-1 px-2 py-0.5 bg-green-500/30 hover:bg-green-500/50 rounded text-[9px] font-bold text-green-300 transition"><i class="fas fa-microphone"></i> فتح</button>`;
+            }
+        }
+
+        let micStatus = '';
+        if (!isOwner && micOpen && isMe) {
+            micStatus = '<span class="text-[9px] text-green-400 font-bold"><i class="fas fa-check"></i> مفتوح</span>';
+        } else if (!isOwner && !micOpen && isMe) {
+            micStatus = '<span class="text-[9px] text-slate-500 font-bold">مقفول</span>';
+        }
+
+        div.innerHTML = `
+            <div class="voice-speaker-avatar" style="${isOwnerSpeaker ? 'background: linear-gradient(135deg, #f59e0b, #d97706);' : ''}">
+                ${initial}
+                <span class="mic-icon" style="background: ${micColor};">
+                    <i class="fas ${micIcon} text-[7px]"></i>
+                </span>
+            </div>
+            <span class="voice-speaker-name">${username}</span>
+            ${micStatus}
+            ${ownerControls}
+        `;
+
+        voiceSpeakers.appendChild(div);
+    });
+}
+
+// ==================== MIC REQUEST QUEUE ====================
+function setupMicRequestListener() {
+    if (!isOwner || !currentRoom) return;
+
+    onValue(ref(db, `voiceRooms/${currentRoom.id}/requests`), (snapshot) => {
+        const requests = snapshot.val() || {};
+        micRequests = Object.entries(requests).filter(([_, r]) => r.status === 'pending');
+
+        if (micRequests.length > 0) {
+            micQueueBadge.textContent = micRequests.length;
+            micQueueBadge.classList.remove('hidden');
+        } else {
+            micQueueBadge.classList.add('hidden');
+        }
+
+        renderMicRequests();
+    });
+}
+
+function renderMicRequests() {
+    micRequestList.innerHTML = '';
+
+    if (micRequests.length === 0) {
+        micRequestList.innerHTML = '<p class="text-slate-500 text-xs text-center py-2">لا توجد طلبات</p>';
+        return;
+    }
+
+    micRequests.forEach(([username, data]) => {
+        const div = document.createElement('div');
+        div.className = 'mic-request-item';
+        div.innerHTML = `
+            <div class="flex items-center gap-2">
+                <span class="text-sm font-bold">${username}</span>
+                <span class="text-[10px] text-slate-400">${RANKS[data.rank]?.name || data.rank}</span>
+            </div>
+            <div class="mic-request-actions">
+                <button onclick="openMemberMic('${username}')" class="mic-accept-btn">
+                    <i class="fas fa-check"></i> فتح مايك
+                </button>
+                <button onclick="rejectMicRequest('${username}')" class="mic-reject-btn">
+                    <i class="fas fa-times"></i> رفض
+                </button>
+            </div>
+        `;
+        micRequestList.appendChild(div);
+    });
+}
+
+window.rejectMicRequest = async (username) => {
+    if (!isOwner || !currentRoom) return;
+
+    await update(ref(db, `voiceRooms/${currentRoom.id}/requests/${username}`), {
+        status: 'rejected',
+        rejectedBy: currentUser,
+        rejectedAt: Date.now()
+    });
+
+    const notifRef = push(ref(db, `notifications/${username}`));
+    await set(notifRef, {
+        type: 'voice',
+        title: 'تم رفض طلبك',
+        message: 'المالك رفض طلب فتح المايك.',
+        by: currentUser,
+        timestamp: Date.now()
+    });
+};
+
+// ==================== EVENT LISTENERS ====================
+voiceChatToggleBtn.addEventListener('click', () => {
+    if (isOwner) {
+        toggleVoiceChatForRoom();
+    } else {
+        if (voiceChatToggleBtn.classList.contains('voice-on')) {
+            leaveVoiceChat();
+        } else {
+            showAudioActivation();
+            joinVoiceChatAsListener();
+        }
+    }
+});
+
+voiceMuteBtn.addEventListener('click', () => {
+    if (isOwner) {
+        toggleOwnerMic();
+    } else {
+        if (myMicOpen) {
+            closeMyMic();
+        } else {
+            requestMic();
+        }
+    }
+});
+
+voiceLeaveBtn.addEventListener('click', leaveVoiceChat);
+closeVoicePanel.addEventListener('click', () => {
+    voiceChatPanel.classList.remove('active');
+});
+
+micQueueBtn.addEventListener('click', () => {
+    micRequestQueue.classList.toggle('active');
+});
+
+closeMicQueue.addEventListener('click', () => {
+    micRequestQueue.classList.remove('active');
+});
+
+// ==================== UPDATE UI ====================
+async function updateVoiceChatUI() {
+    if (!currentRoom) {
+        voiceChatToggleBtn.classList.add('hidden');
+        micQueueBtn.classList.add('hidden');
+        voiceStatusInfo.classList.add('hidden');
+        return;
+    }
+
+    const voiceRef = ref(db, `voiceRooms/${currentRoom.id}`);
+    const snapshot = await get(voiceRef);
+    const isActive = snapshot.exists() && snapshot.val().active;
+
+    voiceChatToggleBtn.classList.remove('hidden');
+    voiceStatusInfo.classList.remove('hidden');
+
+    if (isActive) {
+        voiceChatToggleBtn.classList.remove('voice-off');
+        voiceChatToggleBtn.classList.add('voice-on');
+        voiceBtnText.textContent = isOwner ? 'إغلاق' : 'انضمام';
+        voiceStatusBadge.classList.add('active');
+        voiceStatusBadge.innerHTML = '<i class="fas fa-microphone"></i> الصوت مفتوح';
+
+        if (isOwner) {
+            micQueueBtn.classList.remove('hidden');
+            setupMicRequestListener();
+        }
+    } else {
+        voiceChatToggleBtn.classList.remove('voice-on');
+        voiceChatToggleBtn.classList.add('voice-off');
+        voiceBtnText.textContent = isOwner ? 'فتح صوتي' : 'صوتي';
+        voiceStatusBadge.classList.remove('active');
+        voiceStatusBadge.innerHTML = '<i class="fas fa-microphone-slash"></i> الصوت مغلق';
+        micQueueBtn.classList.add('hidden');
+    }
+}
+
+// ==================== VOICE ROOM LISTENER ====================
+function setupVoiceRoomListener() {
+    if (!currentRoom) return;
+
+    onValue(ref(db, `voiceRooms/${currentRoom.id}`), (snapshot) => {
+        const data = snapshot.val();
+        const wasActive = voiceChatActive;
+        voiceChatActive = data && data.active;
+
+        updateVoiceChatUI();
+
+        if (wasActive && !voiceChatActive && currentVoiceRoom) {
+            leaveVoiceChat();
+            showNotification('المحادثة الصوتية', 'تم إغلاق المحادثة الصوتية من المالك', 'mute');
+        }
+    });
+}
+
+// ==================== INTEGRATE WITH EXISTING FUNCTIONS ====================
+const originalSelectRoom = selectRoom;
+selectRoom = async function(room) {
+    await originalSelectRoom(room);
+    setupVoiceRoomListener();
+    updateVoiceChatUI();
+};
+
+const originalExitRoom = exitRoom;
+exitRoom = async function() {
+    if (currentVoiceRoom) {
+        await leaveVoiceChat();
+    }
+    await originalExitRoom();
+};
 </script>
 
 <!-- ==================== ROYAL PROFILE MODAL ==================== -->
@@ -4982,6 +6258,60 @@ window.addEventListener('visibilitychange', async () => {
         </div>
         <button onclick="closeExpiredRoomModal()" class="w-full py-3 bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 rounded-xl font-bold transition">
             <i class="fas fa-times ml-2"></i>إغلاق
+        </button>
+    </div>
+</div>
+
+
+<!-- ==================== VOICE CHAT PANEL ==================== -->
+<div id="voiceChatPanel" class="voice-chat-panel">
+    <div class="voice-chat-header">
+        <div class="voice-chat-title">
+            <span class="live-indicator"></span>
+            <span><i class="fas fa-microphone-lines text-red-400"></i> المحادثة الصوتية</span>
+        </div>
+        <button id="closeVoicePanel" class="p-1 hover:bg-slate-700 rounded-lg transition">
+            <i class="fas fa-chevron-down text-slate-400"></i>
+        </button>
+    </div>
+    <div id="voiceSpeakers" class="voice-chat-speakers">
+        <p class="text-slate-500 text-xs text-center w-full">لا يوجد متحدثين حالياً</p>
+    </div>
+    <div class="voice-chat-controls">
+        <button id="voiceMuteBtn" class="voice-control-btn voice-btn-mute">
+            <i class="fas fa-microphone-slash"></i> كتم
+        </button>
+        <button id="voiceLeaveBtn" class="voice-control-btn voice-btn-leave">
+            <i class="fas fa-phone-slash"></i> مغادرة
+        </button>
+    </div>
+</div>
+
+<!-- ==================== MIC REQUEST QUEUE (Owner Only) ==================== -->
+<div id="micRequestQueue" class="mic-request-queue">
+    <div class="flex items-center justify-between mb-3">
+        <h4 class="font-bold text-sm text-amber-400"><i class="fas fa-list ml-1"></i>طلبات فتح المايك</h4>
+        <button id="closeMicQueue" class="p-1 hover:bg-slate-700 rounded-lg transition">
+            <i class="fas fa-times text-slate-400 text-xs"></i>
+        </button>
+    </div>
+    <div id="micRequestList" class="space-y-2">
+        <p class="text-slate-500 text-xs text-center py-2">لا توجد طلبات</p>
+    </div>
+</div>
+
+
+<!-- ==================== AUDIO ACTIVATION OVERLAY ==================== -->
+<div id="audioActivationOverlay" class="hidden fixed inset-0 z-[9999] flex items-center justify-center modal-backdrop">
+    <div class="bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-md mx-4 border border-blue-500/30 text-center">
+        <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-600/20 to-cyan-600/20 border-2 border-blue-500/50 flex items-center justify-center">
+            <i class="fas fa-volume-up text-3xl text-blue-400"></i>
+        </div>
+        <h3 class="text-xl font-bold mb-2">تفعيل الصوت</h3>
+        <p class="text-slate-400 text-sm mb-6">اضغط على الزر أدناه لتفعيل الصوت والسماع للمحادثة الصوتية</p>
+        <button id="activateAudioBtn" class="w-full py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 rounded-xl font-bold shadow-lg transition flex items-center justify-center gap-2">
+            <i class="fas fa-volume-up"></i>
+            <span>تفعيل الصوت</span>
         </button>
     </div>
 </div>
